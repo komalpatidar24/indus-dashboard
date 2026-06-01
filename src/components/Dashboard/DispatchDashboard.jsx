@@ -133,7 +133,7 @@ const DISPATCH_DRILL_CONFIG = {
 // eslint-disable-next-line no-unused-vars
 const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoClick, Icon }) => (
     <Box sx={{
-        borderRadius: '20px', bgcolor: '#ffffff',
+        borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
         boxShadow: '0 2px 0 rgba(15,23,42,0.03), 0 4px 20px rgba(15,23,42,0.07)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
@@ -163,16 +163,16 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoC
         }} />
 
         {/* Content */}
-        <Box sx={{ pl: 3, pr: 2.5, pt: 2.5, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ pl: { xs: 2, sm: 3 }, pr: { xs: 1.5, sm: 2.5 }, pt: { xs: 1.5, sm: 2.5 }, pb: { xs: 1.2, sm: 2 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.7, sm: 1 } }}>
             <Box sx={{
-                width: 44, height: 44, borderRadius: '13px', bgcolor: bg,
+                width: { xs: 34, sm: 44 }, height: { xs: 34, sm: 44 }, borderRadius: '13px', bgcolor: bg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: `1.5px solid ${color}22`,
                 boxShadow: `0 2px 10px ${color}22, inset 0 1px 0 ${color}15`,
                 animation: `${iconPop} 0.45s cubic-bezier(0.34,1.56,0.64,1) ${animDelay + 0.12}s both`,
                 transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
             }}>
-                <Icon size={20} strokeWidth={2.2} color={color} />
+                <Icon size={16} strokeWidth={2.2} color={color} />
             </Box>
 
             {loading ? (
@@ -183,16 +183,16 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoC
             ) : (
                 <>
                     <Typography className="kpi-value" sx={{
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
+                        fontSize: { xs: '1.05rem', md: '1.5rem' },
                         fontWeight: 900, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em',
-                        fontFamily: T.fontMono, mt: 0.5,
+                        fontFamily: T.fontMono, mt: 0.3,
                         transition: 'color 0.28s ease',
                         animation: `${countUp} 0.5s cubic-bezier(0.34,1.56,0.64,1) ${animDelay + 0.18}s both`,
                     }}>
                         {value}
                     </Typography>
                     <Typography sx={{
-                        fontSize: '0.64rem', fontWeight: 700, color: '#7c8fa6',
+                        fontSize: { xs: '0.58rem', sm: '0.64rem' }, fontWeight: 700, color: '#7c8fa6',
                         textTransform: 'uppercase', letterSpacing: '0.09em',
                         fontFamily: T.font, lineHeight: 1.4,
                     }}>
@@ -560,9 +560,9 @@ const DispatchDashboard = () => {
                 {/* ── KPI Cards ── */}
                 <Box sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" },
+                    gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" },
                     gap: { xs: "10px", sm: "12px", md: "14px" },
-                    mb: 3.5,
+                    mb: { xs: 2, sm: 3.5 },
                     width: "100%",
                 }}>
                     <StatCard label="Orders in Pipeline"  value={kpiData.ordersInPipeline}  Icon={Package}    color={T.primary} bg={T.primaryLight} accent={T.primary} animDelay={0.08} loading={loading} onInfoClick={() => openDrill('ordersInPipeline')} />
@@ -581,7 +581,7 @@ const DispatchDashboard = () => {
                 }}>
                     {/* Pipeline Distribution */}
                     <ChartCard title="Pipeline Distribution" Icon={PieIcon} accent={T.primary} animDelay={0.38} loading={loading}>
-                        <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <Box sx={{ height: { xs: 220, sm: 260 }, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                             <Box sx={{ width: '100%', height: '100%', maxWidth: 260 }}>
                                 <DashboardChart type="doughnut" data={charts.pipelineDistribution} height="100%" title=""
                                     options={{

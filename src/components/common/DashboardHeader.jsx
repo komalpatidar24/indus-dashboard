@@ -1,74 +1,57 @@
 import React from 'react';
 import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
 import { RefreshCw } from 'lucide-react';
-import { R, T, FONT } from './dashboardTokens';
+import { R, T } from './dashboardTokens';
 
-const DashboardHeader = ({ title, onRefresh, loading, children }) => {
+const DashboardHeader = ({ title, onRefresh, loading, children, controls }) => {
     const refresh = () => { location.reload(); };
     return (
         <Box
             sx={{
                 bgcolor: T.surface,
                 borderBottom: `1px solid ${T.borderLight}`,
-                py: R.headerPy,
-                px: R.headerPx,
-                display: 'flex',
-                alignItems: { xs: 'flex-start', md: 'center' },
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: { xs: '8px', md: '12px' },
                 boxShadow: '0 1px 12px rgba(15,23,42,0.04)',
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
                 backdropFilter: 'blur(8px)',
-                transition: 'box-shadow 0.3s ease',
             }}
         >
-            {/* Title — always full width on xs so filters get their own row */}
-            <Typography
-                variant="h5"
-                sx={{
-                    fontWeight: 900,
-                    color: T.text,
-                    fontSize: FONT.pageTitle,
-                    letterSpacing: '-0.02em',
-                    fontFamily: T.font,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    /* on mobile take full row so filters wrap below */
-                    width: { xs: '100%', md: 'auto' },
-                }}
-            >
-                {title}
-            </Typography>
+            {/* ── Row 1: Title + Refresh ── */}
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: { xs: 2, md: 4 },
+                pt: { xs: 1.2, md: 1.75 },
+                pb: { xs: 0.5, md: 0 },
+            }}>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 900,
+                        color: T.text,
+                        fontSize: { xs: '1.05rem', md: '1.5rem' },
+                        letterSpacing: '-0.02em',
+                        fontFamily: T.font,
+                        lineHeight: 1.2,
+                    }}
+                >
+                    {title}
+                </Typography>
 
-            {/* Controls row — scrollable on xs so pills never overflow */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: { xs: '6px', sm: '8px', md: '10px' },
-                    flex: '1 1 auto',
-                    justifyContent: { xs: 'flex-start', md: 'flex-end' },
-                    overflowX: 'auto',
-                    /* hide scrollbar but keep usable */
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': { display: 'none' },
-                    minWidth: 0,
-                }}
-            >
-                {children}
                 {onRefresh && (
                     <IconButton
                         onClick={refresh}
                         disabled={loading}
+                        size="small"
                         sx={{
                             color: T.textMuted,
                             bgcolor: '#f8fafc',
                             border: `1px solid ${T.border}`,
                             borderRadius: R.radiusInput,
-                            p: 0.9,
+                            p: { xs: 0.6, md: 0.9 },
+                            flexShrink: 0,
                             transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
                             '&:hover': {
                                 bgcolor: T.surface, color: T.text,
@@ -79,11 +62,42 @@ const DashboardHeader = ({ title, onRefresh, loading, children }) => {
                         }}
                     >
                         {loading
-                            ? <CircularProgress size={17} sx={{ color: T.text }} />
-                            : <RefreshCw size={17} />}
+                            ? <CircularProgress size={15} sx={{ color: T.text }} />
+                            : <RefreshCw size={15} />}
                     </IconButton>
                 )}
             </Box>
+
+            {/* ── Row 2: Filters (scrollable, right-aligned) ── */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    px: { xs: 1.5, md: 4 },
+                    py: { xs: 0.8, md: 1.2 },
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                }}
+            >
+                {children}
+            </Box>
+
+            {/* ── Row 3: Extra controls — stacks vertically ── */}
+            {controls && (
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    px: { xs: 1.5, md: 4 },
+                    pb: { xs: 0.8, md: 1 },
+                    gap: 0.8,
+                    borderTop: `1px solid ${T.borderLight}`,
+                    pt: { xs: 0.8, md: 1 },
+                }}>
+                    {controls}
+                </Box>
+            )}
         </Box>
     );
 };

@@ -19,9 +19,9 @@ import Report from './components/Dashboard/Report';
 import ProcurementDashbaord from './components/Dashboard/ProcurementDashbaord';
 import MomYoyDashboard from './components/Dashboard/MomYoyDashboard';
 
+import MobileBottomNav from './components/common/MobileBottomNav';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Import } from "lucide-react";
 
 const useSSOAuth = () => {
   const location = useLocation();
@@ -162,6 +162,9 @@ const App = () => {
   return (
     <>
       {shouldShowHeader && <Header />}
+      {/* bottom padding on mobile so content clears the bottom nav */}
+      <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 68px)' }}
+           className="mobile-page-wrap">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
@@ -183,6 +186,8 @@ const App = () => {
         <Route path="/dashboard/ProcurementDashbaord" element={<ProtectedSSORoute><ProcurementDashbaord /></ProtectedSSORoute>} />
         <Route path="/dashboard/MomYoyDashboard" element={<ProtectedSSORoute><MomYoyDashboard /></ProtectedSSORoute>} />
       </Routes>
+      </div>
+      <MobileBottomNav />
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );

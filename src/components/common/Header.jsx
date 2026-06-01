@@ -266,17 +266,24 @@ const Header = () => {
           path: '/dashboard/Report',
           hasChildren: false
         },
-         {
+        {
+          id: 'costing-dashboard',
+          name: 'Costing Dashboard',
+          icon: <BarChart2 size={14} />,
+          path: '/dashboard/costing',
+          hasChildren: false
+        },
+        {
           id: 'ProcurementDashbaord',
-          name: 'Procurement Dashbaord',
-          icon: <FileText size={14} />,
+          name: 'Procurement Dashboard',
+          icon: <ClipboardList size={14} />,
           path: '/dashboard/ProcurementDashbaord',
           hasChildren: false
         },
-         {
+        {
           id: 'MOM-YOYDashbaord',
-          name: 'MOM-YOY Dashbaord',
-          icon: <FileText size={14} />,
+          name: 'MOM-YOY Dashboard',
+          icon: <TrendingUp size={14} />,
           path: '/dashboard/MomYoyDashboard',
           hasChildren: false
         },

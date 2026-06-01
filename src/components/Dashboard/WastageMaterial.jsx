@@ -106,7 +106,7 @@ const ChartOverlay = ({ loading }) => loading ? (
 // eslint-disable-next-line no-unused-vars
 const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading, animDelay, showWarning, type, onInfoClick, Icon }) => (
     <Box sx={{
-        borderRadius: '20px', bgcolor: '#ffffff',
+        borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
         boxShadow: '0 2px 0 rgba(15,23,42,0.03), 0 4px 20px rgba(15,23,42,0.07)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
@@ -136,23 +136,23 @@ const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading,
         }} />
 
         {/* Content */}
-        <Box sx={{ pl: 3, pr: 2.5, pt: 2.5, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ pl: { xs: 2, sm: 3 }, pr: { xs: 1.5, sm: 2.5 }, pt: { xs: 1.5, sm: 2.5 }, pb: { xs: 1.2, sm: 2 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.7, sm: 1 } }}>
             {/* Icon row + optional warning badge */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box sx={{
-                    width: 44, height: 44, borderRadius: '13px', bgcolor: bg,
+                    width: { xs: 32, sm: 44 }, height: { xs: 32, sm: 44 }, borderRadius: '13px', bgcolor: bg,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: `1.5px solid ${color}22`,
                     boxShadow: `0 2px 10px ${color}22, inset 0 1px 0 ${color}15`,
                     animation: `${iconPop} 0.4s ease ${animDelay + 0.15}s both`,
                     transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
                 }}>
-                    <Icon size={20} strokeWidth={2.2} color={color} />
+                    <Icon size={15} strokeWidth={2.2} color={color} />
                 </Box>
                 {showWarning && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: T.amberLight, color: T.amber, px: 1, py: 0.25, borderRadius: '6px', border: `1px solid ${T.amber}30`, animation: `${fadeIn} 0.5s ease` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: T.amberLight, color: T.amber, px: { xs: 0.5, sm: 1 }, py: 0.25, borderRadius: '6px', border: `1px solid ${T.amber}30`, animation: `${fadeIn} 0.5s ease` }}>
                         <AlertTriangle size={12} strokeWidth={3} />
-                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Warning</Typography>
+                        <Typography sx={{ display: { xs: 'none', sm: 'block' }, fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Warning</Typography>
                     </Box>
                 )}
             </Box>
@@ -165,9 +165,9 @@ const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading,
             ) : (
                 <>
                     <Typography className="kpi-value" sx={{
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
+                        fontSize: { xs: '1rem', md: '1.5rem' },
                         fontWeight: 900, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em',
-                        fontFamily: T.fontMono, mt: 0.5,
+                        fontFamily: T.fontMono, mt: { xs: 0.2, sm: 0.5 },
                         transition: 'color 0.28s ease',
                         animation: `${countUp} 0.5s cubic-bezier(0.34,1.56,0.64,1) ${animDelay + 0.2}s both`,
                     }}>
@@ -176,7 +176,7 @@ const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading,
                     <Box sx={{ width: '100%', height: '1px', background: `linear-gradient(90deg, ${accent}25 0%, transparent 80%)` }} />
                     <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, flexWrap: 'wrap' }}>
                         <Typography sx={{
-                            fontSize: '0.64rem', fontWeight: 700, color: '#7c8fa6',
+                            fontSize: { xs: '0.56rem', sm: '0.64rem' }, fontWeight: 700, color: '#7c8fa6',
                             textTransform: 'uppercase', letterSpacing: '0.09em',
                             fontFamily: T.font, lineHeight: 1.4,
                         }}>
@@ -616,9 +616,9 @@ const WastageMaterial = () => {
                 {/* ── KPI Cards ── */}
                 <Box sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" },
-                    gap: { xs: "12px", sm: "16px", md: "20px" },
-                    mb: 4,
+                    gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" },
+                    gap: { xs: "10px", sm: "14px", md: "20px" },
+                    mb: { xs: 2, sm: 3, md: 4 },
                     width: "100%",
                 }}>
                     <StatCard label="Total Paper Issued" value={kpi.issued} subtext="Sheets" Icon={Layers} color={T.primary} bg={T.primaryLight} accent={T.primary} animDelay={0.1} loading={loading} onInfoClick={() => openDrill('issued')} />
@@ -633,8 +633,8 @@ const WastageMaterial = () => {
                 <Box sx={{
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
-                    gap: { xs: "16px", sm: "20px", md: "24px" },
-                    mb: 5,
+                    gap: { xs: "12px", sm: "18px", md: "24px" },
+                    mb: { xs: 3, sm: 5 },
                     width: "100%",
                 }}>
                     <ChartCard

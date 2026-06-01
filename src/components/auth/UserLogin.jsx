@@ -72,15 +72,7 @@ const UserLogin = () => {
         localStorage.setItem("CompanyID", parsedData.CompanyID);
         localStorage.setItem("ProductionUnitID", parsedData.ProductionUnitID);
         localStorage.setItem("HomePage", parsedData.HomePage);
-        if (parsedData.Role === 'Admin' || parsedData.Role === 'admin'){
-          // navigate("/fms/Order-invoice");
-          navigate("/dashboard/production");
-          // navigate("/fms/UserDashboard");
-          // navigate("/task");
-        }else{
-          navigate("/dashboard/sales");
-
-        }
+        navigate("/dashboard/sales");
       } else {
         throw new Error("Invalid credentials provided.");
       }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Box,
     Typography,
@@ -1542,23 +1543,24 @@ const ComparePanel = ({ data, side, dateLabel, loading }) => {
     ];
 
     return (
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ flex: 1, minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 } }}>
             {/* Panel header */}
             <Box sx={{
-                display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 1.5,
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                px: { xs: 1.5, md: 2.5 }, py: { xs: 1, md: 1.5 },
                 bgcolor: '#fff', borderRadius: '14px', border: `1.5px solid ${T.border}`,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                 background: `linear-gradient(135deg, #fff 0%, ${accent.a}08 100%)`,
             }}>
-                <Box sx={{ width: 4, height: 34, borderRadius: 2, background: `linear-gradient(180deg, ${accent.a}, ${accent.b})`, flexShrink: 0 }} />
+                <Box sx={{ width: 4, height: 30, borderRadius: 2, background: `linear-gradient(180deg, ${accent.a}, ${accent.b})`, flexShrink: 0 }} />
                 <Box>
-                    <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color: T.text, letterSpacing: '-0.01em' }}>{title}</Typography>
-                    <Typography sx={{ fontSize: '0.68rem', color: T.textFaint, fontWeight: 600, mt: 0.2 }}>{dateLabel}</Typography>
+                    <Typography sx={{ fontSize: { xs: '0.85rem', md: '0.95rem' }, fontWeight: 900, color: T.text, letterSpacing: '-0.01em' }}>{title}</Typography>
+                    <Typography sx={{ fontSize: '0.65rem', color: T.textFaint, fontWeight: 600, mt: 0.2 }}>{dateLabel}</Typography>
                 </Box>
             </Box>
 
-            {/* KPI row */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: GRID.kpi5, gap: R.gap }}>
+            {/* KPI row — 3 cols on mobile, 5 on desktop */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(3,1fr)', sm: 'repeat(3,1fr)', md: 'repeat(5,1fr)' }, gap: { xs: 1, md: R.gap } }}>
                 {kpiDefs.map((c, i) => (
                     <KpiCard key={i} title={c.label} value={c.value} color={c.color} icon={c.icon} animDelay={i * 50} />
                 ))}
@@ -1569,7 +1571,7 @@ const ComparePanel = ({ data, side, dateLabel, loading }) => {
                 <DashboardChart data={charts.dailyProduction} type="bar" />
             </ChartCard>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: GRID.charts2, gap: R.gapChart }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: GRID.charts2 }, gap: R.gapChart }}>
                 <ChartCard title="Operation Status" subtitle="Job distribution" accentA={T.green} accentB="#34d399" animDelay={150}>
                     <DashboardChart data={charts.jobStatus} type="doughnut" />
                 </ChartCard>
@@ -1604,6 +1606,8 @@ const ProductionDashboard = () => {
     const [showProductionUnitFilter, setShowProductionUnitFilter] = useState(false);
     const [puDropdownOpen, setPuDropdownOpen] = useState(false);
     const puFilterRef = useRef(null);
+    const puBtnRef = useRef(null);
+    const [puDropdownPos, setPuDropdownPos] = useState({ top: 0, left: 0 });
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [detailModal, setDetailModal] = useState({ open: false, title: '', columns: [], rows: [], loading: false });
@@ -2124,23 +2128,22 @@ const ProductionDashboard = () => {
             ].join(", "),
             backgroundSize: "100% 100%, 28px 28px",
         }}>
-            <DashboardHeader title="Production Dashboard" lastUpdated={lastUpdated} onRefresh={fetchData} loading={loading}>
-                <CommonDateFilter
-                    period={period} setPeriod={setPeriod}
-                    fromDate={fromDate} setFromDate={setFromDate}
-                    toDate={toDate} setToDate={handleSetToDate}
-                    onApply={() => { }}
-                />
-            </DashboardHeader>
-
-            <Box sx={{ width: "100%", px: R.headerPx }}>
-                {/* ── Tab Switcher + Machine Filter ── */}
-                <Box sx={{
-                    display: "flex", alignItems: "center", justifyContent: "flex-start",
-                    gap: 2, mb: { xs: 2, sm: 2.5 }, pt: { xs: 0.5, sm: 1 },
-                    animation: `${fadeUp} 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both`,
-                    position: 'relative', zIndex: 20,
-                }}>
+            <DashboardHeader
+                title="Production Dashboard"
+                lastUpdated={lastUpdated}
+                onRefresh={fetchData}
+                loading={loading}
+                controls={
+                    <>
+                    {/* Sub-row 1: Tab Pills */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, position: 'relative', zIndex: 20 }}>
+                    <Box sx={{
+                        display: "flex", gap: 0.5,
+                        background: "linear-gradient(145deg, #ffffff, #f8fafc)",
+                        p: "5px", borderRadius: "14px",
+                        border: `1.5px solid ${T.border}`,
+                        boxShadow: T.shadowSm,
+                    }}>
                     {/* Tab Pills */}
                     <Box sx={{
                         display: "flex", gap: 0.5,
@@ -2187,19 +2190,32 @@ const ProductionDashboard = () => {
                             );
                         })}
                     </Box>
+                    </Box> {/* end tab pills wrapper */}
+                    </Box> {/* end sub-row 1 */}
 
+                    {/* Sub-row 2: Production Unit + Compare Mode */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: 'nowrap', overflow: 'hidden' }}>
                     {/* ── Production Unit Filter ── visible on both tabs when data exists */}
                     {showProductionUnitFilter && (
                         <Box ref={puFilterRef} sx={{ position: 'relative', zIndex: 10, animation: `${fadeUp} 0.3s ease both` }}>
                             <Box
+                                ref={puBtnRef}
                                 component="button"
-                                onClick={() => setPuDropdownOpen(p => !p)}
+                                onClick={() => {
+                                    if (puBtnRef.current) {
+                                        const r = puBtnRef.current.getBoundingClientRect();
+                                        setPuDropdownPos({ top: r.bottom + 8, left: r.left });
+                                    }
+                                    setPuDropdownOpen(p => !p);
+                                }}
                                 sx={{
                                     display: 'flex', alignItems: 'center', gap: 1,
                                     px: 2, py: '7px', borderRadius: '12px',
                                     border: `1.5px solid ${selectedProductionUnit !== 'All' ? T.teal : T.border}`,
                                     bgcolor: selectedProductionUnit !== 'All' ? `${T.teal}15` : '#ffffff',
                                     cursor: 'pointer', outline: 'none', fontFamily: T.font,
+                                    maxWidth: { xs: '180px', sm: '220px' },
+                                    minWidth: 0, overflow: 'hidden',
                                     boxShadow: selectedProductionUnit !== 'All'
                                         ? `0 0 0 3px ${T.teal}22, 0 2px 8px rgba(0,0,0,0.07)`
                                         : '0 2px 8px rgba(15,23,42,0.07)',
@@ -2216,7 +2232,11 @@ const ProductionDashboard = () => {
                                 <Typography sx={{
                                     fontSize: '0.74rem', fontWeight: 800,
                                     color: selectedProductionUnit !== 'All' ? T.teal : T.textMuted,
-                                    letterSpacing: '0.02em', whiteSpace: 'nowrap',
+                                    letterSpacing: '0.02em',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: { xs: '110px', sm: '160px' },
                                 }}>
                                     {selectedProductionUnit !== 'All'
                                         ? (productionUnits.find(u => String(u.ProductionUnitID) === String(selectedProductionUnit))?.ProductionUnitName ?? selectedProductionUnit)
@@ -2239,17 +2259,9 @@ const ProductionDashboard = () => {
                                 </svg>
                             </Box>
 
-                            {/* Dropdown */}
-                            {puDropdownOpen && (
-                                <Box sx={{
-                                    position: 'absolute', top: 'calc(100% + 8px)', left: 0,
-                                    zIndex: 50, minWidth: 220,
-                                    bgcolor: '#ffffff', borderRadius: '14px',
-                                    border: `1.5px solid ${T.border}`,
-                                    boxShadow: '0 16px 48px rgba(15,23,42,0.14), 0 4px 12px rgba(15,23,42,0.08)',
-                                    overflow: 'hidden',
-                                    animation: `${fadeUp} 0.2s ease both`,
-                                }}>
+                            {/* Dropdown rendered via portal — see below the DashboardHeader */}
+                            {false && (
+                                <Box sx={{ display: 'none' }}>
                                     <Box sx={{ px: 2, py: '10px', borderBottom: `1px solid ${T.borderLight}`, bgcolor: '#fafbfc' }}>
                                         <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                             Production Unit
@@ -2495,39 +2507,120 @@ const ProductionDashboard = () => {
                             )}
                         </Box>
                     )}
-                </Box>
+                    </Box> {/* end sub-row 2 */}
+                    </>
+                }
+            >
+                <CommonDateFilter
+                    period={period} setPeriod={setPeriod}
+                    fromDate={fromDate} setFromDate={setFromDate}
+                    toDate={toDate} setToDate={handleSetToDate}
+                    onApply={() => { }}
+                />
+            </DashboardHeader>
 
-                {activeTab === 'production' && compareMode ? (
-                    /* ── Compare Mode: side-by-side panels ── */
-                    <Box sx={{ animation: `${fadeUp} 0.4s ease both` }}>
-                        <Box sx={{
-                            display: 'flex', gap: { xs: 2, md: 3 },
-                            alignItems: 'flex-start',
-                            flexDirection: { xs: 'column', lg: 'row' },
-                        }}>
-                            <ComparePanel
-                                side="thisMonth"
-                                data={compareData.thisMonth}
-                                dateLabel={compareData.thisMonthLabel ?? ''}
-                                loading={compareData.loading}
-                            />
-                            {/* Divider */}
-                            <Box sx={{
-                                display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', alignItems: 'center',
-                                pt: 6, gap: 1, flexShrink: 0,
-                            }}>
-                                <Box sx={{ width: 1, flex: 1, background: 'linear-gradient(180deg, transparent, #c4b5fd, transparent)', minHeight: 40 }} />
-                                <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: '#f5f3ff', border: '1.5px solid #c4b5fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: '#7c3aed' }}>VS</Typography>
+            {/* ── Production Unit dropdown — portal so it escapes sticky header ── */}
+            {puDropdownOpen && createPortal(
+                <Box ref={puFilterRef} sx={{
+                    position: 'fixed',
+                    top: puDropdownPos.top,
+                    left: puDropdownPos.left,
+                    zIndex: 9999,
+                    minWidth: 220,
+                    bgcolor: '#ffffff',
+                    borderRadius: '14px',
+                    border: `1.5px solid ${T.border}`,
+                    boxShadow: '0 16px 48px rgba(15,23,42,0.14), 0 4px 12px rgba(15,23,42,0.08)',
+                    overflow: 'hidden',
+                    animation: `${fadeUp} 0.2s ease both`,
+                }}>
+                    <Box sx={{ px: 2, py: '10px', borderBottom: `1px solid ${T.borderLight}`, bgcolor: '#fafbfc' }}>
+                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Production Unit
+                        </Typography>
+                    </Box>
+                    <Box sx={{ maxHeight: 220, overflowY: 'auto', py: '6px', '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-thumb': { bgcolor: T.border, borderRadius: '4px' } }}>
+                        <Box component="button"
+                            onClick={() => { setSelectedProductionUnit('All'); setPuDropdownOpen(false); }}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', px: 2, py: '9px', border: 'none', cursor: 'pointer', textAlign: 'left', bgcolor: selectedProductionUnit === 'All' ? `${T.teal}12` : 'transparent', fontFamily: T.font, '&:hover': { bgcolor: `${T.teal}10` }, transition: 'background 0.15s' }}>
+                            <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: selectedProductionUnit === 'All' ? T.teal : T.border }} />
+                            <Typography sx={{ fontSize: '0.73rem', fontWeight: selectedProductionUnit === 'All' ? 800 : 600, color: selectedProductionUnit === 'All' ? T.teal : T.textMuted }}>All Units</Typography>
+                        </Box>
+                        {productionUnits.map(unit => {
+                            const isActive = String(selectedProductionUnit) === String(unit.ProductionUnitID);
+                            return (
+                                <Box key={unit.ProductionUnitID} component="button"
+                                    onClick={() => { setSelectedProductionUnit(String(unit.ProductionUnitID)); setPuDropdownOpen(false); }}
+                                    sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%', px: 2, py: '9px', border: 'none', cursor: 'pointer', textAlign: 'left', bgcolor: isActive ? `${T.teal}12` : 'transparent', fontFamily: T.font, '&:hover': { bgcolor: `${T.teal}10` }, transition: 'background 0.15s' }}>
+                                    <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: isActive ? T.teal : T.border }} />
+                                    <Typography sx={{ fontSize: '0.73rem', fontWeight: isActive ? 800 : 600, color: isActive ? T.teal : T.textMuted }}>
+                                        {unit.ProductionUnitName ?? unit.ProductionUnit ?? `Unit ${unit.ProductionUnitID}`}
+                                    </Typography>
                                 </Box>
-                                <Box sx={{ width: 1, flex: 1, background: 'linear-gradient(180deg, #c4b5fd, transparent)', minHeight: 40 }} />
+                            );
+                        })}
+                    </Box>
+                </Box>,
+                document.body
+            )}
+
+            <Box sx={{ width: "100%", px: R.headerPx }}>
+                {activeTab === 'production' && compareMode ? (
+                    /* ── Compare Mode: always side-by-side, scroll horizontally on mobile ── */
+                    <Box sx={{ animation: `${fadeUp} 0.4s ease both` }}>
+                        {/* Scroll hint on mobile */}
+                        <Box sx={{
+                            display: { xs: 'flex', lg: 'none' },
+                            alignItems: 'center', justifyContent: 'center',
+                            gap: 1, mb: 1.5,
+                        }}>
+                            <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: T.textFaint, letterSpacing: '0.06em' }}>
+                                ← SWIPE TO COMPARE →
+                            </Typography>
+                        </Box>
+
+                        {/* Scrollable side-by-side container */}
+                        <Box sx={{
+                            overflowX: 'auto',
+                            scrollbarWidth: 'none',
+                            '&::-webkit-scrollbar': { display: 'none' },
+                            mx: { xs: -1.5, md: 0 }, // bleed to edges on mobile
+                            px: { xs: 1.5, md: 0 },
+                        }}>
+                            <Box sx={{
+                                display: 'flex',
+                                gap: 1.5,
+                                alignItems: 'flex-start',
+                                // each panel: 85vw on mobile so both peek, 50% on desktop
+                                '& > *': {
+                                    minWidth: { xs: '82vw', sm: '45vw', lg: 0 },
+                                    flex: '1 0 0',
+                                },
+                            }}>
+                                <ComparePanel
+                                    side="thisMonth"
+                                    data={compareData.thisMonth}
+                                    dateLabel={compareData.thisMonthLabel ?? ''}
+                                    loading={compareData.loading}
+                                />
+                                {/* VS divider */}
+                                <Box sx={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    pt: 4, gap: 1, flexShrink: 0, minWidth: 'auto !important', flex: '0 0 auto !important',
+                                }}>
+                                    <Box sx={{ width: 1, height: 40, background: 'linear-gradient(180deg, transparent, #c4b5fd)' }} />
+                                    <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: '#f5f3ff', border: '1.5px solid #c4b5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: '#7c3aed' }}>VS</Typography>
+                                    </Box>
+                                    <Box sx={{ width: 1, height: 40, background: 'linear-gradient(180deg, #c4b5fd, transparent)' }} />
+                                </Box>
+                                <ComparePanel
+                                    side="lastMonth"
+                                    data={compareData.lastMonth}
+                                    dateLabel={compareData.lastMonthLabel ?? ''}
+                                    loading={compareData.loading}
+                                />
                             </Box>
-                            <ComparePanel
-                                side="lastMonth"
-                                data={compareData.lastMonth}
-                                dateLabel={compareData.lastMonthLabel ?? ''}
-                                loading={compareData.loading}
-                            />
                         </Box>
                     </Box>
                 ) : activeTab === 'production' ? (

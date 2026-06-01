@@ -105,8 +105,8 @@ const StatCard = ({ config, loading, rawValue, animDelay, isAmount = false }) =>
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       sx={{
-        borderRadius: "20px", overflow: "hidden",
-        p: { xs: "16px 16px 14px 18px", sm: "20px 20px 17px 20px" },
+        borderRadius: { xs: "14px", sm: "20px" }, overflow: "hidden",
+        p: { xs: "12px 12px 10px 14px", sm: "20px 20px 17px 20px" },
         display: "flex", flexDirection: "column", position: "relative",
         cursor: "default", willChange: "transform, box-shadow",
         background: hovered
@@ -151,7 +151,7 @@ const StatCard = ({ config, loading, rawValue, animDelay, isAmount = false }) =>
       ) : (
         <>
           <Typography sx={{
-            fontSize: { xs: "1.4rem", sm: "1.6rem" }, fontWeight: 800, color: hovered ? accent : T.text,
+            fontSize: { xs: "1.1rem", sm: "1.6rem" }, fontWeight: 800, color: hovered ? accent : T.text,
             letterSpacing: "-0.5px", fontFamily: T.fontMono, lineHeight: 1, mb: 0.65, transition: "color 0.28s ease",
           }}>
             {display}
@@ -334,8 +334,8 @@ const ProcurementDashbaord = () => {
 
       <Box sx={{ p: R.pagePad }}>
         <Box sx={{
-          display: "grid", gap: { xs: 2, md: 2.5 }, mb: 5,
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2,1fr)", md: "repeat(4,1fr)", lg: "repeat(7,1fr)" }
+          display: "grid", gap: { xs: 1.5, md: 2.5 }, mb: { xs: 3, md: 5 },
+          gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(2,1fr)", md: "repeat(4,1fr)", lg: "repeat(7,1fr)" }
         }}>
           {KPI_CONFIGS.map((cfg, i) => (
             <StatCard

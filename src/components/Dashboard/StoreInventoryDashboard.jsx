@@ -81,7 +81,8 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon })
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             sx={{
-                borderRadius: T.radius, p: "14px 16px",
+                borderRadius: { xs: '14px', sm: T.radius },
+                p: { xs: '12px 12px 10px 14px', sm: '14px 16px' },
                 position: "relative", cursor: "default",
                 background: hovered ? `linear-gradient(150deg, #ffffff 0%, ${accent}09 100%)` : "#ffffff",
                 border: `1.5px solid ${hovered ? accent + "50" : T.border}`,
@@ -97,26 +98,26 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon })
                 bgcolor: accent, transform: hovered ? "scaleY(1)" : "scaleY(0.4)",
                 transition: "transform 0.3s ease"
             }} />
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                 <Box sx={{
-                    width: 34, height: 34, borderRadius: "10px",
+                    width: { xs: 30, sm: 34 }, height: { xs: 30, sm: 34 }, borderRadius: "10px",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     bgcolor: bg, color, border: `1px solid ${color}20`,
                     boxShadow: `0 4px 12px ${color}15`,
                     animation: `${iconPop} 0.4s ease ${animDelay + 0.1}s both`,
                 }}>
-                    <Icon size={17} />
+                    <Icon size={15} />
                 </Box>
             </Box>
             {loading ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Shimmer width="60%" height={24} />
-                    <Shimmer width="40%" height={12} />
+                    <Shimmer width="60%" height={20} />
+                    <Shimmer width="40%" height={10} />
                 </Box>
             ) : (
                 <>
-                    <Typography sx={{ fontSize: "1.35rem", fontWeight: 850, color: T.text, lineHeight: 1, mb: 0.5, fontFamily: T.fontMono, letterSpacing: "-0.5px" }}>{value}</Typography>
-                    <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: T.textFaint, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</Typography>
+                    <Typography sx={{ fontSize: { xs: '1.05rem', sm: '1.35rem' }, fontWeight: 850, color: T.text, lineHeight: 1, mb: 0.5, fontFamily: T.fontMono, letterSpacing: "-0.5px" }}>{value}</Typography>
+                    <Typography sx={{ fontSize: { xs: '0.58rem', sm: '0.68rem' }, fontWeight: 700, color: T.textFaint, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</Typography>
                 </>
             )}
         </Box>
@@ -126,7 +127,8 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon })
 // eslint-disable-next-line no-unused-vars
 const ChartCard = ({ title, accent, children, loading, animDelay, action, scrollable, minWidth, Icon }) => (
     <Box sx={{
-        bgcolor: "#ffffff", borderRadius: T.radius, p: "22px",
+        bgcolor: "#ffffff", borderRadius: { xs: '14px', sm: T.radius },
+        p: { xs: '14px 12px 12px', sm: '22px' },
         border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm,
         position: "relative", overflow: "hidden",
         animation: `${fadeUp} 0.6s ease ${animDelay}s both`,
@@ -134,20 +136,20 @@ const ChartCard = ({ title, accent, children, loading, animDelay, action, scroll
         "&:hover": { boxShadow: T.shadowMd, borderColor: `${accent}40`, transform: "translateY(-4px)" }
     }}>
         <ChartOverlay loading={loading} />
-        <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: "6px", background: `linear-gradient(90deg, ${accent}, ${accent}80)` }} />
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                <Box sx={{ width: 34, height: 34, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: `${accent}10`, color: accent, border: `1px solid ${accent}25` }}><Icon size={16} /></Box>
-                <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, color: T.text, textTransform: "uppercase", letterSpacing: "0.04em" }}>{title}</Typography>
+        <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: `linear-gradient(90deg, ${accent}, ${accent}80)` }} />
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: { xs: 28, sm: 34 }, height: { xs: 28, sm: 34 }, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: `${accent}10`, color: accent, border: `1px solid ${accent}25`, flexShrink: 0 }}><Icon size={14} /></Box>
+                <Typography sx={{ fontSize: { xs: '0.72rem', sm: '0.85rem' }, fontWeight: 800, color: T.text, textTransform: "uppercase", letterSpacing: "0.04em" }}>{title}</Typography>
             </Box>
             {action && <Box>{action}</Box>}
         </Box>
-        <Box sx={{ 
-            height: 300, position: "relative",
-            ...(scrollable && { 
-                overflowX: 'auto', overflowY: 'hidden', 
-                '&::-webkit-scrollbar': { height: '6px' }, 
-                '&::-webkit-scrollbar-thumb': { backgroundColor: T.border, borderRadius: '4px' } 
+        <Box sx={{
+            height: { xs: 240, sm: 300 }, position: "relative",
+            ...(scrollable && {
+                overflowX: 'auto', overflowY: 'hidden',
+                '&::-webkit-scrollbar': { height: '6px' },
+                '&::-webkit-scrollbar-thumb': { backgroundColor: T.border, borderRadius: '4px' }
             })
         }}>
             <Box sx={{ height: '100%', minWidth: minWidth || '100%', position: 'relative' }}>{children}</Box>
@@ -416,7 +418,7 @@ const StoreInventoryDashboard = () => {
 
     const txc = { fontSize: 8.5, fontWeight: 700, fill: T.textFaint, fontFamily: T.fontMono };
     const TD = ({ children, s = {} }) => (
-        <td style={{ padding: "14px 18px", borderBottom: `1px solid ${T.borderLight}`, fontSize: "0.72rem", color: T.text, fontWeight: 600, ...s }}>{children}</td>
+        <td style={{ padding: "10px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: "0.7rem", color: T.text, fontWeight: 600, whiteSpace: 'nowrap', ...s }}>{children}</td>
     );
 
     const kpiDefs = [
@@ -478,7 +480,7 @@ const StoreInventoryDashboard = () => {
             </DashboardHeader>
 
             <Box sx={{ p: R.pagePad, boxSizing: 'border-box' }}>
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)", xl: "repeat(6, 1fr)" }, gap: "12px", mb: 3 }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)", xl: "repeat(6, 1fr)" }, gap: { xs: '10px', sm: '12px' }, mb: { xs: 2, sm: 3 } }}>
                     {kpiDefs.map((k, i) => ( <StatCard key={i} {...k} loading={loading} animDelay={i * 0.05} /> ))}
                 </Box>
 
@@ -602,28 +604,28 @@ const StoreInventoryDashboard = () => {
                     </ChartCard>
                 </Box>
 
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <Paper sx={{ borderRadius: T.radius, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
-                        <Box sx={{ p: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 4 } }}>
+                    <Paper sx={{ borderRadius: { xs: '14px', sm: T.radius }, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
+                        <Box sx={{ p: { xs: '14px 16px', sm: '20px 24px' }, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}><Box sx={{ width: 4, height: 18, bgcolor: T.red, borderRadius: 1 }} /><Typography sx={{ fontSize: "0.82rem", fontWeight: 900, color: T.text, textTransform: "uppercase", letterSpacing: "0.06em" }}>Critical Stock Alerts</Typography></Box>
                             <Button size="small" sx={{ fontSize: "0.68rem", fontWeight: 800, color: T.sky, textTransform: "none" }} onClick={() => toggleModal('alerts')}>View All Items</Button>
                         </Box>
                         <AlertTableFull />
                     </Paper>
 
-                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" }, gap: 4 }}>
-                        <Paper sx={{ borderRadius: T.radius, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
-                            <Box sx={{ p: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}><Box sx={{ width: 4, height: 18, bgcolor: T.green, borderRadius: 1 }} /><Typography sx={{ fontSize: "0.82rem", fontWeight: 900, color: T.text, textTransform: "uppercase" }}>Inventory Movement</Typography></Box>
-                                <Button size="small" sx={{ fontSize: "0.68rem", fontWeight: 800, color: T.sky, textTransform: "none" }} onClick={() => toggleModal('movement')}>View All Movement</Button>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" }, gap: { xs: 2, sm: 4 } }}>
+                        <Paper sx={{ borderRadius: { xs: '14px', sm: T.radius }, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
+                            <Box sx={{ p: { xs: '14px 16px', sm: '20px 24px' }, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}><Box sx={{ width: 4, height: 18, bgcolor: T.green, borderRadius: 1 }} /><Typography sx={{ fontSize: { xs: '0.72rem', sm: '0.82rem' }, fontWeight: 900, color: T.text, textTransform: "uppercase" }}>Inventory Movement</Typography></Box>
+                                <Button size="small" sx={{ fontSize: "0.65rem", fontWeight: 800, color: T.sky, textTransform: "none" }} onClick={() => toggleModal('movement')}>View All</Button>
                             </Box>
                             <MovementTable />
                         </Paper>
 
-                        <Paper sx={{ borderRadius: T.radius, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
-                            <Box sx={{ p: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}><Box sx={{ width: 4, height: 18, bgcolor: T.amber, borderRadius: 1 }} /><Typography sx={{ fontSize: "0.82rem", fontWeight: 900, color: T.text, textTransform: "uppercase" }}>Stagnant Assets</Typography></Box>
-                                <Button size="small" sx={{ fontSize: "0.68rem", fontWeight: 800, color: T.sky, textTransform: "none" }} onClick={() => toggleModal('stagnant')}>View All Stagnant</Button>
+                        <Paper sx={{ borderRadius: { xs: '14px', sm: T.radius }, overflow: "hidden", border: `1.5px solid ${T.border}`, boxShadow: T.shadowSm, background: "#fff" }}>
+                            <Box sx={{ p: { xs: '14px 16px', sm: '20px 24px' }, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.borderLight}` }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}><Box sx={{ width: 4, height: 18, bgcolor: T.amber, borderRadius: 1 }} /><Typography sx={{ fontSize: { xs: '0.72rem', sm: '0.82rem' }, fontWeight: 900, color: T.text, textTransform: "uppercase" }}>Stagnant Assets</Typography></Box>
+                                <Button size="small" sx={{ fontSize: "0.65rem", fontWeight: 800, color: T.sky, textTransform: "none" }} onClick={() => toggleModal('stagnant')}>View All</Button>
                             </Box>
                             <StagnantTable />
                         </Paper>

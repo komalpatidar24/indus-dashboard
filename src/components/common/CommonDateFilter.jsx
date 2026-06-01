@@ -330,7 +330,7 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
     return (
         <Box sx={{
             display: 'flex', alignItems: 'center',
-            gap: { xs: '4px', sm: '4px', md: '2px' },
+            gap: { xs: '3px', sm: '4px', md: '2px' },
             flexWrap: 'nowrap',
             flexShrink: 0,
         }}>

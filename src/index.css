@@ -16,6 +16,13 @@ body {
   scroll-behavior: smooth;
 }
 
+/* On desktop, remove the mobile bottom-nav padding */
+@media (min-width: 900px) {
+  .mobile-page-wrap {
+    padding-bottom: 0 !important;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
