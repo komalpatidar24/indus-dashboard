@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Indus Analytics</string>
+    <string name="title_activity_main">Indus Analytics</string>
+    <string name="package_name">com.indusanalytics.dashboard</string>
+    <string name="custom_url_scheme">com.indusanalytics.dashboard</string>
+</resources>

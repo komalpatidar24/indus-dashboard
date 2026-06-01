@@ -1,0 +1,19 @@
+{
+  "appId": "com.indusanalytics.dashboard",
+  "appName": "Indus Analytics",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f172a",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0f172a"
+    }
+  }
+}
