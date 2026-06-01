@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import {
     Box, Typography, Popover, Button,
-    MenuItem, Select, TextField, Divider
+    MenuItem, Select, Divider
 } from '@mui/material';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -231,6 +234,30 @@ const Pill = ({ label, active, onClick, period }) => (
         )}
     </Box>
 );
+
+/* ══════════════════════════════════════════════════
+   COMPACT CALENDAR STYLES
+══════════════════════════════════════════════════ */
+const calendarSx = {
+    // override MUI's hardcoded 320px width and 336px max-height
+    width: '100% !important',
+    maxHeight: 'none !important',
+    height: 'auto !important',
+    minWidth: 0,
+    '& .MuiPickersCalendarHeader-root': { px: 1, minHeight: 32, mt: 0, mb: 0 },
+    '& .MuiPickersCalendarHeader-label': { fontSize: '0.76rem', fontWeight: 800 },
+    '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+    '& .MuiDayCalendar-weekDayLabel': { fontSize: '0.63rem', fontWeight: 700, width: 26, height: 24, m: 0 },
+    '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around', mb: 0, mt: 0 },
+    '& .MuiPickersDay-root': { fontSize: '0.7rem', width: 26, height: 26, m: 0 },
+    '& .MuiPickersDay-root.Mui-selected': { bgcolor: '#0f172a', '&:hover': { bgcolor: '#1e293b' } },
+    // remove the reserved empty rows space — match actual weeks shown
+    '& .MuiDayCalendar-slideTransition': { minHeight: '0 !important', overflow: 'hidden' },
+    '& .MuiDayCalendar-monthContainer': { position: 'relative' },
+    '& .MuiPickersArrowSwitcher-button': { padding: '2px' },
+    '& .MuiPickersCalendarHeader-switchViewButton': { padding: '2px' },
+    mb: 0,
+};
 
 /* ══════════════════════════════════════════════════
    MAIN COMPONENT
@@ -483,10 +510,12 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
                 PaperProps={{
                     elevation: 0,
                     sx:{
-                        mt:1, borderRadius:'16px', p:2.2,
-                        minWidth: { xs: 240, sm: 300 },
-                        width: { xs: 'calc(100vw - 32px)', sm: 'auto' },
+                        mt:1, borderRadius:'16px',
+                        p: { xs: 1.2, sm: 2 },
+                        width: { xs: 268, sm: 320 },
                         maxWidth: '95vw',
+                        maxHeight: '90vh',
+                        overflowY: 'auto',
                         boxShadow:'0 16px 48px -8px rgba(15,23,42,0.18), 0 0 0 1px rgba(226,232,240,0.9)',
                         border:'1px solid rgba(226,232,240,0.6)',
                     }
@@ -530,45 +559,31 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
                     </Typography>
                 </Box>
 
-                {/* From date */}
-                <Box sx={{ mb:1.2 }}>
-                    <Typography sx={{ fontSize:'0.63rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.5 }}>
-                        From
-                    </Typography>
-                    <TextField
-                        type="date" size="small" value={customFrom}
-                        onChange={e => setCustomFrom(e.target.value)}
-                        inputProps={{ max: customTo || undefined }}
-                        fullWidth
-                        sx={{
-                            '& .MuiOutlinedInput-root':{
-                                borderRadius:'10px', fontSize:'0.75rem', bgcolor:'#f8fafc',
-                                '&:hover fieldset':{ borderColor:'#94a3b8' },
-                                '&.Mui-focused fieldset':{ borderColor:'#0f172a' }
-                            }
-                        }}
-                    />
-                </Box>
-
-                {/* To date */}
-                <Box sx={{ mb:1.8 }}>
-                    <Typography sx={{ fontSize:'0.63rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.5 }}>
-                        To
-                    </Typography>
-                    <TextField
-                        type="date" size="small" value={customTo}
-                        onChange={e => setCustomTo(e.target.value)}
-                        inputProps={{ min: customFrom || undefined }}
-                        fullWidth
-                        sx={{
-                            '& .MuiOutlinedInput-root':{
-                                borderRadius:'10px', fontSize:'0.75rem', bgcolor:'#f8fafc',
-                                '&:hover fieldset':{ borderColor:'#94a3b8' },
-                                '&.Mui-focused fieldset':{ borderColor:'#0f172a' }
-                            }
-                        }}
-                    />
-                </Box>
+                {/* From / To date pickers */}
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <Box sx={{ mb: 0 }}>
+                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.2 }}>
+                            From
+                        </Typography>
+                        <DateCalendar
+                            value={customFrom ? dayjs(customFrom) : null}
+                            onChange={d => setCustomFrom(d ? d.format('YYYY-MM-DD') : '')}
+                            maxDate={customTo ? dayjs(customTo) : undefined}
+                            sx={calendarSx}
+                        />
+                    </Box>
+                    <Box sx={{ mb: 1, borderTop: '1px solid #f1f5f9', pt: 0.5 }}>
+                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.2 }}>
+                            To
+                        </Typography>
+                        <DateCalendar
+                            value={customTo ? dayjs(customTo) : null}
+                            onChange={d => setCustomTo(d ? d.format('YYYY-MM-DD') : '')}
+                            defaultCalendarMonth={customFrom ? dayjs(customFrom) : undefined}
+                            sx={calendarSx}
+                        />
+                    </Box>
+                </LocalizationProvider>
 
                 {/* Apply button */}
                 <Button
