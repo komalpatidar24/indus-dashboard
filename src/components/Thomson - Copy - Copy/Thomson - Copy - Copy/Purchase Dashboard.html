@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Template (v16.1)</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required by DevExtreme) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DevExtreme JS & CSS (Theme and Core) -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+
+    <!-- Dashboard Filters CSS -->
+    <link rel="stylesheet" href="dashboard-filters.css">
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <div id="main-dashboard-content" class="container-fluid py-4 modal-body">
+        <header class="dashboard-header pb-2 d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h3 id="dashboardTitle" class="mb-0">CRM & Sales Dashboard <span id="activeFiltersDisplay"
+                    class="filter-display-container"></span></h3>
+
+            <div class="d-flex align-items-center ms-auto">
+                <!-- 1. Job/Value Toggle -->
+                <!--<div class="btn-group otif-toggle-group me-2" id="jobValueToggle" role="group">
+                    <input type="radio" class="btn-check" name="jobValueType" id="jobType" checked>
+                    <label class="btn" for="jobType">Job</label>
+                    <input type="radio" class="btn-check" name="jobValueType" id="valueType">
+                    <label class="btn" for="valueType">Value</label>
+                </div> -->
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 2. Moving Average Dropdown -->
+                <div class="btn-group me-2" id="ma-dropdown-container">
+                    <button type="button" class="btn otif-ma-button active" id="maButton">
+                        <span id="maButtonText">Loading...</span>
+                    </button>
+                    <button type="button" class="btn otif-ma-button dropdown-toggle dropdown-toggle-split active"
+                        data-bs-toggle="dropdown">
+                    </button>
+                    <ul class="dropdown-menu otif-ma-dropdown-menu" id="maDropdownMenu" style="position: relative;">
+                        <!-- Clear Button Removed -->
+                        <li class="px-3 py-2">
+                            <input type="text" class="form-control form-control-sm" id="maSearchInput"
+                                placeholder="Search weeks...">
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item active" href="#" data-ma-type="full" data-ma-week="52">(last)
+                                13-Week-MA</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <div id="maWeekOptions"></div>
+                    </ul>
+                </div>
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 3. Time Filter Toggles -->
+                <div class="btn-group otif-toggle-group me-2" id="timeFilterContainer">
+                    <button type="button" class="btn" data-category="Day">Day</button>
+                    <button type="button" class="btn" data-category="Week">Week</button>
+                    <button type="button" class="btn" data-category="Month">Month</button>
+                    <button type="button" class="btn" data-category="Quarter">Quarter</button>
+                    <button type="button" class="btn" data-category="Year">Year</button>
+                </div>
+
+                <!-- 4. Filter Panel Toggle -->
+                <button class="btn btn-link text-secondary me-1" type="button" id="toggle-filter-panel-btn"
+                    title="Filters">
+                    <i class="bi bi-filter fs-5"></i>
+                </button>
+            </div>
+        </header>
+        <section class="kpi-section mb-3">
+            <div id="kpi-container" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+        <section class="main-content-section">
+            <div id="content-grid" class="row g-3"></div>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="drilldownModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="drilldownModalLabel"></h5>
+                    <div id="drilldownFilterControls"></div><button type="button" class="btn-close ms-2"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="drilldownModalBody"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="expandChartModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expandChartModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="chart-canvas-container flex-grow-1"><canvas id="expandedChartCanvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="kpiGuideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kpiGuideModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="kpiGuideContent">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-card-text"></i> Definition</h6>
+                            <p id="guide-definition" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-graph-up"></i> Interpretation</h6>
+                            <p id="guide-interpretation" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calculator"></i> Calculation</h6>
+                            <p id="guide-calculation" class="small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="docFormModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docFormModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docFormBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div id="custom-tooltip" class="chart-tooltip">
+        <div class="tooltip-main-title"></div>
+        <div class="tooltip-main-content">
+            <div class="tooltip-header"><span class="tooltip-title"></span><span class="tooltip-delta"></span></div>
+            <div class="tooltip-value"></div>
+        </div>
+        <div class="tooltip-footer" style="display: none;"></div>
+        <div class="tooltip-drilldown"><button type="button" class="drilldown-btn">View Details <i
+                    class="bi bi-box-arrow-up-right"></i></button></div>
+    </div>
+    <div id="customContextMenu">
+        <ul class="context-menu-list" id="contextMenuList"></ul>
+    </div>
+    <div id="filter-popup-panel" class="d-none">
+        <div class="p-2 border-bottom position-relative text-center">
+            <h6 class="otif-filter-panel-title mb-0 m-auto">Filters</h6>
+            <button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-2"
+                id="close-filter-panel-btn"></button>
+        </div>
+        <div class="flex-grow-1" style="overflow-y: auto;">
+            <div class="p-2">
+                <div class="filter-section" id="dropdown-filters-section"></div>
+                <div class="filter-section">
+                    <div id="calendar-container">
+                        <div id="calendar-view">
+                            <div class="calendar-header">
+                                <button type="button" class="btn btn-today" id="today-btn">Today</button>
+                                <div class="d-flex align-items-center">
+                                    <button id="prev-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-left"></i></button>
+                                    <div id="month-year-selector" class="month-year-selector-btn">
+                                        <span id="month-year-display" class="month-year-text"></span>
+                                    </div>
+                                    <button id="next-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid day-names">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+                            <div id="calendar-grid" class="calendar-grid"></div>
+                        </div>
+                        <!-- Month/Year Picker Overlay (Hidden by default) -->
+                        <div id="month-year-picker-overlay" class="d-none">
+                            <div class="picker-header">
+                                <span>Select Date</span>
+                                <button type="button" class="btn btn-apply btn-sm" id="picker-done-btn">Done</button>
+                            </div>
+                            <div class="picker-body">
+                                <div class="picker-column" id="picker-month-column">
+                                    <div class="picker-column-header">Month</div>
+                                    <!-- Months will be rendered by JS -->
+                                </div>
+                                <div class="picker-column" id="picker-year-column">
+                                    <div class="picker-column-header">Year</div>
+                                    <!-- Years will be rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="date-range-display" class="date-range-box">
+                        <div class="date-range-item"><label>From</label><span id="selected-from-date">--</span></div>
+                        <div class="date-range-item"><label>To</label><span id="selected-to-date">--</span></div>
+                    </div>
+                    <div class="p-2 d-flex gap-2">
+                        <button type="button" class="btn btn-reset w-100" id="reset-filters-btn-new">Reset</button>
+                        <button type="button" class="btn btn-apply w-100" id="apply-filters-btn-new">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="dashboard-filters.js"></script>
+    <script>
+        const dashboardApp = (function () {
+
+            // ========================================================================================================
+            // SECTION 1: CONFIGURATION (THE ONLY PART TO EDIT FOR A NEW DASHBOARD)
+            // This section simulates `config.js`.
+            // ========================================================================================================
+            const CONFIGURATION = (() => {
+                /**
+                 * HOW TO USE THIS TEMPLATE:
+                 * 1.  Update `dashboardTitle` with the title for your dashboard.
+                 * 2.  Define your Key Performance Indicators (KPIs) in the `kpiConfig` array.
+                 * 3.  Define your chart layout and configurations in the `layoutConfig` array.
+                 * 4.  Update the `DATA_PROVIDER` section to connect to your live backend API.
+                 * 5.  Ensure your data provider returns data objects with keys that match the `dataKey` properties defined here.
+                 */
+                const dashboardTitle = 'Purchase Dashboard';
+
+                const kpiConfig = [
+                    {
+                        id: 'kpi-cycle-time', dataKey: 'cycle_time', label: 'Procure-to-Pay Cycle Time', valueSuffix: ' Days', cssVar: '--glow-blue', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { dataKey: 'indent_count', label: 'Indents Processed', icon: 'bi-file-earmark-text' },
+                            { dataKey: 'invoice_count', label: 'Invoices Paid', icon: 'bi-receipt' }
+                        ],
+                        guide: { title: 'Procure-to-Pay Cycle Time', definition: 'The average time from creating a purchase requisition (indent) to issuing payment to the vendor.', interpretation: 'Measures the efficiency of the entire procurement process. A lower value is better.', calculation: 'Average of (Payment Date - Indent Date) for all completed cycles.' },
+                        drilldownConfig: {
+                            dataKey: 'purchase_orders',
+                            columns: [
+                                { key: 'id', label: 'PO Number' },
+                                { key: 'date', label: 'Date', format: 'date' },
+                                { key: 'vendor', label: 'Vendor' },
+                                { key: 'value', label: 'Value', format: 'currency' },
+                                { key: 'status', label: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-bom-value', dataKey: 'bom_value', label: 'BOM (RM) Value', isCurrency: true, format: 'currency_compact', cssVar: '--glow-orange', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { dataKey: 'projection_based', label: 'Projection Based', icon: 'bi-graph-up-arrow', format: 'currency_compact' },
+                            { dataKey: 'dic_based', label: 'DIC Based', icon: 'bi-calculator', format: 'currency_compact' },
+                            { dataKey: 'job_specific', label: 'Job Specific', icon: 'bi-briefcase', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'BOM Value', definition: 'The financial value of materials that must be purchased to fulfill new demand.', interpretation: 'Highlights the immediate purchasing budget required.', calculation: 'Sum of Projection + DIC Based + Job Specific requirements.' },
+                        drilldownConfig: {
+                            dataKey: 'stock_data',
+                            columns: [
+                                { key: 'item', label: 'Item SKU' },
+                                { key: 'category', label: 'Category' },
+                                { key: 'value', label: 'Stock Value', format: 'currency' },
+                                { key: 'age_days', label: 'Age (Days)' },
+                                { key: 'is_nmi', label: 'Is NMI?' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-rejection', dataKey: 'rejection_rate', label: 'Average Rejection Rate', valueSuffix: '%', cssVar: '--glow-purple', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { dataKey: 'qty_rejected', label: 'Qty Rejected', icon: 'bi-x-circle' },
+                            { dataKey: 'qty_received', label: 'Qty Received', icon: 'bi-truck' }
+                        ],
+                        guide: { title: 'Average Rejection Rate %', definition: 'The percentage of total quantity received from suppliers that was rejected due to quality issues.', interpretation: 'Measures supplier quality and the cost of poor quality.', calculation: '(Total Quantity Rejected / Total Quantity Received) * 100.' },
+                        drilldownConfig: {
+                            dataKey: 'purchase_orders', // Assumes rejection data would be linked to POs
+                            columns: [
+                                { key: 'id', label: 'PO Number' },
+                                { key: 'vendor', label: 'Vendor' },
+                                { key: 'category', label: 'Category' },
+                                { key: 'status', label: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-budget', dataKey: 'capex_utilization', label: 'Capex Budget Utilization %', valueSuffix: '%', cssVar: '--glow-lightblue',
+                        secondaryMetrics: [
+                            { dataKey: 'budgeted_value', label: 'Budget', icon: 'bi-archive', format: 'currency_compact' },
+                            { dataKey: 'utilized_value', label: 'Utilized', icon: 'bi-cash-coin', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Capex Budget Utilization %', definition: 'The percentage of the approved capital expenditure budget that has been spent.', interpretation: 'Tracks spending against plan. Unbudgeted spend highlights out-of-scope procurement.', calculation: '(Actual Capex Spend / Approved Capex Budget) * 100.' },
+                        drilldownConfig: {
+                            dataKey: 'purchase_orders',
+                            columns: [
+                                { key: 'id', label: 'PO Number' },
+                                { key: 'date', label: 'Date', format: 'date' },
+                                { key: 'vendor', label: 'Vendor' },
+                                { key: 'category', label: 'Category' },
+                                { key: 'value', label: 'PO Value', format: 'currency' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-unbudgeted', dataKey: 'unbudgeted_value', label: 'Unbudgeted Capex Value', isCurrency: true, format: 'currency_compact', cssVar: '--glow-green', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { dataKey: 'unbudgeted_po_count', label: 'Unbudgeted POs', icon: 'bi-cash-question-circle' }
+                        ],
+                        guide: { title: 'Unbudgeted Purchase Value', definition: 'The total value of all purchase orders created without a pre-approved budget line item.', interpretation: 'Measures unplanned spending and potential budget overruns. A lower value indicates better financial planning and control.', calculation: 'Sum of (PO Value) for all POs where Budgeted = False.' },
+                        drilldownConfig: {
+                            dataKey: 'purchase_orders', // In a real scenario, this would be filtered
+                            columns: [
+                                { key: 'id', label: 'PO Number' },
+                                { key: 'date', label: 'Date', format: 'date' },
+                                { key: 'vendor', label: 'Vendor' },
+                                { key: 'value', label: 'Value', format: 'currency' }
+                            ]
+                        }
+                    }
+
+                ];
+
+                const layoutConfig = [
+                    // --- ROW 1: 3 CHARTS (col-lg-4 each) ---
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'procurement-funnel', chartType: 'bar', title: 'Procurement Funnel',
+                            dataKey: 'procurement_funnel',
+                            dropdownConfig: {
+                                id: 'funnelCategory',
+                                options: ['All', 'Paper', 'Binding Material', 'Production Consumables', 'Maintenance Services', 'Capex']
+                            },
+                            drilldownConfig: {
+                                dataKey: 'funnel_details',
+                                filterMapping: 'stage',
+                                columns: [
+                                    { key: 'doc_id', label: 'Document ID' },
+                                    { key: 'date', label: 'Date', format: 'date' },
+                                    { key: 'category', label: 'Item Category' },
+                                    { key: 'requestor', label: 'Requestor Name' },
+                                    { key: 'vendor', label: 'Vendor Name' },
+                                    { key: 'value', label: 'Value (INR)', format: 'currency' },
+                                    { key: 'aging', label: 'Aging (Days)' },
+                                    { key: 'expected_date', label: 'Expected Delivery', format: 'date' }
+                                ]
+                            },
+                            transformer: (data, periodIndex, config, state) => {
+                                const selectedCat = state ? state['funnelCategory'] : 'All';
+                                // Filter data if a category is selected (Mock logic: in real app, data might be pre-filtered or we filter here)
+                                // Since 'procurement_funnel' mock data is just stage-aggregated, we'd need detailed data to filter accurately.
+                                // For this template, we'll simulate the filter effect by adjusting values.
+
+                                let displayData = data;
+                                if (selectedCat && selectedCat !== 'All') {
+                                    // Simulation: Reduce values for specific categories
+                                    const ratio = 0.3 + (selectedCat.length % 5) / 10;
+                                    displayData = data.map(d => ({
+                                        ...d,
+                                        value: Math.round(d.value * ratio),
+                                        count: Math.round(d.count * ratio)
+                                    }));
+                                }
+
+                                return {
+                                    labels: displayData.map(d => d.stage),
+                                    datasets: [
+                                        {
+                                            label: 'Value (INR)',
+                                            data: displayData.map(d => d.value),
+                                            backgroundColor: '#025043',
+                                            order: 2,
+                                            yAxisID: 'y'
+                                        },
+                                        {
+                                            type: 'line',
+                                            label: 'No. of POs',
+                                            data: displayData.map(d => d.count),
+                                            borderColor: '#FF9800',
+                                            backgroundColor: '#FF9800',
+                                            borderWidth: 2,
+                                            pointRadius: 4,
+                                            order: 1,
+                                            yAxisID: 'y1'
+                                        }
+                                    ]
+                                };
+                            },
+                            options: {
+                                indexAxis: 'x', // Vertical bars
+                                onClick: (e, elements, chart) => {
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        initiateDrilldown(chart.canvas.id, { dataIndex: index });
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'left',
+                                        title: { display: true, text: 'Value (INR)' },
+                                        grid: { display: false },
+                                        ticks: {
+                                            callback: function (value) {
+                                                if (Math.abs(value) >= 10000000) return (value / 10000000).toFixed(2) + ' Cr';
+                                                if (Math.abs(value) >= 100000) return (value / 100000).toFixed(2) + ' L';
+                                                return new Intl.NumberFormat('en-IN').format(value);
+                                            }
+                                        }
+                                    },
+                                    y1: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'right',
+                                        title: { display: true, text: 'No. of POs' },
+                                        grid: { drawOnChartArea: false }, // only want the grid lines for one axis to show up
+                                    },
+                                    x: {
+                                        title: { display: true, text: 'Procurement Stage' }
+                                    }
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function (context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) {
+                                                    label += ': ';
+                                                }
+                                                if (context.dataset.yAxisID === 'y') {
+                                                    return label + new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(context.raw);
+                                                }
+                                                return label + context.raw;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: { // <-- MODIFIED
+                            id: 'cycle-time-trend-chart', chartType: 'line', title: 'Procurement Cycle Time Trend (Days)',
+                            dataKey: 'cycle_time_trend',
+                            drilldownConfig: {
+                                dataKey: 'cycle_time_details', // New data key for detailed transactional data
+                                filterMapping: 'date_month_short', // Filters the list based on the month clicked
+                                columns: [
+                                    { key: 'doc_id', label: 'PO Number' },
+                                    { key: 'category', label: 'Category' },
+                                    { key: 'vendor', label: 'Vendor Name' },
+                                    { key: 'date', label: 'PO Date', format: 'date' },
+                                    { key: 'delivery_date', label: 'Delivery Date', format: 'date' },
+                                    { key: 'actual_lead', label: 'Actual Lead Time', valueSuffix: ' Days' },
+                                    { key: 'target_lead', label: 'Target Lead Time', valueSuffix: ' Days' },
+                                    { key: 'deviation', label: 'Deviation (+/- Days)', valueSuffix: ' Days' },
+                                    { key: 'status', label: 'Overdue Status' }
+                                ]
+                            },
+                            dropdownConfig: {
+                                id: 'cycleTimeCategory',
+                                options: ['All', 'Paper', 'Binding Material', 'Production Consumable', 'Maintenance Services', 'CapEx']
+                            },
+                            transformer: (data, periodIndex, config, state) => {
+                                const selectedCat = state ? state['cycleTimeCategory'] : null;
+                                let displayData = data;
+                                // Mock filtering effect: randomize data slightly based on category to show interaction
+                                if (selectedCat && selectedCat !== 'All') {
+                                    // Deterministic pseudo-random based on category length to keep it consistent per category
+                                    const seed = selectedCat.length;
+                                    displayData = data.map(d => ({
+                                        ...d,
+                                        avg_days: d.avg_days + (Math.sin(d.avg_days * seed) * 2)
+                                    }));
+                                }
+
+                                return {
+                                    labels: displayData.map(d => d.month),
+                                    datasets: [{
+                                        label: 'Avg Cycle Time',
+                                        data: displayData.map(d => d.avg_days),
+                                        borderColor: '#003366',
+                                        backgroundColor: 'rgba(0, 51, 102, 0.2)',
+                                        fill: true,
+                                        tension: 0.3
+                                    }]
+                                };
+                            },
+                            options: {
+                                scales: {
+                                    y: { beginAtZero: false, title: { display: true, text: 'Avg. Cycle Time (Days)' } },
+                                    x: { title: { display: true, text: 'Month' } }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: { // <-- MODIFIED
+                            id: 'spend-category-chart', chartType: 'pie', title: 'Spend by Category',
+                            dataKey: 'purchase_orders',
+                            drilldownConfig: {
+                                dataKey: 'spend_details', // New data key for detailed transactional spend
+                                filterMapping: 'category', // Filters by the category label on the pie slice
+                                columns: [
+                                    { key: 'vendor', label: 'Vendor Name' },
+                                    { key: 'description', label: 'Item Description' },
+                                    { key: 'value', label: 'Total Spend (INR)', format: 'currency' },
+                                    { key: 'po_count', label: 'No. of POs' },
+                                    { key: 'avg_price', label: 'Avg. Unit Price', format: 'currency' },
+                                    { key: 'contribution', label: '% Contribution', valueSuffix: '%' },
+                                    { key: 'contract_status', label: 'Contract Status' }
+                                ]
+                            },
+                            transformer: (data) => {
+                                const categorySpend = data.reduce((acc, d) => { acc[d.category] = (acc[d.category] || 0) + d.value; return acc; }, {});
+                                return { labels: Object.keys(categorySpend), datasets: [{ data: Object.values(categorySpend), backgroundColor: ['#012a4a', '#013a63', '#01497c', '#2a6f97', '#468faf', '#89c2d9'] }] };
+                            },
+                            options: { plugins: { legend: { position: 'right' } } }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'rejection-reason-chart',
+                            chartType: 'bar',
+                            title: 'Procurement Quality Issues',
+                            dataKey: 'rejection_data',
+                            drilldownConfig: {
+                                dataKey: 'rejection_details', // New key for detailed rejection data
+                                filterMapping: 'reason',      // Filters the list by the reason (e.g., "Excess Qty Tolerance")
+                                columns: [
+                                    { key: 'po_no', label: 'PO Number' },
+                                    { key: 'vendor', label: 'Vendor Name' },
+                                    { key: 'item', label: 'Item Name' },
+                                    { key: 'reason', label: 'Specific Rejection Reason' },
+                                    { key: 'qty', label: 'Quantity Rejected' },
+                                    { key: 'impact', label: 'Financial Impact', format: 'currency' },
+                                    { key: 'action', label: 'Corrective Action' },
+                                    { key: 'response_date', label: 'Vendor Response Date', format: 'date' }
+                                ]
+                            },
+                            transformer: 'transformForSimpleBar',
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { beginAtZero: true, title: { display: true, text: 'Number of Rejections' } },
+                                    y: {
+                                        grid: { display: false }
+                                        /* The entire 'ticks' object containing the truncating callback is removed */
+                                    }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { callbacks: { label: function (context) { return `Count: ${context.raw}`; } } }
+                                }
+                            }
+                        }
+                    },
+                    // --- ROW 2: 2 CHARTS (col-lg-6 each) ---
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'stock-aging-chart',
+                            chartType: 'bar',
+                            title: 'Stock Aging & Inventory Movement',
+                            dataKey: 'stock_data',
+                            // --- ADDED DRILLDOWN CONFIG ---
+                            drilldownConfig: {
+                                dataKey: 'stock_details', // New data key for SKU-level inventory details
+                                filterMapping: 'category', // Filters the list by the material category clicked
+                                columns: [
+                                    { key: 'item_code', label: 'Item Code' },
+                                    { key: 'description', label: 'Item Description' },
+                                    { key: 'location', label: 'Warehouse Location' },
+                                    { key: 'category', label: 'Category' },
+                                    { key: 'status', label: 'Movement Status' },
+                                    { key: 'age_days', label: 'Aging (Days)', valueSuffix: ' Days' },
+                                    { key: 'qty', label: 'Current Qty' },
+                                    { key: 'value', label: 'Total Value', format: 'currency' },
+                                    { key: 'last_issued', label: 'Last Issued Date', format: 'date' }
+                                ]
+                            },
+                            transformer: (data) => {
+                                const labels = ['Paper', 'Binding Material', 'Production Consumables', 'Maintenance Spares'];
+                                const deadStockData = data.filter(d => d.age_days > 180);
+                                const nonMovingData = data.filter(d => d.is_nmi && d.age_days <= 180);
+                                const slowMovingData = data.filter(d => d.age_days > 90 && d.age_days <= 180 && !d.is_nmi);
+                                const movingStockData = data.filter(d => d.age_days <= 90 && !d.is_nmi);
+
+                                const createDataset = (datasetData) => {
+                                    return labels.map(cat =>
+                                        datasetData.filter(d => d.category === cat).reduce((sum, item) => sum + item.value, 0)
+                                    );
+                                };
+
+                                return {
+                                    labels,
+                                    datasets: [
+                                        { label: 'Dead Stock', data: createDataset(deadStockData), backgroundColor: '#005b96', stack: 'stack1' },
+                                        { label: 'Non-Moving', data: createDataset(nonMovingData), backgroundColor: '#6497b1', stack: 'stack1' },
+                                        { label: 'Slow Moving', data: createDataset(slowMovingData), backgroundColor: '#b3cde0', stack: 'stack1' },
+                                        { label: 'Moving Stock', data: createDataset(movingStockData), backgroundColor: '#e5eaef', stack: 'stack1' }
+                                    ]
+                                };
+                            },
+                            options: {
+                                // Enables the click action to trigger drilldown
+                                onClick: (e, elements, chart) => {
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        initiateDrilldown(chart.canvas.id, { dataIndex: index });
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        stacked: true,
+                                        grid: { display: false },
+                                        title: { display: true, text: 'Material Category' },
+                                        ticks: {
+                                            autoSkip: false
+                                        }
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        title: { display: true, text: 'Stock Value (INR)' },
+                                        ticks: {
+                                            callback: function (value) {
+                                                if (value >= 100000) return (value / 100000).toFixed(2) + ' L';
+                                                return value;
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                return `${context.dataset.label}: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.raw)}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart',
+                        width: 'col-lg-4',
+                        config: {
+                            id: 'supplier-rating-chart',
+                            chartType: 'bar', // Remains 'bar', but indexAxis makes it horizontal
+                            title: 'Supplier Rating', // Title updated for clarity
+                            dataKey: 'supplier_ratings',
+                            drilldownConfig: {
+                                dataKey: 'supplier_details', // New data key for detailed supplier scorecards
+                                filterMapping: 'rating_text', // Matches the chart labels (e.g., "5 Stars")
+                                columns: [
+                                    { key: 'name', label: 'Supplier Name' },
+                                    { key: 'category', label: 'Category' },
+                                    { key: 'score', label: 'Overall Score' },
+                                    { key: 'quality', label: 'Quality (1-5)' },
+                                    { key: 'delivery', label: 'Delivery (1-5)' },
+                                    { key: 'price', label: 'Price (1-5)' },
+                                    { key: 'orders', label: 'Orders Placed' },
+                                    { key: 'value', label: 'Total Value Supplied', format: 'currency' },
+                                    { key: 'compliance', label: 'Compliance %', valueSuffix: '%' }
+                                ]
+                            },
+                            transformer: (data) => {
+                                const ratings = ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'];
+                                const categories = ['Paper', 'Binding Material', 'Production Consumables', 'Maintenance Spares', 'Capex'];
+
+                                // Define a consistent color palette for categories
+                                const categoryColors = ['#03396c', '#005b96', '#6497b1', '#b3cde0', '#54ACBF', '#037c6e', '#025043'];
+
+                                const datasets = categories.map((category, index) => {
+                                    return {
+                                        label: category,
+                                        data: ratings.map((_, ratingIndex) => {
+                                            // ratingIndex is 0-4, so actual rating is ratingIndex + 1
+                                            const ratingValue = ratingIndex + 1;
+                                            return data.filter(supplier => supplier.category === category && supplier.rating === ratingValue).length;
+                                        }),
+                                        backgroundColor: categoryColors[index % categoryColors.length]
+                                    };
+                                });
+
+                                return {
+                                    labels: ratings,
+                                    datasets: datasets
+                                };
+                            },
+                            options: {
+                                indexAxis: 'y', // This makes the bar chart horizontal
+                                scales: {
+                                    x: {
+                                        stacked: true, // Stack bars on the x-axis
+                                        title: {
+                                            display: true,
+                                            text: 'Number of Suppliers'
+                                        }
+                                    },
+                                    y: {
+                                        stacked: true, // Required for stacking
+                                        grid: {
+                                            display: false // Cleaner look for horizontal bars
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                // context.dataset.label is the category name
+                                                return `${context.dataset.label}: ${context.raw} Suppliers`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ];
+
+                const contextMenuConfig = {
+                    actions: [
+                        { id: 'drilldown', label: 'View Details', icon: 'bi-table' },
+                        { id: 'expand', label: 'Expand View', icon: 'bi-arrows-fullscreen' },
+                        { id: 'guide', label: 'Definition / Guide', icon: 'bi-question-circle' },
+                        { type: 'separator' },
+                        { id: 'share', label: 'Share via Email', icon: 'bi-envelope' },
+                        {
+                            id: 'export', label: 'Export', icon: 'bi-download', submenu: [
+                                { id: 'export-png', label: 'Export as PNG', icon: 'bi-file-earmark-image' },
+                                { id: 'export-pdf', label: 'Export as PDF', icon: 'bi-filetype-pdf' }
+                            ]
+                        },
+                        { id: 'refresh', label: 'Refresh Data', icon: 'bi-arrow-clockwise' },
+                        { type: 'separator' },
+                        { id: 'ai-insight', label: 'AI Insight', icon: 'bi-magic' }
+                    ]
+                };
+                return {
+                    title: 'Purchase Dashboard',
+                    kpis: kpiConfig,
+                    layout: layoutConfig,
+
+                    contextMenu: contextMenuConfig
+                };
+            })();
+
+            // ========================================================================================================
+            // SECTION 2: DATA PROVIDER MODULE
+            // This section simulates `dataProvider.js`. Swap the provider class to connect to a live backend.
+            // ========================================================================================================
+            const DATA_PROVIDER = (() => {
+
+                const SharedTransformers = {
+                    aggregateByStatus: (data, periodIndex) => { const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const statusCounts = filteredData.reduce((acc, d) => { acc[d.status] = (acc[d.status] || 0) + 1; return acc; }, {}); return { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#03A9F4', '#003366', '#4CAF50', '#9E9E9E'] }] }; },
+                    transformForPareto: (data) => {
+                        const sortedData = [...data].sort((a, b) => b.count - a.count);
+                        const labels = sortedData.map(d => d.reason);
+                        const counts = sortedData.map(d => d.count);
+                        const total = counts.reduce((sum, val) => sum + val, 0);
+                        let cumulative = 0;
+                        const cumulativePercentage = counts.map(count => {
+                            cumulative += count;
+                            return total > 0 ? (cumulative / total) * 100 : 0;
+                        });
+                        return {
+                            labels,
+                            datasets: [
+                                { type: 'bar', label: 'Count', data: counts, backgroundColor: '#003366', yAxisID: 'y' },
+                                { type: 'line', label: 'Cumulative %', data: cumulativePercentage, borderColor: '#EF4444', tension: 0.1, yAxisID: 'y1' }
+                            ]
+                        };
+                    },
+                    transformForSimpleBar: (data) => {
+                        // Sort data to show the highest count on top for better visual hierarchy
+                        const sortedData = [...data].sort((a, b) => a.count - b.count);
+                        return {
+                            labels: sortedData.map(d => d.reason),
+                            datasets: [{
+                                label: 'Rejection Count',
+                                data: sortedData.map(d => d.count),
+                                backgroundColor: '#4b6a9b',
+                                borderColor: '#325a88',
+                                borderWidth: 1
+                            }]
+                        };
+                    },
+                    transformForRadar: (data) => {
+                        const labels = ['Efficiency (Cycle Time)', 'Quality Score', 'Business Value'];
+                        const colors = ['rgba(255, 99, 132, 0.4)', 'rgba(54, 162, 235, 0.4)', 'rgba(255, 206, 86, 0.4)', 'rgba(75, 192, 192, 0.4)', 'rgba(153, 102, 255, 0.4)', 'rgba(255, 159, 64, 0.4)'];
+
+                        const metrics = {
+                            cycleTime: data.map(v => v.avgCycleTime),
+                            quality: data.map(v => v.avgQualityScore),
+                            value: data.map(v => v.totalValue)
+                        };
+
+                        const minMax = {
+                            cycleTime: { min: Math.min(...metrics.cycleTime), max: Math.max(...metrics.cycleTime) },
+                            quality: { min: Math.min(...metrics.quality), max: Math.max(...metrics.quality) },
+                            value: { min: Math.min(...metrics.value), max: Math.max(...metrics.value) }
+                        };
+
+                        const normalize = (val, min, max, invert = false) => {
+                            if (max - min === 0) return 50; // Avoid division by zero
+                            const normalized = ((val - min) / (max - min)) * 100;
+                            return invert ? 100 - normalized : normalized;
+                        };
+
+                        const datasets = data.map((vendor, index) => ({
+                            label: vendor.name,
+                            data: [
+                                normalize(vendor.avgCycleTime, minMax.cycleTime.min, minMax.cycleTime.max, true), // Lower is better
+                                normalize(vendor.avgQualityScore, minMax.quality.min, minMax.quality.max),
+                                normalize(vendor.totalValue, minMax.value.min, minMax.value.max)
+                            ],
+                            borderColor: colors[index % colors.length].replace('0.4', '1'),
+                            backgroundColor: colors[index % colors.length],
+                            pointBackgroundColor: colors[index % colors.length].replace('0.4', '1'),
+                        }));
+
+                        return { labels, datasets };
+                    },
+                    transformForTopN: (data, periodIndex, config) => {
+                        // Read parameters from the chart's configuration
+                        const { n = 5, categoryKey, valueKey, datasetLabel = 'Value', chartType = 'bar' } = config.transformerConfig;
+
+                        if (!categoryKey || !valueKey) {
+                            throw new Error(`'transformerConfig' for TopN must include 'categoryKey' and 'valueKey'.`);
+                        }
+
+                        const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data;
+
+                        const totals = filteredData.reduce((acc, d) => {
+                            const category = d[categoryKey];
+                            const value = d[valueKey];
+                            if (category !== undefined && typeof value === 'number') {
+                                acc[category] = (acc[category] || 0) + value;
+                            }
+                            return acc;
+                        }, {});
+
+                        const topN = Object.entries(totals)
+                            .sort(([, a], [, b]) => b - a)
+                            .slice(0, n);
+
+                        const labels = topN.map(([key]) => key);
+                        const values = topN.map(([, val]) => val);
+
+                        // Dynamically set colors based on chart type for better visuals
+                        const backgroundColor = chartType === 'line' ? 'rgba(16, 185, 129, 0.2)' : '#003366';
+                        const borderColor = chartType === 'line' ? '#10B981' : undefined;
+
+                        return {
+                            labels,
+                            datasets: [{
+                                label: datasetLabel,
+                                data: values,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                                fill: chartType === 'line',
+                                tension: 0.3
+                            }]
+                        };
+                    },
+                };
+
+                class MockDataProvider {
+                    constructor(cacheTTL = 300000) {
+                        this.cache = new Map();
+                        this.cacheTTL = cacheTTL;
+                    }
+
+                    async fetchKpiData() {
+                        await new Promise(r => setTimeout(r, 250));
+                        // Helper to generate volatile data for demonstration
+                        const generateVolatileTrend = (current, previous, points = 7) => {
+                            const trend = [previous];
+                            for (let i = 1; i < points - 1; i++) {
+                                const volatility = (Math.random() - 0.45) * (previous / 15); // Adjust volatility factor as needed
+                                const nextVal = Math.max(0, trend[i - 1] + volatility);
+                                trend.push(nextVal);
+                            }
+                            trend.push(current); // Ensure the trend ends on the current value
+                            return trend;
+                        };
+
+                        return {
+                            // Filter logic for Capex/Unbudgeted: In a real Scenario, exclude 'Cancelled' or 'Rejected' status POs.
+                            // The mock values below assume this filtering has been applied.
+                            cycle_time: { current: 15.2, previous: 16.8, indent_count: 250, invoice_count: 210, trend: generateVolatileTrend(15.2, 18, 10) },
+                            bom_value: { current: 225000, previous: 310000, projection_based: 120000, dic_based: 80000, job_specific: 25000, trend: generateVolatileTrend(225000, 310000, 10) },
+                            capex_utilization: { current: 85, previous: 75, budgeted_value: 500000, utilized_value: 425000, trend: generateVolatileTrend(85, 75, 10) },
+                            rejection_rate: { current: 2.1, previous: 2.5, qty_rejected: 1050, qty_received: 50000, trend: generateVolatileTrend(2.1, 2.8, 10) },
+                            unbudgeted_value: { current: 65800, previous: 82000, unbudgeted_po_count: 12, trend: generateVolatileTrend(65800, 95000, 10) }
+                        };
+                    }
+                    async fetchRawData(dataKey) {
+                        // ... (caching logic remains the same) ...
+                        await new Promise(r => setTimeout(r, 400));
+                        const mockData = {
+                            procurement_funnel: [
+                                { stage: 'PR (Requisition)', count: 250, value: 1250000 },
+                                { stage: 'PO (Order)', count: 225, value: 1180000 },
+                                { stage: 'GRN (Received)', count: 215, value: 1150000 },
+                                { stage: 'Invoice', count: 210, value: 1145000 }
+                            ],
+                            purchase_orders: Array.from({ length: 225 }, (_, i) => ({
+                                id: `PO-${2024001 + i}`, date: new Date(2024, Math.floor(i / 40), (i % 28) + 1),
+                                vendor: ['Global Inks Co.', 'Mumbai Supply', 'Southern Adhesives', 'Component Solutions'][i % 4],
+                                category: ['Paper', 'Paper', 'Paper', 'Paper', 'Binding Material', 'Binding Material', 'Binding Material', 'Production Consumables', 'Maintenance', 'Services', 'Capex'][i % 11],
+                                value: Math.floor(Math.random() * 50000) + 2000,
+                                status: ['Completed', 'Pending Delivery', 'Approved', 'Invoiced'][i % 4]
+                            })),
+                            cycle_time_trend: [
+                                { month: 'Jan', avg_days: 18.1 }, { month: 'Feb', avg_days: 17.5 },
+                                { month: 'Mar', avg_days: 16.8 }, { month: 'Apr', avg_days: 17.2 },
+                                { month: 'May', avg_days: 15.9 }, { month: 'Jun', avg_days: 15.2 }
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> const mockData = { ... }
+                            cycle_time_details: [
+                                // Data for May (Month Index 4)
+                                { id: 'PO-501', doc_id: 'PO-2024-501', stage: 'PO (Order)', date: new Date(2024, 4, 10), delivery_date: new Date(2024, 4, 25), category: 'Paper', vendor: 'Global Inks Co.', actual_lead: 15, target_lead: 12, deviation: 3, status: 'Delayed' },
+                                { id: 'PO-502', doc_id: 'PO-2024-502', stage: 'PO (Order)', date: new Date(2024, 4, 15), delivery_date: new Date(2024, 4, 25), category: 'Binding Material', vendor: 'Mumbai Supply', actual_lead: 10, target_lead: 12, deviation: -2, status: 'On-Time' },
+
+                                // Data for June (Month Index 5)
+                                { id: 'PO-601', doc_id: 'PO-2024-601', stage: 'PO (Order)', date: new Date(2024, 5, 2), delivery_date: new Date(2024, 5, 15), category: 'Maintenance', vendor: 'Component Solutions', actual_lead: 13, target_lead: 10, deviation: 3, status: 'Overdue' },
+                                { id: 'PO-602', doc_id: 'PO-2024-602', stage: 'PO (Order)', date: new Date(2024, 5, 5), delivery_date: new Date(2024, 5, 12), category: 'Capex', vendor: 'Southern Adhesives', actual_lead: 7, target_lead: 10, deviation: -3, status: 'On-Time' }
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> const mockData = { ... }
+                            spend_details: [
+                                // Paper Category
+                                { id: 1, category: 'Paper', vendor: 'Global Inks Co.', description: 'A4 Copier Paper - 80GSM', value: 450000, po_count: 12, avg_price: 350, contribution: 45, contract_status: 'Active' },
+                                { id: 2, category: 'Paper', vendor: 'Mumbai Supply', description: 'Glossy Art Paper', value: 200000, po_count: 5, avg_price: 1200, contribution: 20, contract_status: 'Spot' },
+
+                                // Binding Material Category
+                                { id: 3, category: 'Binding Material', vendor: 'Southern Adhesives', description: 'Hot Melt Glue Sticks', value: 150000, po_count: 8, avg_price: 45, contribution: 30, contract_status: 'Active' },
+
+                                // Capex Category
+                                { id: 4, category: 'Capex', vendor: 'Component Solutions', description: 'Industrial Printer Upgrade', value: 1200000, po_count: 1, avg_price: 1200000, contribution: 100, contract_status: 'Spot' },
+
+                                // Maintenance Category
+                                { id: 5, category: 'Maintenance', vendor: 'Local Services Ltd', description: 'Annual AC Maintenance', value: 85000, po_count: 4, avg_price: 21250, contribution: 15, contract_status: 'Active' }
+                            ],
+                            rejection_data: [
+                                { reason: 'Excess Qty Tolerance', count: 85 },
+                                { reason: 'Incomplete Documentation', count: 42 },
+                                { reason: 'Incorrect Product / Spec', count: 25 },
+                                { reason: 'Others', count: 15 }
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> const mockData = { ... }
+                            rejection_details: [
+                                { id: 1, po_no: 'PO-2024-101', vendor: 'Global Inks Co.', item: 'Cyan Ink 5L', reason: 'Excess Qty Tolerance', qty: 10, impact: 5000, action: 'Return to Vendor', response_date: new Date(2024, 5, 10) },
+                                { id: 2, po_no: 'PO-2024-205', vendor: 'Mumbai Supply', item: 'A4 Paper (80GSM)', reason: 'Incomplete Documentation', qty: 0, impact: 0, action: 'Hold for Paperwork', response_date: new Date(2024, 5, 12) },
+                                { id: 3, po_no: 'PO-2024-309', vendor: 'Southern Adhesives', item: 'Glue Sticks XL', reason: 'Incorrect Product / Spec', qty: 50, impact: 12500, action: 'Rework Required', response_date: new Date(2024, 5, 15) },
+                                { id: 4, po_no: 'PO-2024-412', vendor: 'Component Solutions', item: 'Printer Roller', reason: 'Excess Qty Tolerance', qty: 2, impact: 45000, action: 'Partial Acceptance', response_date: new Date(2024, 5, 18) },
+                                { id: 5, po_no: 'PO-2024-515', vendor: 'Local Services Ltd', reason: 'Others', item: 'General Maintenance Kit', qty: 1, impact: 2000, action: 'Return', response_date: new Date(2024, 5, 20) }
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> const mockData = { ... }
+                            stock_details: [
+                                { id: 1, item_code: 'RM-PAP-001', description: 'Coated Paper 120GSM', location: 'WH-A1', category: 'Paper', status: 'Dead Stock', age_days: 210, qty: 500, value: 150000, last_issued: new Date(2023, 10, 5) },
+                                { id: 2, item_code: 'RM-PAP-005', description: 'Kraft Paper Roll', location: 'WH-B2', category: 'Paper', status: 'Moving Stock', age_days: 15, qty: 2000, value: 85000, last_issued: new Date(2025, 11, 20) },
+                                { id: 3, item_code: 'RM-BIN-012', description: 'Spiral Wires 10mm', location: 'WH-A2', category: 'Binding Material', status: 'Slow Moving', age_days: 110, qty: 1500, value: 45000, last_issued: new Date(2024, 7, 15) },
+                                { id: 4, item_code: 'RM-MTN-998', description: 'Hydraulic Oil Grade 46', location: 'WH-MTN', category: 'Maintenance Spares', status: 'Non-Moving', age_days: 150, qty: 10, value: 25000, last_issued: new Date(2024, 6, 1) },
+                                { id: 5, item_code: 'RM-CON-442', description: 'Safety Gloves (L)', location: 'WH-C1', category: 'Production Consumables', status: 'Moving Stock', age_days: 5, qty: 100, value: 12000, last_issued: new Date(2026, 0, 5) }
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> const mockData = { ... }
+                            supplier_details: [
+                                // 5 Star Suppliers
+                                { id: 1, name: 'Global Inks Co.', category: 'Production Consumables', rating_text: '5 Stars', score: 98, quality: 5, delivery: 5, price: 4.8, orders: 45, value: 1250000, compliance: 100 },
+                                { id: 2, name: 'Premium Paper Ltd.', category: 'Paper', rating_text: '5 Stars', score: 95, quality: 5, delivery: 4.5, price: 5, orders: 30, value: 850000, compliance: 99 },
+
+                                // 4 Star Suppliers
+                                { id: 3, name: 'Mumbai Supply Hub', category: 'Binding Material', rating_text: '4 Stars', score: 82, quality: 4, delivery: 4, price: 4.2, orders: 25, value: 450000, compliance: 95 },
+
+                                // 3 Star Suppliers
+                                { id: 4, name: 'Local Services Ltd.', category: 'Maintenance Services', rating_text: '3 Stars', score: 70, quality: 3.5, delivery: 3, price: 4, orders: 12, value: 120000, compliance: 85 },
+
+                                // 2 Star Suppliers
+                                { id: 5, name: 'Speedy Spares', category: 'Maintenance Spares', rating_text: '2 Stars', score: 55, quality: 2, delivery: 2, price: 4.5, orders: 5, value: 35000, compliance: 70 }
+                            ],
+                            stock_data: [
+                                // Paper
+                                { item: 'SKU-P01', category: 'Paper', value: 50000, age_days: 200, is_nmi: true },  // Dead Stock
+                                { item: 'SKU-P02', category: 'Paper', value: 75000, age_days: 150, is_nmi: true },  // Non-Moving
+                                { item: 'SKU-P03', category: 'Paper', value: 100000, age_days: 110, is_nmi: false }, // Slow Moving
+                                { item: 'SKU-P04', category: 'Paper', value: 25000, age_days: 60, is_nmi: false },   // Moving Stock
+
+                                // --- Binding Material (Ensuring all 4 types exist) ---
+                                { item: 'SKU-B01', category: 'Binding Material', value: 40000, age_days: 190, is_nmi: true }, // Dead Stock
+                                { item: 'SKU-B02', category: 'Binding Material', value: 25000, age_days: 170, is_nmi: true },  // Non-Moving
+                                { item: 'SKU-B03', category: 'Binding Material', value: 30000, age_days: 100, is_nmi: false }, // Slow Moving
+                                { item: 'SKU-B04', category: 'Binding Material', value: 30000, age_days: 80, is_nmi: false },  // Moving Stock
+
+                                // --- Production Consumables (Ensuring all 4 types exist) ---
+                                { item: 'SKU-C01', category: 'Production Consumables', value: 30000, age_days: 210, is_nmi: true }, // Dead Stock
+                                { item: 'SKU-C02', category: 'Production Consumables', value: 30000, age_days: 170, is_nmi: true }, // Non-Moving
+                                { item: 'SKU-C03', category: 'Production Consumables', value: 40000, age_days: 100, is_nmi: false }, // Slow Moving
+                                { item: 'SKU-C04', category: 'Production Consumables', value: 20000, age_days: 30, is_nmi: false },  // Moving Stock
+
+                                // --- Maintenance Spares (Ensuring all 4 types exist) ---
+                                { item: 'SKU-M01', category: 'Maintenance Spares', value: 150000, age_days: 250, is_nmi: true },// Dead Stock
+                                { item: 'SKU-M02', category: 'Maintenance Spares', value: 80000, age_days: 120, is_nmi: true },  // Non-Moving
+                                { item: 'SKU-M03', category: 'Maintenance Spares', value: 100000, age_days: 140, is_nmi: false },// Slow Moving
+                                { item: 'SKU-M04', category: 'Maintenance Spares', value: 20000, age_days: 50, is_nmi: false }   // Moving Stock
+                            ],
+                            // Inside MockDataProvider -> fetchRawData -> mockData object
+                            funnel_details: [
+                                { doc_id: 'PR-9901', stage: 'PR (Requisition)', date: new Date(2024, 5, 1), category: 'Paper', requestor: 'Amit Sharma', vendor: 'N/A', value: 45000, aging: 2, expected_date: new Date(2024, 5, 10) },
+                                { doc_id: 'PO-8802', stage: 'PO (Order)', date: new Date(2024, 5, 2), category: 'Binding Material', requestor: 'Suresh Raina', vendor: 'Mumbai Supply', value: 120000, aging: 5, expected_date: new Date(2024, 5, 15) },
+                                { doc_id: 'GRN-7703', stage: 'GRN (Received)', date: new Date(2024, 5, 5), category: 'Production Consumables', requestor: 'Vikas G.', vendor: 'Global Inks Co.', value: 85000, aging: 1, expected_date: new Date(2024, 5, 6) },
+                                { doc_id: 'INV-6604', stage: 'Invoice', date: new Date(2024, 5, 7), category: 'Capex', requestor: 'Rohan M.', vendor: 'Component Solutions', value: 500000, aging: 12, expected_date: new Date(2024, 5, 20) },
+                                // Add more rows as needed for testing...
+                            ],
+                            supplier_ratings: [
+                                // Generate random-like data for demonstration
+                                ...Array.from({ length: 150 }, (_, i) => {
+                                    const categories = ['Paper', 'Binding Material', 'Production Consumables', 'Maintenance Spares', 'Capex'];
+                                    return {
+                                        supplierId: `SUP-${1000 + i}`,
+                                        category: categories[i % categories.length],
+                                        // Skew ratings towards 3, 4, and 5 stars
+                                        rating: Math.floor(Math.random() * 3) + 3 // Generates 3, 4, 5
+                                    };
+                                }),
+                                ...Array.from({ length: 30 }, (_, i) => {
+                                    const categories = ['Paper', 'Binding Material', 'Production Consumables', 'Maintenance Spares', 'Capex'];
+                                    return {
+                                        supplierId: `SUP-${2000 + i}`,
+                                        category: categories[i % categories.length],
+                                        rating: Math.floor(Math.random() * 2) + 1 // Generates 1, 2
+                                    };
+                                })
+                            ]
+                        };
+                        const data = mockData[dataKey];
+                        this.cache.set(dataKey, { data, timestamp: Date.now() });
+                        return data;
+                    }
+                }
+                return { SharedTransformers, getInstance: () => new MockDataProvider() };
+            })();
+
+            // ========================================================================================================
+            // SECTION 3: APPLICATION CORE
+            // This section simulates `app.js` and contains all the reusable logic.
+            // ========================================================================================================
+            const APP_CORE = (() => {
+                const dashboardConfig = CONFIGURATION;
+                const DataProvider = DATA_PROVIDER.getInstance();
+                const SharedTransformers = DATA_PROVIDER.SharedTransformers;
+                let chartInstances = {};
+                let modals = {};
+                let tooltipHideTimer = null;
+
+                const StateManager = (() => {
+                    const state = { selectedPeriodIndex: null };
+                    const subscribers = {};
+                    return {
+                        getState: (key) => key ? state[key] : state,
+                        subscribe: (key, callback) => {
+                            if (!subscribers[key]) subscribers[key] = [];
+                            subscribers[key].push(callback);
+                        },
+                        setState: (key, data) => {
+                            const currentState = state[key];
+                            let hasChanged = false;
+                            if (typeof currentState === 'object' && currentState !== null && typeof data === 'object' && data !== null) {
+                                if (JSON.stringify(currentState) !== JSON.stringify(data)) hasChanged = true;
+                            } else {
+                                if (currentState !== data) hasChanged = true;
+                            }
+                            if (!hasChanged) return;
+                            state[key] = data;
+                            if (subscribers[key]) subscribers[key].forEach(callback => callback(data));
+                        }
+                    };
+                })();
+
+                const ChartDefaults = {
+                    getChartOptions(config) {
+                        const baseOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            onHover: (e, el) => { e.native.target.style.cursor = el.length > 0 ? 'pointer' : 'default'; },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+                                tooltip: { enabled: false, external: InteractivityHandler.customTooltip }
+                            }
+                        };
+
+                        // Apply type-specific defaults
+                        switch (config.chartType) {
+                            case 'doughnut':
+                                baseOptions.plugins.legend.display = false;
+                                break;
+                            case 'bubble':
+                                baseOptions.plugins.legend.display = false;
+                                // Bubble chart tooltip is now handled by the main customTooltip handler
+                                break;
+                        }
+
+                        // Merge user-defined options from the config over the defaults
+                        return Utils.deepMerge(baseOptions, config.options || {});
+                    }
+
+                };
+                const ActionRegistry = {
+                    setPeriodIndex: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const newIndex = elements[0].index;
+                            StateManager.setState('selectedPeriodIndex', newIndex);
+                            chart.setActiveElements([{ datasetIndex: 0, index: newIndex }]);
+                            chart.update();
+                        }
+                    }
+                };
+
+                async function init() {
+                    try {
+                        ConfigValidator.validate(dashboardConfig);
+                    } catch (error) {
+                        console.error("Dashboard Configuration Error:", error.message);
+                        document.body.innerHTML = `<div class="alert alert-danger m-4" role="alert"><strong>Configuration Error:</strong> ${error.message}</div>`;
+                        return;
+                    }
+
+                    Chart.register(ChartDataLabels);
+                    Chart.defaults.plugins.datalabels.display = false;
+                    const centerTextPlugin = { id: 'centerText', afterDraw: (chart) => { const { centerText } = chart.config.options.plugins; if (centerText?.display) { const { ctx, chartArea: { top, left, width, height } } = chart; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = left + width / 2, valueY = top + height / 2 - 10, labelY = valueY + 22; ctx.font = `700 ${centerText.fontSize || '24px'} Inter`; ctx.fillStyle = centerText.color || '#212529'; ctx.fillText(centerText.text, centerX, valueY); if (centerText.label) { ctx.font = `500 1rem Inter`; ctx.fillStyle = '#6B7280'; ctx.fillText(centerText.label, centerX, labelY); } ctx.restore(); } } };
+                    Chart.register(centerTextPlugin);
+
+                    document.title = dashboardConfig.title;
+                    document.getElementById('dashboardTitle').textContent = dashboardConfig.title;
+                    ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'].forEach(id => { modals[id] = new bootstrap.Modal(document.getElementById(id)); });
+
+                    renderLayoutShells();
+                    // Initialize Shared Filters
+                    try {
+                        DashboardFilters.init({
+                            container: '#main-dashboard-content',
+                            movingAverage: {
+                                enabled: true,
+                                period: 13,
+                                maxWeeks: 52,
+                                dropdownSelector: '#maDropdownMenu',
+                                buttonTextSelector: '#maButtonText',
+                                weekOptionsContainer: '#maWeekOptions',
+                                onWeekChange: function (newWeek) {
+                                    // Your code to refresh charts goes here
+                                    console.log("MA Week changed to: " + newWeek);
+                                }
+                            },
+                            timeFilters: {
+                                enabled: true,
+                                defaultSelection: 'Week',
+                                containerSelector: '#timeFilterContainer'
+                            },
+                            customFilters: [
+                                { id: 'filterBuyer', label: 'Buyer', placeholder: 'All Buyers', dataSource: ['Amit Sharma', 'Suresh Raina', 'Vikas G.', 'Rohan M.', 'Priya Singh'], width: 6 },
+                                { id: 'filterPurchaseCategory', label: 'Purchase Category', placeholder: 'All Options', dataSource: ['Domestic', 'Import'], width: 6 }
+                            ],
+                            onFilterChange: function (filters) {
+                                // Trigger data refresh when Day/Week/Month changes
+                                console.log("Filters updated", filters);
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Filter Init Error:", e);
+                    }
+
+                    InteractivityHandler.init();
+                    setupSubscriptions();
+
+
+
+                    // Initialize dropdown listeners
+                    document.body.addEventListener('change', (e) => {
+                        if (e.target.matches('.chart-header-controls .form-select')) {
+                            const paramName = e.target.dataset.param;
+                            StateManager.setState(paramName, e.target.value);
+
+                            // Find which chart uses this param and trigger update
+                            dashboardConfig.layout.forEach(item => {
+                                if (item.config.dropdownConfig && item.config.dropdownConfig.id === paramName) {
+                                    ChartHandler.render(item.config);
+                                }
+                            });
+                        }
+                    });
+
+                    await initialDataFetch();
+                }
+
+                async function initialDataFetch() {
+                    const kpiDataPromise = DataProvider.fetchKpiData();
+
+                    // Find all data keys from main charts AND their drilldown configs
+                    const rawDataKeys = new Set();
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.config.dataKey) rawDataKeys.add(item.config.dataKey);
+                        if (item.config.drilldownConfig?.dataKey) rawDataKeys.add(item.config.drilldownConfig.dataKey);
+                    });
+
+                    const rawDataKeysArray = Array.from(rawDataKeys);
+                    const rawDataPromises = rawDataKeysArray.map(key => DataProvider.fetchRawData(key));
+
+                    const [kpiData] = await Promise.all([kpiDataPromise]);
+                    StateManager.setState('kpiData', kpiData);
+                    renderKpis();
+
+                    const allRawData = await Promise.all(rawDataPromises);
+                    allRawData.forEach((data, index) => {
+                        StateManager.setState(rawDataKeysArray[index], data);
+                    });
+                }
+
+                function setupSubscriptions() {
+                    // 1. Subscribe charts (this part is correct)
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                        }
+                    });
+
+
+                }
+
+                function renderLayoutShells() {
+                    document.getElementById('kpi-container').innerHTML = dashboardConfig.kpis.map(c => `<div class="col" id="shell-${c.id}"></div>`).join('');
+                    const loadingSpinner = `<div class="chart-feedback-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+                    document.getElementById('content-grid').innerHTML = dashboardConfig.layout.map(item => {
+                        let headerHtml = `<h3 class="content-title">${item.config.title}</h3>`;
+
+                        if (item.config.dropdownConfig) {
+                            const opts = item.config.dropdownConfig.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                            const selectHtml = `<div class="chart-header-controls"><select class="form-select form-select-sm" data-param="${item.config.dropdownConfig.id}" style="width: auto; max-width: 150px;">${opts}</select></div>`;
+                            headerHtml = `<div class="chart-header"><h3 class="content-title">${item.config.title}</h3>${selectHtml}</div>`;
+                        }
+
+                        return `<div class="${item.width}" id="container-${item.config.id}"><div class="content-wrapper context-menu-target" data-component-id="${item.config.id}">${headerHtml}<div class="chart-canvas-container">${loadingSpinner}<canvas id="${item.config.id}"></canvas></div></div></div>`;
+                    }).join('');
+                }
+
+                function renderKpis() {
+                    const { kpiData } = StateManager.getState();
+                    if (!kpiData) return;
+                    dashboardConfig.kpis.forEach(config => {
+                        const data = kpiData[config.dataKey];
+                        if (!data) return;
+                        const growth = data.previous > 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
+                        const container = document.getElementById(`shell-${config.id}`);
+
+                        const isPositiveGrowth = growth >= 0;
+                        const isGood = config.invertGrowthColor ? !isPositiveGrowth : isPositiveGrowth;
+
+                        container.innerHTML = `<div class="card kpi-card context-menu-target" data-component-id="${config.id}">
+                    <div class="card-body">
+                        <div class="kpi-header">
+                            <div class="kpi-title-container">
+                                ${config.mainIcon ? `<i class="bi ${config.mainIcon}"></i>` : ''}
+                                <span class="kpi-title">${config.label}</span>
+                            </div>
+                            <div class="kpi-growth ${isGood ? 'positive' : 'negative'}">
+                                <i class="bi ${isPositiveGrowth ? 'bi-arrow-up-short' : 'bi-arrow-down-short'}"></i> ${Math.abs(growth).toFixed(1)}%
+                            </div>
+                        </div>
+
+                        <div class="kpi-body">
+                            <div class="kpi-primary-metrics">
+                                <span class="kpi-value">${Utils.formatMetric(data.current, config.isCurrency, config.valueSuffix)}</span>
+                                <span class="kpi-previous-value">Prev: ${Utils.formatMetric(data.previous, config.isCurrency, config.valueSuffix)}</span>
+                            </div>
+                            <div class="kpi-secondary-metrics">
+                                ${config.secondaryMetrics.map(sm => `<div class="metric-item"><i class="bi ${sm.icon}"></i><span>${sm.label ? sm.label + ': ' : ''}${Utils.formatMetric(data[sm.dataKey], sm.format)}</span></div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="kpi-footer">
+                            <div class="kpi-chart-container">
+                                <canvas id="sparkline-${config.id}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                        renderSparkline(config.id, data.trend, config.cssVar);
+                    });
+                }
+
+                function renderSparkline(id, data, colorVarName) {
+                    const ctx = document.getElementById(`sparkline-${id}`)?.getContext('2d');
+                    if (!ctx) return;
+
+                    const trendColor = getComputedStyle(document.documentElement).getPropertyValue(colorVarName).trim();
+                    const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                    if (!trendColorRGB) {
+                        console.error(`Invalid color format or CSS variable not found for: ${colorVarName}`);
+                        return;
+                    }
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                    // MODIFIED: Implemented a 3-stop gradient for a darker top that fades out.
+                    gradient.addColorStop(0, `rgba(${trendColorRGB}, 0.45)`);  // Darker start color near the line
+                    gradient.addColorStop(0.4, `rgba(${trendColorRGB}, 0.1)`);   // Fade significantly by 40% height
+                    gradient.addColorStop(1, `rgba(${trendColorRGB}, 0)`);      // Fully transparent at the bottom
+
+                    if (chartInstances[id]) chartInstances[id].destroy();
+
+                    chartInstances[id] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(() => ''),
+                            datasets: [{
+                                data: data,
+                                borderColor: trendColor,
+                                borderWidth: 2,
+                                fill: true,
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                pointRadius: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { x: { display: false }, y: { display: false } },
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            layout: {
+                                padding: 0
+                            }
+                        }
+                    });
+                }
+                const ChartHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        if (!container) return; // Exit if container not found
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        const feedbackEl = canvasContainer.querySelector('.chart-feedback-overlay');
+                        try {
+                            const ctx = canvasContainer.querySelector('canvas')?.getContext('2d');
+                            if (!ctx) throw new Error(`Canvas with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) { return; }
+                            const periodIndex = StateManager.getState('selectedPeriodIndex');
+                            let transformer;
+                            if (typeof config.transformer === 'function') {
+                                transformer = config.transformer;
+                            } else if (typeof config.transformer === 'string' && SharedTransformers[config.transformer]) {
+                                transformer = SharedTransformers[config.transformer];
+                            } else {
+                                throw new Error(`Transformer '${config.transformer}' is not a valid function or a key in SharedTransformers.`);
+                            }
+                            const data = transformer(rawData, periodIndex, config, StateManager.getState());
+                            if (chartInstances[config.id]) chartInstances[config.id].destroy();
+
+                            let finalOptions = ChartDefaults.getChartOptions(config);
+
+                            if (config.onClickAction && ActionRegistry[config.onClickAction]) { finalOptions.onClick = ActionRegistry[config.onClickAction]; }
+
+                            if (config.chartType === 'doughnut') {
+                                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (finalOptions.plugins.centerText) {
+                                    finalOptions.plugins.centerText.text = Utils.formatMetric(total);
+                                }
+                                finalOptions.onHover = (event, elements, chart) => { const centerText = chart.config.options.plugins.centerText; if (elements.length > 0) { const index = elements[0].index; centerText.text = Utils.formatMetric(chart.data.datasets[0].data[index]); centerText.label = chart.data.labels[index]; } else { centerText.text = Utils.formatMetric(total); centerText.label = 'Total'; } chart.update('none'); };
+                                if (config.drilldownTarget) { finalOptions.onClick = () => DrilldownHandler.show(config.drilldownTarget); }
+                            }
+                            if (feedbackEl) feedbackEl.remove();
+                            chartInstances[config.id] = new Chart(ctx, { type: config.chartType, data, options: finalOptions });
+                        } catch (error) {
+                            console.error(`Failed to render chart '${config.id}':`, error);
+                            this.renderErrorState(canvasContainer, error);
+                        }
+                    },
+                    renderErrorState(container, error) {
+                        container.innerHTML = `<div class="chart-feedback-overlay"><i class="bi bi-exclamation-triangle-fill"></i><strong>Chart Failed to Load</strong><small class="mt-1">${error.message}</small></div>`;
+                    }
+                };
+
+
+
+                const DrilldownService = {
+                    show(title, columns, dataRows, filters, docFormConfig) {
+                        const filterControls = document.getElementById('drilldownFilterControls');
+                        const modalBody = document.getElementById('drilldownModalBody');
+
+                        if (docFormConfig) {
+                            modalBody.dataset.docFormConfig = JSON.stringify(docFormConfig);
+                        } else {
+                            delete modalBody.dataset.docFormConfig;
+                        }
+
+                        if (filters) {
+                            filterControls.innerHTML = filters.map(opt => `<div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="drilldownFilter" id="filter_${opt.value}" value="${opt.value}" ${opt.default ? 'checked' : ''}><label class="form-check-label small" for="filter_${opt.value}">${opt.label}</label></div>`).join('');
+                        } else {
+                            filterControls.innerHTML = '';
+                        }
+
+                        const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+                        const rows = dataRows.map(row => `<tr data-doc-id="${row.id}" data-status="${row.status}">${columns.map(col => `<td>${Utils.formatMetric(row[col.key], col.format)}</td>`).join('')}</tr>`).join('');
+
+                        document.getElementById('drilldownModalLabel').textContent = title;
+                        modalBody.innerHTML = `<div class="table-responsive"><table class="table table-hover"><thead id="drilldownThead"><tr>${headers}</tr></thead><tbody id="drilldownTbody">${rows}</tbody></table></div>`;
+                        modals.drilldownModal.show();
+                    },
+                    showPlaceholder(title, message) {
+                        document.getElementById('drilldownModalLabel').textContent = `Details for ${title}`;
+                        document.getElementById('drilldownModalBody').innerHTML = `<p class="p-3">${message}</p>`;
+                        modals.drilldownModal.show();
+                    }
+                };
+                // --- ADDED: New orchestrator function for all drilldown actions ---
+                function initiateDrilldown(componentId, context = {}) {
+                    const config = Utils.getComponentConfig(componentId);
+
+                    if (!config) return;
+
+                    if (config.drilldownTarget && !context.dataIndex) {
+                        return initiateDrilldown(config.drilldownTarget);
+                    }
+
+                    const drilldownConfig = config.drilldownConfig;
+                    const titleBase = config.label || config.title || "Details";
+
+                    if (!drilldownConfig) {
+                        return DrilldownService.showPlaceholder(titleBase, `No drilldown configured.`);
+                    }
+
+                    const { dataKey, columns, filters, docFormConfig, filterMapping } = drilldownConfig;
+                    let title = `Detailed View: ${titleBase}`;
+                    const rawData = StateManager.getState(dataKey);
+
+                    if (!rawData) {
+                        return DrilldownService.showPlaceholder(title, `No detailed data available.`);
+                    }
+
+                    let filteredData = [...rawData];
+
+                    // Check if we are filtering by a specific chart element (Tooltip Click)
+                    if (context.dataIndex !== undefined) {
+                        const chart = chartInstances[componentId];
+                        if (chart && chart.data.labels[context.dataIndex] !== undefined) {
+                            // Trim the label to remove any hidden spaces
+                            const label = String(chart.data.labels[context.dataIndex]).trim();
+                            title += ` (${label})`;
+
+                            if (filterMapping === 'date_month_short') {
+                                filteredData = rawData.filter(item => {
+                                    const d = new Date(item.date);
+                                    // Use a more robust check for month matching
+                                    const itemMonth = d.toLocaleString('en-US', { month: 'short' }).replace('.', '');
+                                    const targetMonth = label.replace('.', '');
+                                    return itemMonth.toLowerCase() === targetMonth.toLowerCase();
+                                });
+                            } else if (filterMapping) {
+                                // Case-insensitive and trimmed comparison for categories
+                                filteredData = rawData.filter(item => {
+                                    const val = String(item[filterMapping] || "").trim();
+                                    return val.toLowerCase() === label.toLowerCase();
+                                });
+                            }
+                        }
+                    }
+
+                    DrilldownService.show(title, columns, filteredData, filters, docFormConfig);
+                }
+
+                const DocFormHandler = {
+                    show(docId, config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        const data = rawData.find(item => item.id === docId);
+                        if (!data) { alert(`Details for ${docId} not found.`); return; }
+                        const bodyHtml = `<div class="row">${config.fields.map(field => `<div class="col-md-6 form-readonly-group"><label>${field.label}</label><input type="text" class="form-control" value="${Utils.formatMetric(data[field.key], field.format)}" readonly></div>`).join('')}</div>`;
+                        document.getElementById('docFormModalLabel').textContent = `Details for: ${docId}`;
+                        document.getElementById('docFormBody').innerHTML = bodyHtml;
+                        modals.drilldownModal.classList.add('is-blurred');
+                        modals.docFormModal.show();
+                    }
+                };
+
+                const ExpandChartHandler = {
+                    show(componentId) {
+                        const originalChart = chartInstances[componentId];
+                        const config = Utils.getComponentConfig(componentId);
+                        if (!originalChart || !config) { alert('Cannot expand: chart instance not found.'); return; }
+
+                        const ctx = document.getElementById('expandedChartCanvas').getContext('2d');
+                        const chartData = JSON.parse(JSON.stringify(originalChart.data));
+
+                        const originalOptions = originalChart.config.options;
+                        const expansionOverrides = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    enabled: true,
+                                    external: null
+                                }
+                            }
+                        };
+
+                        const finalOptions = Utils.deepMerge(JSON.parse(JSON.stringify(originalOptions)), expansionOverrides);
+
+                        const isKpiCard = dashboardConfig.kpis.some(k => k.id === componentId);
+                        if (isKpiCard) {
+                            const kpiData = StateManager.getState('kpiData')[config.dataKey];
+                            if (kpiData && kpiData.trend_labels) {
+                                chartData.labels = kpiData.trend_labels;
+                            }
+                            chartData.datasets[0].label = config.label;
+
+                            // START: MODIFICATION
+                            // Dynamically set colors based on the source KPI's configured CSS variable
+                            if (config.cssVar) {
+                                const trendColor = getComputedStyle(document.documentElement).getPropertyValue(config.cssVar).trim();
+                                const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                                if (trendColor && trendColorRGB) {
+                                    chartData.datasets[0].borderColor = trendColor;
+                                    chartData.datasets[0].backgroundColor = `rgba(${trendColorRGB}, 0.2)`;
+                                    chartData.datasets[0].fill = true;
+                                    chartData.datasets[0].tension = 0.3;
+                                }
+                            }
+                        }
+
+                        document.getElementById('expandChartModalLabel').textContent = `Expanded View: ${config.label || config.title}`;
+
+                        if (chartInstances['expandedChart']) chartInstances['expandedChart'].destroy();
+                        chartInstances['expandedChart'] = new Chart(ctx, { type: originalChart.config.type, data: chartData, options: finalOptions });
+                        modals.expandChartModal.show();
+                    }
+                };
+
+                const GuideHandler = { show(kpiConfig) { if (!kpiConfig?.guide) { alert('No guide available for this KPI.'); return; } const { title, definition, interpretation, calculation } = kpiConfig.guide; document.getElementById('kpiGuideModalLabel').textContent = `Guide: ${title}`; document.getElementById('guide-definition').textContent = definition; document.getElementById('guide-interpretation').textContent = interpretation; document.getElementById('guide-calculation').textContent = calculation; modals.kpiGuideModal.show(); } };
+
+                const InteractivityHandler = {
+                    init() {
+                        const mainContent = document.getElementById('main-dashboard-content');
+                        const modalIds = ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'];
+
+                        modalIds.forEach(id => {
+                            const modalEl = document.getElementById(id);
+                            if (modalEl) {
+                                // Add blur when any modal opens
+                                modalEl.addEventListener('show.bs.modal', () => {
+                                    mainContent.classList.add('dashboard-blur');
+                                });
+
+                                // Remove blur only if NO other modals are currently open (handles stacked modals)
+                                modalEl.addEventListener('hidden.bs.modal', () => {
+                                    const isAnyModalOpen = modalIds.some(mid => {
+                                        const m = document.getElementById(mid);
+                                        // Bootstrap adds the 'show' class to visible modals
+                                        return m && m.classList.contains('show');
+                                    });
+
+                                    if (!isAnyModalOpen) {
+                                        mainContent.classList.remove('dashboard-blur');
+                                    }
+                                });
+                            }
+                        });
+                        const menu = document.getElementById('customContextMenu');
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        const drilldownModalEl = document.getElementById('drilldownModal');
+                        const hideMenu = () => menu.style.display = 'none';
+                        const hideTooltip = () => { if (tooltipEl) { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; } };
+                        document.addEventListener('click', hideMenu);
+                        document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+                        document.body.addEventListener('contextmenu', e => { const target = e.target.closest('.context-menu-target'); if (target) { e.preventDefault(); this.showContextMenu(e, target.dataset.componentId); } });
+                        document.body.addEventListener('click', e => {
+                            const target = e.target.closest('.kpi-card');
+                            if (target) initiateDrilldown(target.dataset.componentId);
+                        });
+                        tooltipEl.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+                        tooltipEl.addEventListener('mouseleave', () => { tooltipHideTimer = setTimeout(hideTooltip, 300); });
+                        document.getElementById('drilldownFilterControls').addEventListener('change', e => { if (e.target.name === 'drilldownFilter') { const filterValue = e.target.value; document.getElementById('drilldownTbody').querySelectorAll('tr').forEach(row => { row.style.display = (filterValue === 'all' || row.dataset.status === filterValue) ? '' : 'none'; }); } });
+
+                        drilldownModalEl.addEventListener('click', e => {
+                            const row = e.target.closest('tr[data-doc-id]');
+                            const configStr = drilldownModalEl.querySelector('.modal-body').dataset.docFormConfig;
+                            if (row && configStr) {
+                                const config = JSON.parse(configStr);
+                                DocFormHandler.show(row.dataset.docId, config);
+                            }
+                        });
+
+                        drilldownModalEl.addEventListener('hidden.bs.modal', () => {
+                            const modalBody = drilldownModalEl.querySelector('.modal-body');
+                            if (modalBody.dataset.docFormConfig) {
+                                delete modalBody.dataset.docFormConfig;
+                            }
+                        });
+
+                        document.getElementById('docFormModal').addEventListener('hidden.bs.modal', () => modals.drilldownModal.classList.remove('is-blurred'));
+                        document.getElementById('expandChartModal').addEventListener('hidden.bs.modal', () => {
+                            if (chartInstances['expandedChart']) {
+                                chartInstances['expandedChart'].destroy();
+                                chartInstances['expandedChart'] = null;
+                            }
+                        });
+                    },
+                    showContextMenu(event, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        const menu = document.getElementById('customContextMenu');
+                        const menuList = document.getElementById('contextMenuList');
+                        const componentActions = config?.actions || dashboardConfig.contextMenu.actions.map(a => a.id);
+                        let actions = dashboardConfig.contextMenu.actions.filter(a => componentActions.includes(a.id) || a.type === 'separator');
+                        const renderItems = items => items.map(a => a.type === 'separator' ? '<li class="context-menu-separator"></li>' : `<li class="context-menu-item" data-action="${a.id}"><i class="bi ${a.icon}"></i><span>${a.label}</span>${a.submenu ? `<i class="bi bi-chevron-right"></i><ul class="context-menu-sublist">${renderItems(a.submenu)}</ul>` : ''}</li>`).join('');
+                        menuList.innerHTML = renderItems(actions);
+                        menu.querySelectorAll('.context-menu-item').forEach(item => { if (!item.querySelector('.context-menu-sublist')) item.addEventListener('click', () => this.handleContextMenuAction(item.dataset.action, componentId)); });
+                        menu.style.visibility = 'hidden';
+                        menu.style.display = 'block';
+
+                        const { offsetWidth: menuW, offsetHeight: menuH } = menu;
+                        const { clientX: mouseX, clientY: mouseY } = event;
+                        const { innerWidth: viewportW, innerHeight: viewportH } = window;
+                        const padding = 5; // A small buffer from the viewport edge
+                        let finalLeft = mouseX;
+                        if ((mouseX + menuW + padding) > viewportW) {
+                            finalLeft = mouseX - menuW; // Flip to the left of the cursor
+                        }
+                        let finalTop = mouseY;
+                        if ((mouseY + menuH + padding) > viewportH) {
+                            finalTop = mouseY - menuH; // Flip above the cursor
+                        }
+                        menu.style.left = `${finalLeft + window.scrollX}px`;
+                        menu.style.top = `${finalTop + window.scrollY}px`;
+                        menu.style.visibility = 'visible';
+                    },
+                    handleContextMenuAction(action, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        switch (action) {
+                            case 'drilldown': initiateDrilldown(componentId); break;
+                            case 'refresh': initialDataFetch(); break;
+                            case 'expand': ExpandChartHandler.show(componentId); break;
+                            case 'guide': if (config.guide) GuideHandler.show(config); break;
+                            case 'share': window.location.href = `mailto:?subject=Dashboard Insight: ${config.label || config.title}&body=Review data for ${config.label || config.title}.`; break;
+                            case 'export-png': const chart = chartInstances[componentId]; if (chart) { const a = document.createElement('a'); a.href = chart.toBase64Image(); a.download = `${componentId}.png`; a.click(); } break;
+                            default: alert(`Action '${action}' is not yet implemented.`);
+                        }
+                    },
+
+                    customTooltip(context) {
+                        const { chart, tooltip } = context;
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        clearTimeout(tooltipHideTimer);
+                        if (tooltip.opacity === 0) { tooltipHideTimer = setTimeout(() => { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; }, 300); return; }
+
+                        const titleEl = tooltipEl.querySelector('.tooltip-main-title');
+                        const headerEl = tooltipEl.querySelector('.tooltip-header');
+                        const valueEl = tooltipEl.querySelector('.tooltip-value');
+                        const seriesTitleEl = tooltipEl.querySelector('.tooltip-title');
+                        const deltaEl = tooltipEl.querySelector('.tooltip-delta');
+                        const footerEl = tooltipEl.querySelector('.tooltip-footer');
+
+                        // Reset common elements
+                        headerEl.style.display = 'flex';
+                        deltaEl.style.display = 'none';
+                        footerEl.style.display = 'none';
+
+                        if (chart.canvas.id.startsWith('pareto')) {
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            headerEl.style.display = 'none';
+                            valueEl.textContent = '';
+                            const footerContent = tooltip.dataPoints.map(dp => {
+                                const isPercentage = dp.dataset.label.includes('%');
+                                const value = isPercentage ? `${dp.raw.toFixed(1)}%` : Utils.formatMetric(dp.raw);
+                                return `<div class="footer-row"><span>${dp.dataset.label}</span><span>${value}</span></div>`;
+                            }).join('');
+                            footerEl.innerHTML = footerContent;
+                            footerEl.style.display = 'flex';
+                        } else { // Default handler for bar, line, doughnut, radar etc.
+                            const dp = tooltip.dataPoints[0];
+                            if (!dp) return;
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            seriesTitleEl.textContent = dp.dataset.label || '';
+                            valueEl.textContent = Utils.formatMetric(dp.raw);
+                            const prev = dp.dataIndex > 0 ? chart.data.datasets[dp.datasetIndex].data[dp.dataIndex - 1] : null;
+                            if (prev !== null && prev !== 0 && typeof dp.raw === 'number') { const change = ((dp.raw - prev) / prev) * 100, isPos = change >= 0; deltaEl.className = `tooltip-delta ${isPos ? 'positive' : 'negative'}`; deltaEl.innerHTML = `<i class="bi ${isPos ? 'bi-arrow-up' : 'bi-arrow-down'}"></i> ${Math.abs(change).toFixed(1)}%`; deltaEl.style.display = 'flex'; }
+                            const footerContent = chart.data.datasets.map((ds, i) => i !== dp.datasetIndex && ds.data[dp.dataIndex] !== undefined ? `<div class="footer-row"><span>${ds.label}</span><span>${Utils.formatMetric(ds.data[dp.dataIndex])}</span></div>` : null).filter(Boolean);
+                            if (footerContent.length > 0) { footerEl.innerHTML = footerContent.join(''); footerEl.style.display = 'flex'; }
+                        }
+
+                        tooltipEl.querySelector('.drilldown-btn').onclick = () => initiateDrilldown(chart.canvas.id, { dataIndex: tooltip.dataPoints[0].dataIndex });
+                        const canvasRect = chart.canvas.getBoundingClientRect();
+                        tooltipEl.style.opacity = 1;
+                        tooltipEl.style.pointerEvents = 'all';
+                        tooltipEl.style.left = (canvasRect.left + window.scrollX + tooltip.caretX) + 'px';
+                        tooltipEl.style.top = (canvasRect.top + window.scrollY + tooltip.caretY) + 'px';
+                    }
+                };
+
+                const Utils = {
+                    formatMetric(value, format, suffix = '') {
+                        if (value === null || value === undefined) return 'N/A';
+
+                        if (format === 'currency_compact') {
+                            if (Math.abs(value) >= 10000000) { // Crore
+                                return (value / 10000000).toFixed(2) + ' Cr';
+                            }
+                            if (Math.abs(value) >= 100000) { // Lakh
+                                return (value / 100000).toFixed(2) + ' L';
+                            }
+                            if (Math.abs(value) >= 1000) { // Thousand
+                                return (value / 1000).toFixed(1) + ' K';
+                            }
+                            return new Intl.NumberFormat('en-IN').format(value);
+                        }
+
+                        if (format === 'currency') {
+                            return new Intl.NumberFormat('en-IN', {
+                                style: 'currency',
+                                currency: 'INR',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            }).format(value);
+                        }
+                        if (format === 'date') return new Date(value).toLocaleString('en-GB');
+                        if (typeof value === 'number') return value.toLocaleString('en-US');
+                        return `${value}${suffix}`;
+                    }, hexToRgb(hex) {
+                        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+                        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                    },
+                    getComponentConfig: (id) => dashboardConfig.kpis.find(c => c.id === id) || dashboardConfig.layout.find(c => c.config.id === id)?.config,
+                    // --- ADDED: Shared deepMerge utility ---
+                    deepMerge(target, source) {
+                        const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+                        let output = { ...target };
+                        if (isObject(target) && isObject(source)) {
+                            Object.keys(source).forEach(key => {
+                                if (isObject(source[key])) {
+                                    if (key in target) {
+                                        output[key] = this.deepMerge(target[key], source[key]);
+                                    } else {
+                                        Object.assign(output, { [key]: source[key] });
+                                    }
+                                } else {
+                                    Object.assign(output, { [key]: source[key] });
+                                }
+                            });
+                        }
+                        return output;
+                    }
+                };
+
+                const ConfigValidator = {
+                    validate(config) {
+                        if (!config.title) throw new Error("`title` is missing.");
+                        if (!Array.isArray(config.kpis)) throw new Error("`kpis` must be an array.");
+                        if (!Array.isArray(config.layout)) throw new Error("`layout` must be an array.");
+                        config.kpis.forEach((kpi, i) => {
+                            if (!kpi.id || !kpi.dataKey || !kpi.label) throw new Error(`KPI at index ${i} is missing required keys (id, dataKey, label).`);
+                        });
+                        config.layout.forEach((item, i) => {
+                            if (!item.type || !item.width || !item.config) throw new Error(`Layout item at index ${i} is missing required keys (type, width, config).`);
+                            const chartConfig = item.config;
+                            if (chartConfig.drilldownConfig && !Array.isArray(chartConfig.drilldownConfig.columns)) {
+                                throw new Error(`Drilldown config for chart '${chartConfig.id}' is missing a 'columns' array.`);
+                            }
+                            if (typeof chartConfig.transformer !== 'function' && !SharedTransformers[chartConfig.transformer]) {
+                                throw new Error(`Transformer for chart '${chartConfig.id}' must be a function or a key in SharedTransformers.`);
+                            }
+                        });
+                    }
+                };
+
+                return { init };
+            })();
+            // Initialize the application
+            APP_CORE.init();
+        })();
+    </script>
+</body>
+
+</html>

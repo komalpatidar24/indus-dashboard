@@ -1,0 +1,2556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Template (v16.1)</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required by DevExtreme) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DevExtreme JS & CSS (Theme and Core) -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+
+    <!-- Dashboard Filters CSS -->
+    <link rel="stylesheet" href="dashboard-filters.css">
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <div id="main-dashboard-content" class="container-fluid py-4 modal-body">
+        <header class="dashboard-header pb-2 d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h3 id="dashboardTitle" class="mb-0 d-flex align-items-center">
+                CRM & Sales Dashboard
+                <span id="activeFiltersDisplay" class="filter-display-container ms-3" data-version="2.0"
+                    style="display: inline-flex; gap: 0.5rem; flex-wrap: wrap;"></span>
+            </h3>
+
+            <div class="d-flex align-items-center ms-auto">
+                <!-- 1. Job/Value Toggle -->
+                <!--<div class="btn-group otif-toggle-group me-2" id="jobValueToggle" role="group">
+                    <input type="radio" class="btn-check" name="jobValueType" id="jobType" checked>
+                    <label class="btn" for="jobType">Job</label>
+                    <input type="radio" class="btn-check" name="jobValueType" id="valueType">
+                    <label class="btn" for="valueType">Value</label>
+                </div> -->
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 2. Moving Average Dropdown -->
+                <div class="btn-group me-2" id="ma-dropdown-container">
+                    <button type="button" class="btn otif-ma-button active" id="maButton">
+                        <span id="maButtonText">Loading...</span>
+                    </button>
+                    <button type="button" class="btn otif-ma-button dropdown-toggle dropdown-toggle-split active"
+                        data-bs-toggle="dropdown">
+                    </button>
+                    <ul class="dropdown-menu otif-ma-dropdown-menu" id="maDropdownMenu" style="position: relative;">
+                        <!-- Clear Button Removed -->
+                        <li class="px-3 py-2">
+                            <input type="text" class="form-control form-control-sm" id="maSearchInput"
+                                placeholder="Search weeks...">
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item active" href="#" data-ma-type="full" data-ma-week="52">(last)
+                                13-Week-MA</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <div id="maWeekOptions"></div>
+                    </ul>
+                </div>
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 3. Time Filter Toggles -->
+                <div class="btn-group otif-toggle-group me-2" id="timeFilterContainer">
+                    <button type="button" class="btn" data-category="Day">Day</button>
+                    <button type="button" class="btn" data-category="Week">Week</button>
+                    <button type="button" class="btn" data-category="Month">Month</button>
+                    <button type="button" class="btn" data-category="Quarter">Quarter</button>
+                    <button type="button" class="btn" data-category="Year">Year</button>
+                </div>
+
+                <!-- 4. Filter Panel Toggle -->
+                <button class="btn btn-link text-secondary me-1" type="button" id="toggle-filter-panel-btn"
+                    title="Filters">
+                    <i class="bi bi-filter fs-5"></i>
+                </button>
+            </div>
+        </header>
+        <section class="kpi-section mb-3">
+            <div id="kpi-container" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+        <section class="main-content-section">
+            <div id="content-grid" class="row g-3"></div>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="drilldownModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="drilldownModalLabel"></h5>
+                    <div id="drilldownFilterControls"></div><button type="button" class="btn-close ms-2"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="drilldownModalBody"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="expandChartModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expandChartModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="chart-canvas-container flex-grow-1"><canvas id="expandedChartCanvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="kpiGuideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kpiGuideModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="kpiGuideContent">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-card-text"></i> Definition</h6>
+                            <p id="guide-definition" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-graph-up"></i> Interpretation</h6>
+                            <p id="guide-interpretation" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calculator"></i> Calculation</h6>
+                            <p id="guide-calculation" class="small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="docFormModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docFormModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docFormBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div id="custom-tooltip" class="chart-tooltip">
+        <div class="tooltip-main-title"></div>
+        <div class="tooltip-main-content">
+            <div class="tooltip-header"><span class="tooltip-title"></span><span class="tooltip-delta"></span></div>
+            <div class="tooltip-value"></div>
+        </div>
+        <div class="tooltip-footer" style="display: none;"></div>
+        <div class="tooltip-drilldown"><button type="button" class="drilldown-btn">View Details <i
+                    class="bi bi-box-arrow-up-right"></i></button></div>
+    </div>
+    <div id="customContextMenu">
+        <ul class="context-menu-list" id="contextMenuList"></ul>
+    </div>
+    <div id="filter-popup-panel" class="d-none">
+        <div class="p-2 border-bottom position-relative text-center">
+            <h6 class="otif-filter-panel-title mb-0 m-auto">Filters</h6>
+            <button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-2"
+                id="close-filter-panel-btn"></button>
+        </div>
+        <div class="flex-grow-1" style="overflow-y: auto;">
+            <div class="p-2">
+                <div class="filter-section" id="dropdown-filters-section"></div>
+                <div class="filter-section">
+                    <div id="calendar-container">
+                        <div id="calendar-view">
+                            <div class="calendar-header">
+                                <button type="button" class="btn btn-today" id="today-btn">Today</button>
+                                <div class="d-flex align-items-center">
+                                    <button id="prev-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-left"></i></button>
+                                    <div id="month-year-selector" class="month-year-selector-btn">
+                                        <span id="month-year-display" class="month-year-text"></span>
+                                    </div>
+                                    <button id="next-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid day-names">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+                            <div id="calendar-grid" class="calendar-grid"></div>
+                        </div>
+                        <!-- Month/Year Picker Overlay (Hidden by default) -->
+                        <div id="month-year-picker-overlay" class="d-none">
+                            <div class="picker-header">
+                                <span>Select Date</span>
+                                <button type="button" class="btn btn-apply btn-sm" id="picker-done-btn">Done</button>
+                            </div>
+                            <div class="picker-body">
+                                <div class="picker-column" id="picker-month-column">
+                                    <div class="picker-column-header">Month</div>
+                                    <!-- Months will be rendered by JS -->
+                                </div>
+                                <div class="picker-column" id="picker-year-column">
+                                    <div class="picker-column-header">Year</div>
+                                    <!-- Years will be rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="date-range-display" class="date-range-box">
+                        <div class="date-range-item"><label>From</label><span id="selected-from-date">--</span></div>
+                        <div class="date-range-item"><label>To</label><span id="selected-to-date">--</span></div>
+                    </div>
+                    <div class="p-2 d-flex gap-2">
+                        <button type="button" class="btn btn-reset w-100" id="reset-filters-btn-new">Reset</button>
+                        <button type="button" class="btn btn-apply w-100" id="apply-filters-btn-new">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="dashboard-filters.js"></script>
+    <script>
+        const dashboardApp = (function () {
+            const Utils = {
+                formatMetric(value, format, suffix = '') {
+                    if (value === null || value === undefined) return 'N/A';
+                    const currencyCode = 'INR';
+
+                    if (format === 'currency_compact') {
+                        if (Math.abs(value) >= 10000000) { // Crore
+                            return `₹${(value / 10000000).toFixed(2)} Cr`;
+                        }
+                        if (Math.abs(value) >= 100000) { // Lakh
+                            return `₹${(value / 100000).toFixed(2)} L`;
+                        }
+                        if (Math.abs(value) >= 1000) { // Thousand
+                            return `₹${(value / 1000).toFixed(1)} K`;
+                        }
+                        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+                    }
+
+                    if (format === 'currency') return new Intl.NumberFormat('en-IN', { style: 'currency', currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+                    if (format === 'date') return new Date(value).toLocaleString('en-GB');
+                    if (typeof value === 'number') return value.toLocaleString('en-IN');
+                    return `${value}${suffix}`;
+                },
+                hexToRgb(hex) {
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                },
+                deepMerge(target, source) {
+                    const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+                    let output = { ...target };
+                    if (isObject(target) && isObject(source)) {
+                        Object.keys(source).forEach(key => {
+                            if (isObject(source[key])) {
+                                if (key in target) {
+                                    output[key] = this.deepMerge(target[key], source[key]);
+                                } else {
+                                    Object.assign(output, { [key]: source[key] });
+                                }
+                            } else {
+                                Object.assign(output, { [key]: source[key] });
+                            }
+                        });
+                    }
+                    return output;
+                }
+            };
+            // ========================================================================================================
+            // SECTION 1: CONFIGURATION (THE ONLY PART TO EDIT FOR A NEW DASHBOARD)
+            // This section simulates `config.js`.
+            // ========================================================================================================
+            const CONFIGURATION = (() => {
+                /**
+                 * HOW TO USE THIS TEMPLATE:
+                 * 1.  Update `dashboardTitle` with the title for your dashboard.
+                 * 2.  Define your Key Performance Indicators (KPIs) in the `kpiConfig` array.
+                 * 3.  Define your chart layout and configurations in the `layoutConfig` array.
+                 * 4.  Update the `DATA_PROVIDER` section to connect to your live backend API.
+                 * 5.  Ensure your data provider returns data objects with keys that match the `dataKey` properties defined here.
+                 */
+                const dashboardTitle = 'CRM & Sales Dashboard';
+
+                const kpiConfig = [
+                    {
+                        id: 'kpi-new-prospects', dataKey: 'new_prospects', label: 'Active Prospects', cssVar: '--glow-blue',
+                        secondaryMetrics: [
+                            { icon: 'bi-fire', dataKey: 'hot_prospects', label: 'Hot' },
+                            { icon: 'bi-thermometer-half', dataKey: 'warm_prospects', label: 'Warm' }
+                        ],
+                        guide: { title: 'Total prospects', definition: 'Total number of new potential customers acquired during the period.', interpretation: 'Measures the effectiveness of marketing and prospect generation activities.', calculation: 'Count of all new records created in the prospects module.' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'prospects_data',
+                            columns: [
+                                { dataField: 'ClientCode', caption: 'Code' },
+                                { dataField: 'ClientName', caption: 'Client/Prospect Name' },
+                                { dataField: 'CreatedDate', caption: 'Registration Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'Region', caption: 'Region' },
+                                { dataField: 'SalesExecutive', caption: 'Sales Executive' },
+                                { dataField: 'AnnualTurnover', caption: 'Annual Turnover', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'ProspectShare', caption: 'Prospect Share %', customizeText: (cellInfo) => cellInfo.value + '%' },
+                                { dataField: 'Status', caption: 'Status' },
+                                { dataField: 'City', caption: 'City' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-prospect-to-client', dataKey: 'prospect_to_client_rate', label: 'Prospect-to-Client Rate', valueSuffix: '%', cssVar: '--glow-orange',
+                        secondaryMetrics: [{ icon: 'bi-person-check', dataKey: 'total_prospects', label: 'Prospect' }, { icon: 'bi-person-plus', dataKey: 'client_old', label: 'Client Old' }, { icon: 'bi-person-arms-up', dataKey: 'client_new', label: 'Client New' }],
+                        guide: { title: 'Prospect-to-Client Conversion Rate', definition: 'The percentage of qualified prospects that become paying customers.', interpretation: 'Measures the overall effectiveness of the sales and marketing funnel in acquiring new clients.', calculation: '(New Clients / Total Qualified prospects) * 100.' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'clients_data',
+                            columns: [
+                                { dataField: 'ClientCode', caption: 'Code' },
+                                { dataField: 'ClientName', caption: 'Client Name' },
+                                { dataField: 'CreatedDate', caption: 'Registration Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'Region', caption: 'Region' },
+                                { dataField: 'SalesExecutive', caption: 'Sales Executive' },
+                                { dataField: 'AnnualTurnover', caption: 'Annual Turnover', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'Status', caption: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-open-proposals', dataKey: 'open_proposal_value', label: 'Open Proposals', format: 'currency_compact', cssVar: '--glow-lightblue',
+                        secondaryMetrics: [{ icon: 'bi-people', dataKey: 'lead_count', label: 'Lead Count' }, { icon: 'bi-file-earmark-text', dataKey: 'avg_proposal_value', label: 'Avg. Proposal', format: 'currency_compact' }],
+                        guide: { title: 'Value of Open Proposals', definition: 'The total monetary value of all proposals currently in "Submitted" or "Negotiating" status.', interpretation: 'Represents the active, undecided new business in the sales pipeline.', calculation: 'Sum of "value" for all proposals not yet "Won" or "Lost".' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'proposals_data',
+                            columns: [
+                                { dataField: 'SENo', caption: 'Enquiry No.' },
+                                { dataField: 'SEDate', caption: 'Enquiry Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'ClientName', caption: 'Client Name' },
+                                { dataField: 'JobName', caption: 'Job Description' },
+                                { dataField: 'ProductCategory', caption: 'Category' },
+                                { dataField: 'ScheduledDOD', caption: 'Scheduled DOD', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'SalesCategory', caption: 'Sales Type' },
+                                { dataField: 'ExpectedValue', caption: 'Est. Value', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'PostStatus', caption: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-conversion-ratio', dataKey: 'conversion_ratio', label: 'Order Conversion Ratio', valueSuffix: '%', cssVar: '--glow-purple',
+                        secondaryMetrics: [{ icon: 'bi-file-earmark-check', dataKey: 'converted_count', label: 'Converted' }, { icon: 'bi-cash-stack', dataKey: 'converted_value', label: 'Value', format: 'currency_compact' }],
+                        guide: {
+                            title: 'Proposal Conversion Ratio',
+                            definition: 'The percentage of submitted proposals that are successfully converted into business ("Won").',
+                            interpretation: 'Measures the effectiveness of the sales team in closing deals after the proposal stage.',
+                            calculation: '(Total Won Proposals / Total Submitted Proposals) * 100.'
+                        },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'so_booking_data', // This must match the key in MockDataProvider
+                            columns: [
+                                { dataField: 'SalesOrderNo', caption: 'SO Number' },
+                                { dataField: 'OrderDate', caption: 'Order Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'ClientName', caption: 'Customer' },
+                                { dataField: 'JobName', caption: 'Job Name' },
+                                { dataField: 'OrderQty', caption: 'Order Qty', dataType: 'number', format: '#,##0' },
+                                { dataField: 'Rate', caption: 'Unit Rate', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency') },
+                                { dataField: 'NetAmount', caption: 'Total Value (Net)', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'ExpectedDelDate', caption: 'Expected Delivery', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'SalesRep', caption: 'Sales Rep' },
+                                { dataField: 'IsBooked', caption: 'Booking Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-total-sales', dataKey: 'total_sales_value', label: 'Total Sales Value', format: 'currency_compact', cssVar: '--glow-green',
+                        secondaryMetrics: [{ icon: 'bi-receipt', dataKey: 'order_count', label: 'Fresh Orders' }, { icon: 'bi-cash-coin', dataKey: 'billing_value', label: 'Billing Value', format: 'currency_compact' }],
+                        guide: {
+                            title: 'Total Sales Value',
+                            definition: 'The total monetary value of all completed sales orders within the period.',
+                            interpretation: 'Represents the total revenue generated from sales activities. It is a primary indicator of business performance.',
+                            calculation: 'Sum of "value" for all records in the Sales Orders module.'
+                        },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'sales_orders',
+                            columns: [
+                                { dataField: 'BillNo', caption: 'Invoice No' },
+                                { dataField: 'BillDate', caption: 'Invoice Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                { dataField: 'WTNo', caption: 'Work Ticket' },
+                                { dataField: 'CustomerName', caption: 'Customer' },
+                                { dataField: 'BilledQty', caption: 'Billed Qty', dataType: 'number', format: '#,##0' },
+                                { dataField: 'SaleAmtExclFr', caption: 'Basic Amount', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'Freight', caption: 'Freight', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency') },
+                                { dataField: 'TotalAmtINR', caption: 'Total (INR)', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency_compact') },
+                                { dataField: 'ThroughputHr', caption: 'Throughput/Hr', dataType: 'number', customizeText: (cellInfo) => Utils.formatMetric(cellInfo.value, 'currency') },
+                                { dataField: 'MachineNo', caption: 'Machine Used' }
+                            ]
+                        }
+                    }
+                ];
+
+                const layoutConfig = [
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'funnel-chart', chartType: 'bar', title: 'Weekly Sales Funnel',
+                            dataKey: 'sales_funnel_weekly_data',
+                            transformer: (data, view = 'value') => {
+                                const dataKey = view === 'value' ? 'value' : 'count';
+                                const yAxisTitle = view === 'value' ? 'Value (INR)' : 'Count';
+                                const yAxisFormatter = view === 'value'
+                                    ? (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '')
+                                    : (value) => Number.isInteger(value) ? value.toLocaleString('en-IN') : '';
+                                const sortedWeeks = [...new Set(data.map(d => d.week))].sort();
+                                const displayLabels = sortedWeeks.map((_, i) => i === sortedWeeks.length - 1 ? 'Current Week' : `Week ${i + 1}`);
+                                const stages = ['Enquiry', 'Quotation', 'Order', 'Invoice'];
+                                const stageColors = ['#003366', '#03A9F4', '#0C98BA', '#0DAD8D'];
+                                return {
+                                    type: 'bar',
+                                    data: {
+                                        labels: displayLabels,
+                                        datasets: stages.map((stage, i) => ({
+                                            label: stage,
+                                            data: sortedWeeks.map(week => {
+                                                const item = data.find(d => d.week === week && d.stage === stage);
+                                                return item ? item[dataKey] : 0;
+                                            }),
+                                            backgroundColor: stageColors[i],
+                                        }))
+                                    },
+                                    options: {
+                                        plugins: { legend: { display: true, position: 'top' } },
+                                        scales: {
+                                            y: { stacked: true, title: { display: true, text: yAxisTitle }, ticks: { callback: yAxisFormatter } },
+                                            x: { stacked: true, grid: { display: false } }
+                                        }
+                                    }
+                                };
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'funnel_report_data',
+                                filterMapping: 'Stage',
+                                columns: [
+                                    { dataField: 'DocNo', caption: 'Document Number' },
+                                    { dataField: 'Date', caption: 'Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'JobDescription', caption: 'Job Description' },
+                                    { dataField: 'Category', caption: 'Product Category' },
+                                    { dataField: 'Executive', caption: 'Sales Executive' },
+                                    { dataField: 'Value', caption: 'Document Value', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'customer-happiness-chart', chartType: 'bar', title: 'Customer Happiness Index',
+                            dataKey: 'customer_happiness_index',
+                            transformer: (data) => {
+                                const categoryOrder = ['Bad', 'Moderate', 'Good'];
+                                const sortedData = data.sort((a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category));
+                                return {
+                                    labels: sortedData.map(d => d.category),
+                                    datasets: [{
+                                        label: 'No. of Customers',
+                                        data: sortedData.map(d => d.count),
+                                        backgroundColor: ['#C62828', '#FF9800', '#4eAF50']
+                                    }]
+                                };
+                            },
+                            options: {
+                                plugins: { legend: { display: false } },
+                                scales: { x: { grid: { display: false } }, y: { title: { display: true, text: 'No. of Customers' }, beginAtZero: true, ticks: { precision: 0 } } }
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'customer_sentiment_data',
+                                filterMapping: 'Sentiment',
+                                columns: [
+                                    { dataField: 'ClientCode', caption: 'Client Code' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'SalesRep', caption: 'Assigned Sales Rep' },
+                                    { dataField: 'Sentiment', caption: 'Sentiment Category' },
+                                    { dataField: 'LastInteraction', caption: 'Last Interaction', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'LastActivity', caption: 'Last Activity Performed' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'non-proposal-reasons-chart', chartType: 'bar', title: 'Top 5 Reasons for Proposal Non-conversion',
+                            dataKey: 'non_proposal_reasons',
+                            transformer: 'transformForTopN',
+                            transformerConfig: { n: 5, categoryKey: 'reason', valueKey: 'value', datasetLabel: 'Lost Value', backgroundColor: '#0C98BA' },
+                            options: {
+                                indexAxis: 'y', plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { grid: { display: false }, ticks: { autoSkip: false } },
+                                    x: { title: { display: true, text: 'Lost Value (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } }
+                                }
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'lost_business_data',
+                                filterMapping: 'Reason',
+                                columns: [
+                                    { dataField: 'EnquiryNo', caption: 'Enquiry Number' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'JobName', caption: 'Job Name' },
+                                    { dataField: 'EstValue', caption: 'Estimated Value', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') },
+                                    { dataField: 'Executive', caption: 'Sales Executive' },
+                                    { dataField: 'Reason', caption: 'Reason for Non-conversion' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'actual-vs-target-chart', chartType: 'bar', title: 'Weekly Sales vs. Target (FO)',
+                            dataKey: 'weekly_sales_vs_target_detailed',
+                            transformer: (data, view = 'overview') => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                const targetData = data.map(d => d.target);
+                                if (view === 'machine') {
+                                    const machineTypes = Object.keys(data[0].actual_breakdown.machine);
+                                    const machineColors = ['#003366', '#00509E', '#007BFF', '#4DADF7'];
+                                    return {
+                                        type: 'bar',
+                                        data: {
+                                            labels,
+                                            datasets: [...machineTypes.map((m, i) => ({ label: m.replace('_', ' ').toUpperCase(), data: data.map(d => d.actual_breakdown.machine[m]), backgroundColor: machineColors[i], order: 2 })),
+                                            { label: 'Target', data: targetData, type: 'line', borderColor: '#f44336', backgroundColor: '#f44336', fill: false, tension: 0.4, order: 1 }]
+                                        },
+                                        options: { scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, title: { display: true, text: 'Sales Value (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } } } }
+                                    };
+                                }
+                                return {
+                                    type: 'bar',
+                                    data: {
+                                        labels,
+                                        datasets: [{ label: 'New Client', data: data.map(d => d.actual_breakdown.new_client), backgroundColor: '#03A9F4', order: 2 },
+                                        { label: 'Old Client', data: data.map(d => d.actual_breakdown.old_client), backgroundColor: '#003366', order: 2 },
+                                        { label: 'Target', data: targetData, type: 'line', borderColor: '#f44336', backgroundColor: '#f44336', fill: false, tension: 0.4, order: 1 }]
+                                    },
+                                    options: { scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, title: { display: true, text: 'Sales Value (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } } } }
+                                };
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'fresh_order_detail_data',
+                                filterMapping: 'Week',
+                                columns: [
+                                    { dataField: 'SONo', caption: 'SO Number' },
+                                    { dataField: 'OrderDate', caption: 'Order Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'JobName', caption: 'Job Name' },
+                                    { dataField: 'MachineType', caption: 'Machine Type' },
+                                    { dataField: 'Executive', caption: 'Sales Executive' },
+                                    { dataField: 'NetValue', caption: 'Net Order Value', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-sales-overview-chart', chartType: 'line', title: 'Weekly Billing Actual vs Target',
+                            dataKey: 'weekly_billing_data',
+                            transformer: (data) => ({
+                                labels: data.map((_, i) => i === data.length - 1 ? 'Current Week' : `Week ${i + 1}`),
+                                datasets: [{ label: 'Actual Billing', data: data.map(d => d.actual_billing), type: 'line', fill: true, backgroundColor: 'rgba(0, 51, 102, 0.2)', borderColor: '#003366', tension: 0.4 },
+                                { label: 'Target', data: data.map(d => d.billing_target), type: 'line', fill: true, backgroundColor: 'rgba(13, 173, 141, 0.2)', borderColor: '#0DAD8D', tension: 0.4 }]
+                            }),
+                            options: { plugins: { legend: { display: true, position: 'top' } }, scales: { x: { grid: { display: false } }, y: { title: { display: true, text: 'Billing Value (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } } } },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'weekly_invoicing_data',
+                                filterMapping: 'Week',
+                                columns: [
+                                    { dataField: 'InvoiceNo', caption: 'Invoice Number' },
+                                    { dataField: 'BillDate', caption: 'Bill Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'WTNo', caption: 'WT Number' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'BasicAmt', caption: 'Basic Amount', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') },
+                                    { dataField: 'TaxAmt', caption: 'Tax Amount', dataType: 'number' },
+                                    { dataField: 'TotalValue', caption: 'Total Invoiced Value', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'aging-chart', chartType: 'bar', title: 'Aging Analysis Overview',
+                            dataKey: 'weekly_receivables',
+                            transformer: (data, view = 'receivables') => {
+                                const currentData = data[data.length - 1];
+                                const agingData = currentData.overdue_ageing;
+                                const buckets = ['0-30', '31-60', '61-90', '90+'];
+                                const labels = ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days'];
+                                const values = buckets.map(b => agingData[b]);
+                                const backgroundColors = view === 'overdue' ? ['#4C1d3D', '#852E4E', '#A33757', '#Dc586d'] : ['#003366', '#325a88', '#4b6a9b', '#b4c3d2'];
+                                return {
+                                    type: 'bar',
+                                    data: { labels: labels, datasets: [{ label: view === 'overdue' ? 'Overdue Amount' : 'Receivables Amount', data: values, backgroundColor: backgroundColors, barPercentage: 0.6, borderRadius: 4 }] },
+                                    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, title: { display: true, text: 'Aging Bucket' } }, y: { title: { display: true, text: 'Amount (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } } } }
+                                };
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'outstanding_receivables_data',
+                                filterMapping: 'Bucket',
+                                columns: [
+                                    { dataField: 'InvoiceNo', caption: 'Invoice Number' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'InvoiceDate', caption: 'Invoice Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'DueDate', caption: 'Due Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'DaysOverdue', caption: 'Days Overdue' },
+                                    { dataField: 'TotalAmount', caption: 'Total Amount', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') },
+                                    { dataField: 'Bucket', caption: 'Aging Bucket' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-fg-delay-chart', chartType: 'bar', title: 'Weekly Job Status Overview',
+                            dataKey: 'weekly_job_status_data',
+                            transformer: (data, view = 'wip') => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                let stageData = view === 'fg-creation' ? data.map(d => d.fg_creation) : (view === 'dispatch' ? data.map(d => d.dispatch) : data.map(d => d.wip));
+                                return {
+                                    type: 'bar',
+                                    data: {
+                                        labels,
+                                        datasets: [{ label: 'On-Time', data: stageData.map(d => d.on_time), backgroundColor: '#4caf50' },
+                                        { label: 'Delayed Orders', data: stageData.map(d => d.delayed_orders), backgroundColor: '#ff9800' },
+                                        { label: 'Delay due to Sales', data: stageData.map(d => d.delay_due_to_sales), backgroundColor: '#f44336' }]
+                                    },
+                                    options: { plugins: { legend: { display: true, position: 'top' } }, scales: { x: { grid: { display: false } }, y: { title: { display: true, text: 'No. of Orders' }, beginAtZero: true, ticks: { precision: 0 } } } }
+                                };
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'production_tracking_data',
+                                filterMapping: 'Category',
+                                columns: [
+                                    { dataField: 'WTNo', caption: 'WT Number' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'JobName', caption: 'Job Name' },
+                                    { dataField: 'PlannedDate', caption: 'Planned Completion', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'Status', caption: 'Actual Status' },
+                                    { dataField: 'DelayDays', caption: 'Delay Days' },
+                                    { dataField: 'DelayReason', caption: 'Delay Reason' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-machine-load-chart', chartType: 'line', title: 'Weekly Printing Machine Load',
+                            dataKey: 'weekly_machine_load',
+                            transformer: (data) => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                const machineTypes = ['1_color', '2_color', '4_color', 'web'];
+                                const colors = ['#03A9F4', '#4CAF50', '#FF9800', '#003366'];
+                                const bgColors = ['rgba(3, 169, 244, 0.3)', 'rgba(76, 175, 80, 0.3)', 'rgba(255, 152, 0, 0.3)', 'rgba(0, 51, 102, 0.3)'];
+                                return {
+                                    labels,
+                                    datasets: machineTypes.map((machine, i) => ({ label: machine.replace('_', ' ').toUpperCase(), data: data.map(d => d[machine]), fill: true, backgroundColor: bgColors[i], borderColor: colors[i], tension: 0.4 }))
+                                };
+                            },
+                            options: { plugins: { legend: { display: true, position: 'top' } }, scales: { y: { stacked: true, title: { display: true, text: 'Load (Hours)' } }, x: { grid: { display: false } } } },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'machine_schedule_data',
+                                filterMapping: 'MachineID',
+                                columns: [
+                                    { dataField: 'WTNo', caption: 'WT Number' },
+                                    { dataField: 'JobName', caption: 'Job Name' },
+                                    { dataField: 'MachineID', caption: 'Machine ID' },
+                                    { dataField: 'StartTime', caption: 'Planned Start', dataType: 'date', format: 'dd-MMM HH:mm' },
+                                    { dataField: 'EstHours', caption: 'Est. Hours' },
+                                    { dataField: 'Priority', caption: 'Job Priority' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-input-delay-chart', chartType: 'bar', title: 'Weekly Input Delay',
+                            dataKey: 'weekly_input_delay_data',
+                            transformer: (data) => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                return {
+                                    labels,
+                                    datasets: [{ label: 'Total Inputs', data: data.map(d => d.total_inputs), backgroundColor: 'rgba(75, 192, 192, 0.6)', order: 2 },
+                                    { label: 'Delayed Inputs', data: data.map(d => d.delayed_inputs), type: 'line', borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 1)', tension: 0.4, order: 1, yAxisID: 'y1' }]
+                                };
+                            },
+                            options: {
+                                plugins: { legend: { display: true, position: 'top' } }, scales: {
+                                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'No. of Inputs' } }, y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'No. of Delayed Inputs' }, grid: { drawOnChartArea: false } }, x: {
+                                        grid: { display: false },
+                                        ticks: {
+                                            maxRotation: 0, // Forces labels to stay horizontal
+                                            minRotation: 0, // Forces labels to stay horizontal
+                                            autoSkip: true  // Skips labels if they are truly too crowded
+                                        }
+                                    }
+                                }
+                            },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'bottleneck_report_data',
+                                columns: [
+                                    { dataField: 'SONo', caption: 'SO Number' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'JobName', caption: 'Job Name' },
+                                    { dataField: 'MissingInput', caption: 'Missing Input Type' },
+                                    { dataField: 'DaysDelayed', caption: 'Days Delayed' },
+                                    { dataField: 'Executive', caption: 'Responsible Executive' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-billing-pending-chart', chartType: 'bar', title: 'Weekly Billing vs. Pending Orders',
+                            dataKey: 'weekly_billing_pending_data',
+                            transformer: (data) => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                return {
+                                    labels,
+                                    datasets: [{ label: 'Billed Amount', data: data.map(d => d.billed_amount), backgroundColor: '#0c98ba' },
+                                    { label: 'Pending Order Value', data: data.map(d => d.pending_order_value), backgroundColor: '#b4e9f2' }]
+                                };
+                            },
+                            options: { plugins: { legend: { display: true, position: 'top' } }, scales: { y: { title: { display: true, text: 'Amount (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } }, x: { grid: { display: false } } } },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'order_backlog_data',
+                                columns: [
+                                    { dataField: 'SONo', caption: 'SO Number' },
+                                    { dataField: 'OrderDate', caption: 'Order Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'TotalValue', caption: 'Total Order Value', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') },
+                                    { dataField: 'BilledAmt', caption: 'Billed Amount', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') },
+                                    { dataField: 'PendingValue', caption: 'Remaining Pending', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'weekly-collection-chart', chartType: 'line', title: 'Weekly Collection: Target vs Actual',
+                            dataKey: 'weekly_receivables',
+                            transformer: (data) => {
+                                const labels = data.map((_, i) => i === data.length - 1 ? 'Current' : `Week ${i + 1}`);
+                                return {
+                                    labels,
+                                    datasets: [{ label: 'Actual Collection', data: data.map(d => d.collection), borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.2)', fill: true, tension: 0.4 },
+                                    { label: 'Target', data: data.map(d => d.collection_target), borderColor: '#0DAD8D', backgroundColor: 'rgba(13, 173, 141, 0.2)', fill: true, tension: 0.4 }]
+                                };
+                            },
+                            options: { plugins: { legend: { display: true, position: 'top' } }, scales: { x: { grid: { display: false } }, y: { title: { display: true, text: 'Collection Amount (INR)' }, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('₹', '') } } } },
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'collection_register_data',
+                                filterMapping: 'Week',
+                                columns: [
+                                    { dataField: 'ReceiptNo', caption: 'Receipt Number' },
+                                    { dataField: 'Date', caption: 'Payment Date', dataType: 'date', format: 'dd-MMM-yyyy' },
+                                    { dataField: 'CustomerName', caption: 'Customer Name' },
+                                    { dataField: 'InvoiceRef', caption: 'Invoice Reference' },
+                                    { dataField: 'Mode', caption: 'Payment Mode' },
+                                    { dataField: 'Amount', caption: 'Amount Collected', dataType: 'number', customizeText: (e) => Utils.formatMetric(e.value, 'currency_compact') }
+                                ]
+                            }
+                        }
+                    }
+                ];
+
+                const contextMenuConfig = {
+                    actions: [
+                        { id: 'drilldown', label: 'View Details', icon: 'bi-table' },
+                        { id: 'expand', label: 'Expand View', icon: 'bi-arrows-fullscreen' },
+                        { id: 'guide', label: 'Definition / Guide', icon: 'bi-question-circle' },
+                        { type: 'separator' },
+                        { id: 'share', label: 'Share via Email', icon: 'bi-envelope' },
+                        {
+                            id: 'export', label: 'Export', icon: 'bi-download', submenu: [
+                                { id: 'export-png', label: 'Export as PNG', icon: 'bi-file-earmark-image' },
+                                { id: 'export-pdf', label: 'Export as PDF', icon: 'bi-filetype-pdf' }
+                            ]
+                        },
+                        { id: 'refresh', label: 'Refresh Data', icon: 'bi-arrow-clockwise' },
+                        { type: 'separator' },
+                        { id: 'ai-insight', label: 'AI Insight', icon: 'bi-magic' }
+                    ]
+                };
+                return {
+                    title: 'CRM & Sales Dashboard',
+                    kpis: kpiConfig,
+                    layout: layoutConfig,
+                    contextMenu: contextMenuConfig
+                };
+            })();
+
+            // ========================================================================================================
+            // SECTION 2: DATA PROVIDER MODULE
+            // This section simulates `dataProvider.js`. Swap the provider class to connect to a live backend.
+            // ========================================================================================================
+            const DATA_PROVIDER = (() => {
+
+                const SharedTransformers = {
+                    aggregateByStatus: (data, periodIndex) => { const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const statusCounts = filteredData.reduce((acc, d) => { acc[d.status] = (acc[d.status] || 0) + 1; return acc; }, {}); return { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#03A9F4', '#003366', '#4CAF50', '#9E9E9E'] }] }; },
+
+                    transformForPareto: (data) => {
+                        const sortedData = [...data].sort((a, b) => b.count - a.count);
+                        const labels = sortedData.map(d => d.reason);
+                        const counts = sortedData.map(d => d.count);
+                        const total = counts.reduce((sum, val) => sum + val, 0);
+                        let cumulative = 0;
+                        const cumulativePercentage = counts.map(count => {
+                            cumulative += count;
+                            return total > 0 ? (cumulative / total) * 100 : 0;
+                        });
+                        return {
+                            labels,
+                            datasets: [
+                                { type: 'bar', label: 'Count', data: counts, backgroundColor: '#003366', yAxisID: 'y' },
+                                { type: 'line', label: 'Cumulative %', data: cumulativePercentage, borderColor: '#EF4444', tension: 0.1, yAxisID: 'y1' }
+                            ]
+                        };
+                    },
+                    transformForRadar: (data) => {
+                        const labels = ['Efficiency (Cycle Time)', 'Quality Score', 'Business Value'];
+                        const colors = ['rgba(255, 99, 132, 0.4)', 'rgba(54, 162, 235, 0.4)', 'rgba(255, 206, 86, 0.4)', 'rgba(75, 192, 192, 0.4)', 'rgba(153, 102, 255, 0.4)', 'rgba(255, 159, 64, 0.4)'];
+
+                        const metrics = {
+                            cycleTime: data.map(v => v.avgCycleTime),
+                            quality: data.map(v => v.avgQualityScore),
+                            value: data.map(v => v.totalValue)
+                        };
+
+                        const minMax = {
+                            cycleTime: { min: Math.min(...metrics.cycleTime), max: Math.max(...metrics.cycleTime) },
+                            quality: { min: Math.min(...metrics.quality), max: Math.max(...metrics.quality) },
+                            value: { min: Math.min(...metrics.value), max: Math.max(...metrics.value) }
+                        };
+
+                        const normalize = (val, min, max, invert = false) => {
+                            if (max - min === 0) return 50; // Avoid division by zero
+                            const normalized = ((val - min) / (max - min)) * 100;
+                            return invert ? 100 - normalized : normalized;
+                        };
+
+                        const datasets = data.map((vendor, index) => ({
+                            label: vendor.name,
+                            data: [
+                                normalize(vendor.avgCycleTime, minMax.cycleTime.min, minMax.cycleTime.max, true), // Lower is better
+                                normalize(vendor.avgQualityScore, minMax.quality.min, minMax.quality.max),
+                                normalize(vendor.totalValue, minMax.value.min, minMax.value.max)
+                            ],
+                            borderColor: colors[index % colors.length].replace('0.4', '1'),
+                            backgroundColor: colors[index % colors.length],
+                            pointBackgroundColor: colors[index % colors.length].replace('0.4', '1'),
+                        }));
+
+                        return { labels, datasets };
+                    },
+                    transformForTopN: (data, periodIndex, config) => {
+                        // Read parameters from the chart's configuration
+                        const { n = 5, categoryKey, valueKey, datasetLabel = 'Value', chartType = 'bar', backgroundColor: customBackgroundColor } = config.transformerConfig;
+
+                        if (!categoryKey || !valueKey) {
+                            throw new Error(`'transformerConfig' for TopN must include 'categoryKey' and 'valueKey'.`);
+                        }
+
+                        const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data;
+
+                        const totals = filteredData.reduce((acc, d) => {
+                            const category = d[categoryKey];
+                            const value = d[valueKey];
+                            if (category !== undefined && typeof value === 'number') {
+                                acc[category] = (acc[category] || 0) + value;
+                            }
+                            return acc;
+                        }, {});
+
+                        const topN = Object.entries(totals)
+                            .sort(([, a], [, b]) => b - a)
+                            .slice(0, n);
+
+                        const labels = topN.map(([key]) => key);
+                        const values = topN.map(([, val]) => val);
+
+                        // Dynamically set colors based on chart type for better visuals
+                        const backgroundColor = customBackgroundColor || (chartType === 'line' ? 'rgba(16, 185, 129, 0.2)' : '#003366');
+                        const borderColor = chartType === 'line' ? '#10B981' : undefined;
+
+                        return {
+                            labels,
+                            datasets: [{
+                                label: datasetLabel,
+                                data: values,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                                fill: chartType === 'line',
+                                tension: 0.3
+                            }]
+                        };
+                    },
+                };
+
+                class MockDataProvider {
+                    constructor(cacheTTL = 300000) {
+                        this.cache = new Map();
+                        this.cacheTTL = cacheTTL;
+                    }
+
+                    getWeekDetails(date) {
+                        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                        return `W${weekNo} '${String(d.getUTCFullYear()).slice(2)}`;
+                    }
+
+                    generateWeeklyJobStatusData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const label = i === 0 ? 'Current' : `W${weeks - i}`;
+
+                            // Generate random data for each stage with 3 metrics
+                            const generateStageData = () => ({
+                                on_time: Math.floor(Math.random() * 30) + 40, // 40-70 orders
+                                delayed_orders: Math.floor(Math.random() * 15) + 5, // 5-20 orders
+                                delay_due_to_sales: Math.floor(Math.random() * 10) + 2 // 2-12 orders
+                            });
+
+                            data.push({
+                                week: label,
+                                wip: generateStageData(),
+                                fg_creation: generateStageData(),
+                                dispatch: generateStageData()
+                            });
+                        }
+                        return data;
+                    }
+                    generateWeeklyFunnelData(weeks = 4) {
+                        const data = [];
+                        const stages = [
+                            { name: 'Enquiry', baseValue: 2500000, variance: 0.2, baseCount: 100 },
+                            { name: 'Quotation', baseValue: 1800000, variance: 0.25, baseCount: 80 },
+                            { name: 'Order', baseValue: 1600000, variance: 0.3, baseCount: 60 },
+                            { name: 'Invoice', baseValue: 1550000, variance: 0.35, baseCount: 55 }
+                        ];
+                        const today = new Date('2025-12-02'); // Using a fixed date for consistent mock data
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            stages.forEach(stage => {
+                                const value = Math.floor(stage.baseValue / weeks * (1 + (Math.random() - 0.5) * stage.variance));
+                                const count = Math.floor(stage.baseCount / weeks * (1 + (Math.random() - 0.5) * stage.variance));
+                                data.push({
+                                    week: weekLabel,
+                                    stage: stage.name,
+                                    value: value,
+                                    count: count
+                                });
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklySalesVsTarget(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02'); // Using a fixed date for consistent mock data
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const target = Math.floor(Math.random() * 20000) + 70000;
+
+                            const actual_new_client = Math.floor(target * (Math.random() * 0.4 + 0.2)); // 20-60% of target
+                            const actual_old_client = Math.floor(target * (Math.random() * 0.5 + 0.4)); // 40-90% of target
+
+                            const total_actual = actual_new_client + actual_old_client;
+
+                            // Distribute total actuals across machine types
+                            const webVal = Math.floor(total_actual * 0.2);
+                            const fourColorVal = Math.floor(total_actual * 0.4);
+                            const twoColorVal = Math.floor(total_actual * 0.3);
+                            const oneColorVal = total_actual - webVal - fourColorVal - twoColorVal;
+
+                            data.push({
+                                week: weekLabel,
+                                target: target,
+                                actual_total: total_actual,
+                                actual_breakdown: {
+                                    new_client: actual_new_client,
+                                    old_client: actual_old_client,
+                                    machine: {
+                                        '1_color': oneColorVal,
+                                        '2_color': twoColorVal,
+                                        '4_color': fourColorVal,
+                                        'web': webVal
+                                    }
+                                }
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyMachineLoad(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            data.push({
+                                week: weekLabel,
+                                '1_color': Math.floor(Math.random() * 50) + 100, // Random load between 100-150
+                                '2_color': Math.floor(Math.random() * 80) + 150,
+                                '4_color': Math.floor(Math.random() * 100) + 250,
+                                'web': Math.floor(Math.random() * 60) + 160
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyReceivables(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const overdue_total = Math.floor(Math.random() * 200000) + 100000;
+                            const current = Math.floor(Math.random() * 300000) + 200000;
+
+                            const ageing_30 = Math.floor(overdue_total * 0.4);
+                            const ageing_60 = Math.floor(overdue_total * 0.3);
+                            const ageing_90 = Math.floor(overdue_total * 0.2);
+                            const ageing_90plus = overdue_total - ageing_30 - ageing_60 - ageing_90;
+
+                            const collection = Math.floor((overdue_total + current) * (Math.random() * 0.2 + 0.7)); // Collect 70-90% of total outstanding
+
+                            data.push({
+                                week: weekLabel,
+                                outstanding_current: current,
+                                outstanding_overdue_total: overdue_total,
+                                overdue_ageing: {
+                                    '0-30': ageing_30,
+                                    '31-60': ageing_60,
+                                    '61-90': ageing_90,
+                                    '90+': ageing_90plus
+                                },
+                                collection: collection
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyInputDelayData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const total_inputs = Math.floor(Math.random() * 100) + 300; // 300-400 inputs per week
+                            const delayed_inputs = Math.floor(total_inputs * (Math.random() * 0.20)); // 0-20% of inputs are delayed
+
+                            data.push({
+                                week: weekLabel,
+                                total_inputs: total_inputs,
+                                delayed_inputs: delayed_inputs
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyBillingPendingData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        let pending_orders = 750000; // Starting pending order value
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const billed_amount = Math.floor(Math.random() * 100000) + 200000; // 200k-300k billed per week
+                            const new_pending = Math.floor(Math.random() * 50000) + 225000; // 225k-275k new pending orders
+
+                            pending_orders = pending_orders + new_pending - billed_amount;
+
+                            data.push({
+                                week: weekLabel,
+                                billed_amount: billed_amount,
+                                pending_order_value: pending_orders
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyMachineLoad(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            data.push({
+                                week: weekLabel,
+                                '1_color': Math.floor(Math.random() * 50) + 100, // Random load between 100-150
+                                '2_color': Math.floor(Math.random() * 80) + 150,
+                                '4_color': Math.floor(Math.random() * 100) + 250,
+                                'web': Math.floor(Math.random() * 60) + 160
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyReceivables(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const overdue_total = Math.floor(Math.random() * 200000) + 100000;
+                            const current = Math.floor(Math.random() * 300000) + 200000;
+
+                            const ageing_30 = Math.floor(overdue_total * 0.4);
+                            const ageing_60 = Math.floor(overdue_total * 0.3);
+                            const ageing_90 = Math.floor(overdue_total * 0.2);
+                            const ageing_90plus = overdue_total - ageing_30 - ageing_60 - ageing_90;
+
+                            const collection = Math.floor((overdue_total + current) * (Math.random() * 0.2 + 0.7)); // Collect 70-90% of total outstanding
+
+                            data.push({
+                                week: weekLabel,
+                                outstanding_current: current,
+                                outstanding_overdue_total: overdue_total,
+                                overdue_ageing: {
+                                    '0-30': ageing_30,
+                                    '31-60': ageing_60,
+                                    '61-90': ageing_90,
+                                    '90+': ageing_90plus
+                                },
+                                collection: collection
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyInputDelayData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const total_inputs = Math.floor(Math.random() * 100) + 300; // 300-400 inputs per week
+                            const delayed_inputs = Math.floor(total_inputs * (Math.random() * 0.20)); // 0-20% of inputs are delayed
+
+                            data.push({
+                                week: weekLabel,
+                                total_inputs: total_inputs,
+                                delayed_inputs: delayed_inputs
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyBillingPendingData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        let pending_orders = 750000; // Starting pending order value
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const billed_amount = Math.floor(Math.random() * 100000) + 200000; // 200k-300k billed per week
+                            const new_pending = Math.floor(Math.random() * 50000) + 225000; // 225k-275k new pending orders
+
+                            pending_orders = pending_orders + new_pending - billed_amount;
+
+                            data.push({
+                                week: weekLabel,
+                                billed_amount: billed_amount,
+                                pending_order_value: pending_orders
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyMachineLoad(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            data.push({
+                                week: weekLabel,
+                                '1_color': Math.floor(Math.random() * 50) + 100,
+                                '2_color': Math.floor(Math.random() * 80) + 150,
+                                '4_color': Math.floor(Math.random() * 100) + 250,
+                                'web': Math.floor(Math.random() * 60) + 160
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyReceivables(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const overdue_total = Math.floor(Math.random() * 200000) + 100000;
+                            const current = Math.floor(Math.random() * 300000) + 200000;
+
+                            const ageing_30 = Math.floor(overdue_total * 0.4);
+                            const ageing_60 = Math.floor(overdue_total * 0.3);
+                            const ageing_90 = Math.floor(overdue_total * 0.2);
+                            const ageing_90plus = overdue_total - ageing_30 - ageing_60 - ageing_90;
+
+                            const collection = Math.floor((overdue_total + current) * (Math.random() * 0.2 + 0.7));
+
+                            data.push({
+                                week: weekLabel,
+                                outstanding_current: current,
+                                outstanding_overdue_total: overdue_total,
+                                overdue_ageing: {
+                                    '0-30': ageing_30,
+                                    '31-60': ageing_60,
+                                    '61-90': ageing_90,
+                                    '90+': ageing_90plus
+                                },
+                                collection: collection,
+                                collection_target: 280000
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyInputDelayData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const total_inputs = Math.floor(Math.random() * 100) + 300;
+                            const delayed_inputs = Math.floor(total_inputs * (Math.random() * 0.20));
+
+                            data.push({
+                                week: weekLabel,
+                                total_inputs: total_inputs,
+                                delayed_inputs: delayed_inputs
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyBillingPendingData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+                        let pending_orders = 750000;
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const billed_amount = Math.floor(Math.random() * 100000) + 200000;
+                            const new_pending = Math.floor(Math.random() * 50000) + 225000;
+
+                            pending_orders = pending_orders + new_pending - billed_amount;
+
+                            data.push({
+                                week: weekLabel,
+                                billed_amount: billed_amount,
+                                pending_order_value: pending_orders
+                            });
+                        }
+                        return data;
+                    }
+
+                    generateWeeklyBillingData(weeks = 4) {
+                        const data = [];
+                        const today = new Date('2025-12-02');
+
+                        for (let i = weeks - 1; i >= 0; i--) {
+                            const weekDate = new Date(today);
+                            weekDate.setDate(today.getDate() - (i * 7));
+                            const weekLabel = this.getWeekDetails(weekDate);
+
+                            const billing_target = 400000;
+                            const actual_billing = Math.floor(Math.random() * 100000) + 320000;
+
+                            data.push({
+                                week: weekLabel,
+                                actual_billing: actual_billing,
+                                billing_target: billing_target
+                            });
+                        }
+                        return data;
+                    }
+
+                    async fetchKpiData() {
+                        await new Promise(r => setTimeout(r, 250));
+                        return {
+                            new_prospects: { current: 820, previous: 750, hot_prospects: 274, warm_prospects: 273, cold_prospects: 273, trend: [60, 75, 70, 85, 90, 110, 105] },
+                            prospect_to_client_rate: { current: 12.5, previous: 11.9, total_prospects: 820, client_old: 65, client_new: 38, trend: [10, 11, 11.5, 12.1, 11.8, 12.3, 12.5] },
+                            open_proposal_value: { current: 480000, previous: 450000, lead_count: 42, avg_proposal_value: 11428, trend: [40, 42, 41, 45, 46, 45, 45.5] },
+                            total_sales_value: { current: 1596000, previous: 1480000, order_count: 152, billing_value: 1420000, trend: [180, 220, 210, 250, 240, 260, 236] },
+                            // REMOVED: overdue_receivables_pct: { ... },
+                            conversion_ratio: { current: 25.5, previous: 24.1, converted_count: 14, converted_value: 215000, trend: [23, 24, 22, 25, 26, 25.5, 25] } // ADDED
+                        };
+                    }
+
+                    async fetchRawData(dataKey) {
+                        const cached = this.cache.get(dataKey);
+                        if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) {
+                            return cached.data;
+                        }
+                        await new Promise(r => setTimeout(r, 400));
+                        const mockData = { // KPI 1: Active Prospects
+                            prospects_data: Array.from({ length: 50 }, (_, i) => ({
+                                ClientCode: `P-${2001 + i}`,
+                                ClientName: `Prospect Name ${i + 1}`,
+                                CreatedDate: new Date(2025, 0, i + 1),
+                                Region: ['North', 'South', 'East', 'West'][i % 4],
+                                SalesExecutive: ['Alice', 'Bob', 'Charlie'][i % 3],
+                                AnnualTurnover: Math.random() * 5000000,
+                                ProspectShare: Math.floor(Math.random() * 100),
+                                Status: 'Pending',
+                                City: 'New Delhi'
+                            })),
+
+                            // KPI 2: Prospect-to-Client
+                            clients_data: Array.from({ length: 30 }, (_, i) => ({
+                                ClientCode: `CL-${1001 + i}`,
+                                ClientName: `Approved Client ${i + 1}`,
+                                CreatedDate: new Date(2024, 11, i + 1),
+                                Region: ['North', 'South'][i % 2],
+                                SalesExecutive: 'Alice Johnson',
+                                AnnualTurnover: Math.random() * 10000000,
+                                Status: 'Approved'
+                            })),
+
+                            // KPI 3: Open Proposals
+                            proposals_data: Array.from({ length: 25 }, (_, i) => ({
+                                SENo: `ENQ-${500 + i}`,
+                                SEDate: new Date(2025, 11, 20 + i),
+                                ClientName: `Client ${i + 1}`,
+                                JobName: `Project Alpha ${i}`,
+                                ProductCategory: 'Packaging',
+                                ScheduledDOD: new Date(2026, 0, 15),
+                                SalesCategory: 'Domestic',
+                                ExpectedValue: Math.random() * 200000,
+                                PostStatus: 'Pending'
+                            })),
+
+                            // KPI 4: Order Conversion (SO Booking)
+                            so_booking_data: Array.from({ length: 20 }, (_, i) => ({
+                                SalesOrderNo: `SO-${800 + i}`,
+                                OrderDate: new Date(2025, 11, i + 1),
+                                ClientName: `Customer ${i + 1}`,
+                                JobName: `Job Order ${i}`,
+                                OrderQty: 5000 + (i * 100),
+                                Rate: 15.5,
+                                NetAmount: (5000 + (i * 100)) * 15.5,
+                                ExpectedDelDate: new Date(2026, 1, 10),
+                                SalesRep: 'Bob Williams',
+                                IsBooked: true
+                            })),
+
+                            // KPI 5: Total Sales (Sales Register)
+                            sales_orders: Array.from({ length: 40 }, (_, i) => ({
+                                BillNo: `INV-${9000 + i}`,
+                                BillDate: new Date(2025, 11, i + 5),
+                                WTNo: `WT-${400 + i}`,
+                                CustomerName: `Customer ${i + 1}`,
+                                BilledQty: 4800,
+                                SaleAmtExclFr: 75000,
+                                Freight: 1200,
+                                TotalAmtINR: 76200,
+                                ThroughputHr: 450,
+                                MachineNo: 'HEIDELBERG-01'
+                            })),
+                            funnel_report_data: Array.from({ length: 40 }, (_, i) => ({
+                                DocNo: `DOC-${1000 + i}`, Date: new Date(), CustomerName: `Customer ${i}`,
+                                JobDescription: 'Packaging Box', Category: 'Cartons', Executive: 'Alice',
+                                Value: 50000, Stage: i % 4 === 0 ? 'Quotation' : 'Enquiry'
+                            })),
+
+                            customer_sentiment_data: Array.from({ length: 20 }, (_, i) => ({
+                                ClientCode: `C-${i}`, CustomerName: `Client ${i}`, SalesRep: 'Bob',
+                                Sentiment: ['Bad', 'Moderate', 'Good'][i % 3], LastInteraction: new Date(), LastActivity: 'Follow-up Call'
+                            })),
+
+                            lost_business_data: Array.from({ length: 30 }, (_, i) => ({
+                                EnquiryNo: `ENQ-${700 + i}`,
+                                CustomerName: `Client ${String.fromCharCode(65 + (i % 10))}`,
+                                JobName: `Project ${i + 1}`,
+                                EstValue: Math.floor(Math.random() * 50000) + 10000,
+                                Executive: ['Alice', 'Bob', 'Charlie'][i % 3],
+                                // This ensures every record matches one of the 5 reasons above
+                                Reason: ['Pricing Issues', 'Process Not available', 'RM not available', 'Delivery Timeline', 'Competitor Preference'][i % 5]
+                            })),
+
+                            fresh_order_detail_data: Array.from({ length: 30 }, (_, i) => ({
+                                SONo: `SO-${i}`, OrderDate: new Date(), CustomerName: `Cust ${i}`,
+                                JobName: 'Brochure', MachineType: '4-Color', Executive: 'Alice', NetValue: 45000, Week: 'Current'
+                            })),
+
+                            weekly_invoicing_data: Array.from({ length: 25 }, (_, i) => ({
+                                InvoiceNo: `INV-${i}`, BillDate: new Date(), WTNo: `WT-${i}`,
+                                CustomerName: `Cust ${i}`, BasicAmt: 10000, TaxAmt: 1800, TotalValue: 11800, Week: 'Current'
+                            })),
+
+                            outstanding_receivables_data: Array.from({ length: 40 }, (_, i) => ({
+                                InvoiceNo: `INV-${i}`, CustomerName: `Cust ${i}`, InvoiceDate: new Date(),
+                                DueDate: new Date(), DaysOverdue: i * 5, TotalAmount: 15000,
+                                Bucket: i < 10 ? '0-30 Days' : '31-60 Days'
+                            })),
+
+                            production_tracking_data: Array.from({ length: 30 }, (_, i) => ({
+                                WTNo: `WT-${i}`, CustomerName: `Cust ${i}`, JobName: 'Job ${i}',
+                                PlannedDate: new Date(), Status: 'In Progress', DelayDays: i % 5,
+                                DelayReason: i % 3 === 0 ? 'Delayed due to Sales' : 'Material Shortage', Category: 'Delayed Orders'
+                            })),
+
+                            machine_schedule_data: Array.from({ length: 20 }, (_, i) => ({
+                                WTNo: `WT-${i}`, JobName: `Job ${i}`, MachineID: '4_COLOR',
+                                StartTime: new Date(), EstHours: 4, Priority: 'High'
+                            })),
+
+                            bottleneck_report_data: Array.from({ length: 10 }, (_, i) => ({
+                                SONo: `SO-${i}`, CustomerName: `Cust ${i}`, JobName: `Job ${i}`,
+                                MissingInput: 'Artwork Approval', DaysDelayed: 4, Executive: 'Alice'
+                            })),
+
+                            order_backlog_data: Array.from({ length: 20 }, (_, i) => ({
+                                SONo: `SO-${i}`, OrderDate: new Date(), CustomerName: `Cust ${i}`,
+                                TotalValue: 100000, BilledAmt: 40000, PendingValue: 60000
+                            })),
+
+                            collection_register_data: Array.from({ length: 15 }, (_, i) => ({
+                                ReceiptNo: `RCT-${i}`, Date: new Date(), CustomerName: `Cust ${i}`,
+                                InvoiceRef: `INV-${i}`, Mode: 'NEFT', Amount: 25000, Week: 'Current'
+                            })),
+                            // Chart Data
+                            sales_funnel_weekly_data: this.generateWeeklyFunnelData(4),
+                            weekly_job_status_data: this.generateWeeklyJobStatusData(4),
+                            customer_happiness_index: [
+                                { category: 'Bad', count: 6 },
+                                { category: 'Moderate', count: 6 },
+                                { category: 'Good', count: 15 }
+                            ],
+                            customer_satisfaction_details: Array.from({ length: 20 }, (_, i) => ({
+                                id: `C-${100 + i}`,
+                                name: `Customer ${i}`,
+                                status: i % 3 === 0 ? 'Bad' : 'Good',
+                                last_interaction: new Date()
+                            })),
+                            non_proposal_reasons: [
+                                { reason: 'Pricing Issues', count: 45, value: 220000 },
+                                { reason: 'Process Not available', count: 38, value: 180000 },
+                                { reason: 'RM not available', count: 32, value: 150000 },
+                                { reason: 'Delivery Timeline', count: 28, value: 120000 },
+                                { reason: 'Competitor Preference', count: 22, value: 95000 }
+                            ],
+                            weekly_sales_vs_target_detailed: this.generateWeeklySalesVsTarget(4),
+                            weekly_machine_load: this.generateWeeklyMachineLoad(4),
+                            weekly_receivables: this.generateWeeklyReceivables(4),
+                            weekly_input_delay_data: this.generateWeeklyInputDelayData(4),
+                            weekly_billing_pending_data: this.generateWeeklyBillingPendingData(4),
+                            weekly_billing_data: this.generateWeeklyBillingData(4)
+                        };
+
+                        const data = mockData[dataKey] || [];
+                        this.cache.set(dataKey, { data, timestamp: Date.now() });
+                        return data;
+                    }
+                }
+                return { SharedTransformers, getInstance: () => new MockDataProvider() };
+            })();
+
+            // ========================================================================================================
+            // SECTION 3: APPLICATION CORE
+            // This section simulates `app.js` and contains all the reusable logic.
+            // ========================================================================================================
+            const APP_CORE = (() => {
+                const dashboardConfig = CONFIGURATION;
+                const DataProvider = DATA_PROVIDER.getInstance();
+                const SharedTransformers = DATA_PROVIDER.SharedTransformers;
+                let chartInstances = {};
+                let modals = {};
+                let tooltipHideTimer = null;
+                Utils.getComponentConfig = (id) => dashboardConfig.kpis.find(c => c.id === id) || dashboardConfig.layout.find(c => c.config.id === id)?.config;
+                const StateManager = (() => {
+                    const state = { selectedPeriodIndex: null, salesChartView: 'client', funnelChartView: 'value', fgDelayChartView: 'wip', agingChartView: 'receivables' };
+                    const subscribers = {};
+                    return {
+                        getState: (key) => key ? state[key] : state,
+                        subscribe: (key, callback) => {
+                            if (!subscribers[key]) subscribers[key] = [];
+                            subscribers[key].push(callback);
+                        },
+                        setState: (key, data) => {
+                            const currentState = state[key];
+                            let hasChanged = false;
+                            if (typeof currentState === 'object' && currentState !== null && typeof data === 'object' && data !== null) {
+                                if (JSON.stringify(currentState) !== JSON.stringify(data)) hasChanged = true;
+                            } else {
+                                if (currentState !== data) hasChanged = true;
+                            }
+                            if (!hasChanged) return;
+                            state[key] = data;
+                            if (subscribers[key]) subscribers[key].forEach(callback => callback(data));
+                        }
+                    };
+                })();
+
+                const ChartDefaults = {
+                    getChartOptions(config) {
+                        const baseOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            onHover: (e, el) => { e.native.target.style.cursor = el.length > 0 ? 'pointer' : 'default'; },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+                                tooltip: { enabled: false, external: InteractivityHandler.customTooltip }
+                            }
+                        };
+
+                        // Apply type-specific defaults
+                        switch (config.chartType) {
+                            case 'doughnut':
+                                baseOptions.plugins.legend.display = false;
+                                break;
+                            case 'bubble':
+                                baseOptions.plugins.legend.display = false;
+                                // Bubble chart tooltip is now handled by the main customTooltip handler
+                                break;
+                        }
+
+                        // Merge user-defined options from the config over the defaults
+                        return Utils.deepMerge(baseOptions, config.options || {});
+                    }
+
+                };
+                const ActionRegistry = {
+                    setPeriodIndex: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const newIndex = elements[0].index;
+                            StateManager.setState('selectedPeriodIndex', newIndex);
+                            chart.setActiveElements([{ datasetIndex: 0, index: newIndex }]);
+                            chart.update();
+                        }
+                    }
+                };
+
+                async function init() {
+                    DashboardFilters.init({
+                        container: '#main-dashboard-content',
+                        movingAverage: {
+                            enabled: true,
+                            period: 13,
+                            dropdownSelector: '#maDropdownMenu',
+                            buttonTextSelector: '#maButtonText',
+                            weekOptionsContainer: '#maWeekOptions',
+                            onWeekChange: () => {
+                                const filters = DashboardFilters.getFilters();
+                                StateManager.setState('filters', filters);
+                                refreshDashboardData();
+                            }
+                        },
+                        timeFilters: {
+                            enabled: true,
+                            containerSelector: '#timeFilterContainer'
+                        },
+                        customFilters: [
+                            {
+                                id: 'filterProductionUnit',
+                                label: 'Production Unit',
+                                placeholder: 'All Units',
+                                dataSource: ['Faridabad - DTA', 'Faridabad - EOU', 'C - 35 Noida', 'HCBF', 'Thomson Press (ISD)'],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterSalesCategory',
+                                label: 'Sales Category',
+                                placeholder: 'All Categories',
+                                dataSource: ['Domestic', 'Export'],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterClientCategory',
+                                label: 'Client Category',
+                                placeholder: 'All Categories',
+                                dataSource: ['New', 'Old'],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterRegion',
+                                label: 'Region',
+                                placeholder: 'All Regions',
+                                dataSource: ['North', 'East', 'South', 'West', 'NCR'],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterSalesHead',
+                                label: 'Sales Head',
+                                placeholder: 'All Heads',
+                                dataSource: ['KR', 'RP', 'LMI'],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterMISCategory',
+                                label: 'MIS Category',
+                                placeholder: 'All MIS Categories',
+                                dataSource: [
+                                    'Annual Reports', 'Board Books', 'Box', 'Brouchers and Catalogues',
+                                    'Card / Leaflet', 'Carry Bags', 'Coffee Table Books', 'Colour Books',
+                                    'Corrugated Printed Box', 'Diaries', 'Dictionary', 'Envelope',
+                                    'Magazines', 'Magazines - LS', 'Medical Journals', 'Mono Carton',
+                                    'Note Books', 'Other Commercial Jobs (OCJ)', 'Periodicals',
+                                    'Religios Books - Others', 'Religious Books - Bible',
+                                    'Religious Books - Geeta', 'Religious Books - Quaran', 'Rigid Box',
+                                    'Slip Case', 'Sticker', 'Table Calendars', 'School Books',
+                                    'Trade Books', 'Wall Calendars'
+                                ],
+                                type: 'dropdown',
+                                width: 6
+                            },
+                            {
+                                id: 'filterSalesExecutive',
+                                label: 'Sales Executive',
+                                placeholder: 'All Executives',
+                                dataSource: [
+                                    'Praveen Mittal',
+                                    'Dinesh Kumar Gupta',
+                                    'Kiran Singh',
+                                    'Gurvinder Saini',
+                                    'Deepak Ahuja',
+                                    'Shiv Dutt Kaushik',
+                                    'Narendra Singh'
+                                ],
+                                type: 'dropdown',
+                                width: 6
+                            }
+                        ],
+                        onFilterChange: (filters) => {
+                            StateManager.setState('filters', filters);
+                            refreshDashboardData();
+                        }
+                    });
+                    // Note: Panel toggle/close/apply/reset handlers are now managed by DashboardFilters.initFilterPanel()
+                    try {
+                        ConfigValidator.validate(dashboardConfig);
+                    } catch (error) {
+                        console.error("Dashboard Configuration Error:", error.message);
+                        document.body.innerHTML = `<div class="alert alert-danger m-4" role="alert"><strong>Configuration Error:</strong> ${error.message}</div>`;
+                        return;
+                    }
+
+                    Chart.register(ChartDataLabels);
+                    Chart.defaults.plugins.datalabels.display = false;
+                    const centerTextPlugin = { id: 'centerText', afterDraw: (chart) => { const { centerText } = chart.config.options.plugins; if (centerText?.display) { const { ctx, chartArea: { top, left, width, height } } = chart; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = left + width / 2, valueY = top + height / 2 - 10, labelY = valueY + 22; ctx.font = `700 ${centerText.fontSize || '24px'} Inter`; ctx.fillStyle = centerText.color || '#212529'; ctx.fillText(centerText.text, centerX, valueY); if (centerText.label) { ctx.font = `500 1rem Inter`; ctx.fillStyle = '#6B7280'; ctx.fillText(centerText.label, centerX, labelY); } ctx.restore(); } } };
+                    Chart.register(centerTextPlugin);
+                    document.getElementById('dashboardTitle').textContent = dashboardConfig.title;
+                    if (dashboardConfig.grid && dashboardConfig.grid.title) {
+                        document.getElementById('gridTitle').textContent = dashboardConfig.grid.title;
+                    }
+                    ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'].forEach(id => { modals[id] = new bootstrap.Modal(document.getElementById(id)); });
+                    renderLayoutShells();
+                    InteractivityHandler.init();
+                    setupSubscriptions();
+
+                    await refreshDashboardData();
+                }
+
+                async function refreshDashboardData() {
+                    const filters = StateManager.getState('filters');
+                    const kpiDataPromise = DataProvider.fetchKpiData(filters);
+
+                    // Collect main data keys AND drilldown data keys
+                    const rawDataKeys = [...new Set([
+                        ...dashboardConfig.kpis.map(kpi => kpi.drilldownConfig?.dataKey),
+                        ...dashboardConfig.layout.map(item => item.config.dataKey),
+                        ...dashboardConfig.layout.map(item => item.config.drilldownConfig?.dataKey), // Fetch drilldown keys
+                        'so_booking_data',
+                        ...(dashboardConfig.grid ? [dashboardConfig.grid.dataKey] : [])
+                    ].filter(Boolean))];
+
+                    const rawDataPromises = rawDataKeys.map(key => DataProvider.fetchRawData(key, filters));
+
+                    const [kpiData] = await Promise.all([kpiDataPromise]);
+                    StateManager.setState('kpiData', kpiData);
+                    renderKpis();
+
+                    const allRawData = await Promise.all(rawDataPromises);
+                    allRawData.forEach((data, index) => {
+                        StateManager.setState(rawDataKeys[index], data);
+                    });
+                }
+
+                function setupSubscriptions() {
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                            // Special subscriptions for charts with view toggles
+                            if (item.config.id === 'actual-vs-target-chart') {
+                                StateManager.subscribe('salesChartView', () => ChartHandler.render(item.config));
+                            }
+                            if (item.config.id === 'funnel-chart') {
+                                StateManager.subscribe('funnelChartView', () => ChartHandler.render(item.config));
+                            }
+                            if (item.config.id === 'weekly-fg-delay-chart') {
+                                StateManager.subscribe('fgDelayChartView', () => ChartHandler.render(item.config));
+                            }
+                            if (item.config.id === 'aging-chart') {
+                                StateManager.subscribe('agingChartView', () => ChartHandler.render(item.config));
+                            }
+                        }
+                    });
+
+                    if (dashboardConfig.grid) {
+                        StateManager.subscribe(dashboardConfig.grid.dataKey, () => GridHandler.render(dashboardConfig.grid));
+                    }
+                }
+
+                function renderLayoutShells() {
+                    document.getElementById('kpi-container').innerHTML = dashboardConfig.kpis.map(c => `<div class="col" id="shell-${c.id}"></div>`).join('');
+                    const loadingSpinner = `<div class="chart-feedback-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+                    document.getElementById('content-grid').innerHTML = dashboardConfig.layout.map(item => {
+                        let toggleButtons = '';
+                        if (item.config.id === 'actual-vs-target-chart') {
+                            toggleButtons = `
+                        <div class="btn-group btn-group-sm dashboard-toggle-group" role="group" id="sales-view-toggle-${item.config.id}">
+                            <input type="radio" class="btn-check" name="salesView-${item.config.id}" id="view-by-client-${item.config.id}" value="client" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="view-by-client-${item.config.id}">Client</label>
+                            <input type="radio" class="btn-check" name="salesView-${item.config.id}" id="view-by-machine-${item.config.id}" value="machine" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="view-by-machine-${item.config.id}">Color</label>
+                        </div>`;
+                        } else if (item.config.id === 'weekly-fg-delay-chart') {
+                            toggleButtons = `
+                        <div class="btn-group btn-group-sm dashboard-toggle-group" role="group" id="fg-delay-view-toggle-${item.config.id}">
+                            <input type="radio" class="btn-check" name="fgDelayView-${item.config.id}" id="view-wip-${item.config.id}" value="wip" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="view-wip-${item.config.id}">WIP</label>
+                            <input type="radio" class="btn-check" name="fgDelayView-${item.config.id}" id="view-fg-creation-${item.config.id}" value="fg-creation" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="view-fg-creation-${item.config.id}">FG Creation</label>
+                            <input type="radio" class="btn-check" name="fgDelayView-${item.config.id}" id="view-dispatch-${item.config.id}" value="dispatch" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="view-dispatch-${item.config.id}">Dispatch</label>
+                        </div>`;
+                        } else if (item.config.id === 'aging-chart') {
+                            toggleButtons = `
+                        <div class="btn-group btn-group-sm dashboard-toggle-group" role="group" id="aging-view-toggle-${item.config.id}">
+                            <input type="radio" class="btn-check" name="agingView-${item.config.id}" id="view-receivables-${item.config.id}" value="receivables" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="view-receivables-${item.config.id}">Receivables</label>
+                            <input type="radio" class="btn-check" name="agingView-${item.config.id}" id="view-overdue-${item.config.id}" value="overdue" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="view-overdue-${item.config.id}">Overdue</label>
+                        </div>`;
+                        }
+
+                        return `<div class="${item.width}" id="container-${item.config.id}">
+                        <div class="content-wrapper context-menu-target" data-component-id="${item.config.id}">
+                            <div class="d-flex justify-content-between align-items-start ps-0 pe-2"> 
+                                <h3 class="content-title mb-0">${item.config.title}</h3>
+                                ${toggleButtons}
+                            </div>
+                        <div class="chart-canvas-container">
+                            ${loadingSpinner}
+                            <canvas id="${item.config.id}"></canvas>
+                        </div>
+                    </div>
+                </div>`;
+                    }).join('');
+                }
+
+                function renderKpis() {
+                    const { kpiData } = StateManager.getState();
+                    if (!kpiData) return;
+                    dashboardConfig.kpis.forEach(config => {
+                        const data = kpiData[config.dataKey];
+                        if (!data) return;
+                        const growth = data.previous > 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
+                        const container = document.getElementById(`shell-${config.id}`);
+
+                        const isPositiveGrowth = growth >= 0;
+                        const isGood = config.invertGrowthColor ? !isPositiveGrowth : isPositiveGrowth;
+
+                        container.innerHTML = `<div class="card kpi-card context-menu-target" data-component-id="${config.id}">
+                    <div class="card-body">
+                        <div class="kpi-header">
+                            <div class="kpi-title-container">
+                                ${config.mainIcon ? `<i class="bi ${config.mainIcon}"></i>` : ''}
+                                <span class="kpi-title">${config.label}</span>
+                            </div>
+                            <div class="kpi-growth ${isGood ? 'positive' : 'negative'}">
+                                <i class="bi ${isPositiveGrowth ? 'bi-arrow-up-short' : 'bi-arrow-down-short'}"></i> ${Math.abs(growth).toFixed(1)}%
+                            </div>
+                        </div>
+
+                        <div class="kpi-body">
+                            <div class="kpi-primary-metrics">
+                                <span class="kpi-value">${Utils.formatMetric(data.current, config.format, config.valueSuffix)}</span>
+                                <span class="kpi-previous-value">Prev: ${Utils.formatMetric(data.previous, config.format, config.valueSuffix)}</span>
+                            </div>
+                            <div class="kpi-secondary-metrics">
+                                ${config.secondaryMetrics.map(sm => `<div class="metric-item"><i class="bi ${sm.icon}"></i><span>${sm.label ? sm.label + ': ' : ''}${Utils.formatMetric(data[sm.dataKey], sm.format)}</span></div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="kpi-footer">
+                            <div class="kpi-chart-container">
+                                <canvas id="sparkline-${config.id}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                        renderSparkline(config.id, data.trend, config.cssVar);
+                    });
+                }
+
+                function renderSparkline(id, data, colorVarName) {
+                    const ctx = document.getElementById(`sparkline-${id}`)?.getContext('2d');
+                    if (!ctx) return;
+
+                    const trendColor = getComputedStyle(document.documentElement).getPropertyValue(colorVarName);
+                    const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                    if (!trendColorRGB) {
+                        console.error(`Invalid color format or CSS variable not found for: ${colorVarName}`);
+                        return;
+                    }
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                    gradient.addColorStop(0, `rgba(${trendColorRGB}, 0.3)`);
+                    gradient.addColorStop(1, `rgba(${trendColorRGB}, 0)`);
+
+                    if (chartInstances[id]) chartInstances[id].destroy();
+
+                    chartInstances[id] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(() => ''),
+                            datasets: [{
+                                data: data,
+                                borderColor: trendColor,
+                                borderWidth: 2,
+                                fill: true,
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                pointRadius: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { x: { display: false }, y: { display: false } },
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            layout: {
+                                padding: 0
+                            }
+                        }
+                    });
+                }
+
+                const ChartHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        if (!container) return; // Exit if container not found
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        const feedbackEl = canvasContainer.querySelector('.chart-feedback-overlay');
+                        try {
+                            const ctx = canvasContainer.querySelector('canvas')?.getContext('2d');
+                            if (!ctx) throw new Error(`Canvas with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) { return; }
+
+                            if (chartInstances[config.id]) chartInstances[config.id].destroy();
+
+                            if (['actual-vs-target-chart', 'funnel-chart', 'weekly-fg-delay-chart', 'aging-chart'].includes(config.id)) {
+                                let view;
+                                if (config.id === 'actual-vs-target-chart') {
+                                    view = StateManager.getState('salesChartView') || 'overview';
+                                } else if (config.id === 'funnel-chart') {
+                                    view = StateManager.getState('funnelChartView') || 'value';
+                                } else if (config.id === 'aging-chart') {
+                                    view = StateManager.getState('agingChartView') || 'receivables';
+
+                                    // --- ADD THIS SECTION TO UPDATE THE TITLE ---
+                                    const titleEl = container.querySelector('.content-title');
+                                    if (titleEl) {
+                                        titleEl.textContent = view === 'overdue' ? 'Overdue Aging Overview' : 'Receivables Aging Overview';
+                                    }
+                                    // --------------------------------------------
+
+                                } else {
+                                    view = StateManager.getState('fgDelayChartView') || 'fg-delayed';
+                                }
+                                const chartConfig = config.transformer(rawData, view);
+                                const finalOptions = Utils.deepMerge(ChartDefaults.getChartOptions({ chartType: chartConfig.type }), chartConfig.options);
+                                chartInstances[config.id] = new Chart(ctx, { type: chartConfig.type, data: chartConfig.data, options: finalOptions });
+                            } else {
+                                const periodIndex = StateManager.getState('selectedPeriodIndex');
+                                let transformer;
+                                if (typeof config.transformer === 'function') {
+                                    transformer = config.transformer;
+                                } else if (typeof config.transformer === 'string' && SharedTransformers[config.transformer]) {
+                                    transformer = SharedTransformers[config.transformer];
+                                } else {
+                                    throw new Error(`Transformer '${config.transformer}' is not a valid function or a key in SharedTransformers.`);
+                                }
+                                const data = transformer(rawData, periodIndex, config);
+
+                                let finalOptions = ChartDefaults.getChartOptions(config);
+
+                                if (config.onClickAction && ActionRegistry[config.onClickAction]) { finalOptions.onClick = ActionRegistry[config.onClickAction]; }
+
+                                if (config.chartType === 'doughnut') {
+                                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    if (finalOptions.plugins.centerText) {
+                                        finalOptions.plugins.centerText.text = Utils.formatMetric(total);
+                                    }
+                                    finalOptions.onHover = (event, elements, chart) => { const centerText = chart.config.options.plugins.centerText; if (elements.length > 0) { const index = elements[0].index; centerText.text = Utils.formatMetric(chart.data.datasets[0].data[index]); centerText.label = chart.data.labels[index]; } else { centerText.text = Utils.formatMetric(total); centerText.label = 'Total'; } chart.update('none'); };
+                                    if (config.drilldownTarget) { finalOptions.onClick = () => DrilldownHandler.show(config.drilldownTarget); }
+                                }
+                                chartInstances[config.id] = new Chart(ctx, { type: config.chartType, data, options: finalOptions });
+                            }
+                            if (feedbackEl) feedbackEl.style.display = 'none';
+
+                        } catch (error) {
+                            console.error(`Failed to render chart '${config.id}':`, error);
+                            this.renderErrorState(canvasContainer, error);
+                        }
+                    },
+                    renderErrorState(container, error) {
+                        container.innerHTML = `<div class="chart-feedback-overlay"><i class="bi bi-exclamation-triangle-fill"></i><strong>Chart Failed to Load</strong><small class="mt-1">${error.message}</small></div>`;
+                    }
+                };
+
+                const GridHandler = {
+                    render(config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        if (!rawData) return;
+
+                        $(`#grid-container`).dxDataGrid({
+                            dataSource: rawData,
+                            keyExpr: config.key || undefined,
+                            columns: config.columns,
+
+                            //  UI Enhancements
+                            showBorders: true,
+                            rowAlternationEnabled: true,
+                            hoverStateEnabled: true,
+                            columnAutoWidth: true,
+                            wordWrapEnabled: true,  // better handling of long text
+                            showColumnLines: false,
+                            showRowLines: false,
+
+                            // Column interactions
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnResizingMode: "widget",
+
+                            //  Paging + Pager
+                            paging: { pageSize: 10 },
+                            pager: {
+                                showPageSizeSelector: false,
+                                allowedPageSizes: false,
+                                showInfo: true,
+                                showNavigationButtons: true,
+                                visible: true
+                            },
+
+                            //  Filtering + Searching
+                            searchPanel: { visible: true, width: 240, placeholder: "Search..." },
+                            filterRow: { visible: true },
+                            headerFilter: { visible: true },
+                            filterPanel: { visible: false },
+                            groupPanel: { visible: true },
+                            grouping: { autoExpandAll: false },
+
+                            // Sorting + Column Chooser
+                            sorting: { mode: "multiple" },
+                            columnChooser: { enabled: true, mode: "select" },
+                            columnFixing: { enabled: true }, // pin important columns
+
+                            // Toolbar with quick actions
+                            toolbar: {
+                                items: [
+                                    "searchPanel",
+                                    "groupPanel",
+                                    "exportButton",
+                                    "columnChooserButton",
+                                    {
+                                        location: "after",
+                                        widget: "dxButton",
+                                        options: {
+                                            icon: "refresh",
+                                            hint: "Refresh",
+                                            onClick: () => $(`#grid-container`).dxDataGrid("instance").refresh()
+                                        }
+                                    },
+                                    {
+                                        location: "after",
+                                        widget: "dxButton",
+                                        options: {
+                                            icon: "clear",
+                                            hint: "Clear Filters",
+                                            onClick: () => $(`#grid-container`).dxDataGrid("instance").clearFilter()
+                                        }
+                                    }
+                                ]
+                            },
+
+                            // Export Options
+                            export: { enabled: true, formats: ["xlsx", "pdf"] },
+                            onExporting(e) {
+                                if (e.format === "xlsx") {
+                                    // Customize Excel export
+                                } else if (e.format === "pdf") {
+                                    // Customize PDF export
+                                }
+                            },
+
+                            //  State Persistence (saves user preferences)
+                            stateStoring: {
+                                enabled: true,
+                                type: "localStorage",
+                                storageKey: `${config.dataKey}-gridState`
+                            },
+
+                            //  Scrolling
+                            scrolling: { mode: "Budgeted" }, // smooth with big datasets
+                            loadPanel: { enabled: true, text: "Loading..." },
+
+                            //  Summary Section
+                            summary: {
+                                totalItems: [
+                                    {
+                                        column: config.summaryColumn || "id", // change to your numeric column
+                                        summaryType: "count",
+                                        displayFormat: "Total Rows: {0}"
+                                    },
+                                    {
+                                        column: config.summaryValueColumn || "amount", // change to your numeric column
+                                        summaryType: "sum",
+                                        valueFormat: { type: 'currency', currency: 'INR', precision: 0 },
+                                        displayFormat: "Total: {0}"
+                                    },
+                                    {
+                                        column: config.summaryValueColumn || "amount",
+                                        summaryType: "avg",
+                                        valueFormat: { type: 'currency', currency: 'INR', precision: 0 },
+                                        displayFormat: "Avg: {0}"
+                                    }
+                                ],
+                                groupItems: [
+                                    {
+                                        column: config.summaryValueColumn || "amount",
+                                        summaryType: "sum",
+                                        valueFormat: { type: 'currency', currency: 'INR', precision: 0 },
+                                        displayFormat: "Group Total: {0}",
+                                        alignByColumn: true
+                                    }
+                                ]
+                            },
+
+                            //  Events for extra control
+                            onRowClick: (e) => config.onRowClick && config.onRowClick(e),
+                            onCellPrepared: (e) => config.onCellPrepared && config.onCellPrepared(e)
+                        });
+
+                    }
+                };
+
+                const DrilldownService = {
+                    show(title, config, dataRows) {
+                        const { columns, filters, docFormConfig, renderAs } = config;
+                        const filterControls = document.getElementById('drilldownFilterControls');
+                        const modalBody = document.getElementById('drilldownModalBody');
+
+                        document.getElementById('drilldownModalLabel').textContent = title;
+                        modalBody.innerHTML = ''; // Clear previous content
+
+                        if (docFormConfig) {
+                            modalBody.dataset.docFormConfig = JSON.stringify(docFormConfig);
+                        } else {
+                            delete modalBody.dataset.docFormConfig;
+                        }
+
+                        if (filters) {
+                            filterControls.innerHTML = filters.map(opt => `<div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="drilldownFilter" id="filter_${opt.value}" value="${opt.value}" ${opt.default ? 'checked' : ''}><label class="form-check-label small" for="filter_${opt.value}">${opt.label}</label></div>`).join('');
+                        } else {
+                            filterControls.innerHTML = '';
+                        }
+
+                        if (renderAs === 'grid') {
+                            const gridContainer = document.createElement('div');
+                            gridContainer.style.height = '60vh'; // Ensure container has height
+                            modalBody.appendChild(gridContainer);
+
+                            $(gridContainer).dxDataGrid({
+                                dataSource: dataRows,
+                                columns: columns,
+                                showBorders: true,
+                                rowAlternationEnabled: true,
+                                hoverStateEnabled: true,
+                                filterRow: { visible: true },
+                                headerFilter: { visible: true },
+                                searchPanel: { visible: true },
+                                groupPanel: { visible: true },
+                                paging: { pageSize: 15 },
+                                pager: { showPageSizeSelector: true, allowedPageSizes: [15, 30, 50], showInfo: true },
+                                columnAutoWidth: true,
+                                export: { enabled: true }
+                            });
+                        } else { // Default to HTML table
+                            const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+                            const rows = dataRows.map(row => `<tr data-doc-id="${row.id}" data-status="${row.status}">${columns.map(col => `<td>${Utils.formatMetric(row[col.key], col.format)}</td>`).join('')}</tr>`).join('');
+                            modalBody.innerHTML = `<div class="table-responsive"><table class="table table-hover"><thead id="drilldownThead"><tr>${headers}</tr></thead><tbody id="drilldownTbody">${rows}</tbody></table></div>`;
+                        }
+
+                        modals.drilldownModal.show();
+                    },
+                    showPlaceholder(title, message) { /* ... (no changes here) */ }
+                };
+
+                // Replace the existing initiateDrilldown function with this:
+                function initiateDrilldown(componentId, context = {}) {
+                    const config = Utils.getComponentConfig(componentId);
+
+                    if (config.drilldownTarget && !context.dataIndex) {
+                        return initiateDrilldown(config.drilldownTarget);
+                    }
+
+                    const drilldownConfig = config?.drilldownConfig;
+                    if (!drilldownConfig) {
+                        return DrilldownService.showPlaceholder(config.label || config.title, `No drilldown configured.`);
+                    }
+
+                    const { dataKey, filterMapping } = drilldownConfig;
+                    let title = `Detailed View: ${config.label || config.title}`;
+                    const rawData = StateManager.getState(dataKey);
+
+                    if (!rawData || rawData.length === 0) {
+                        return DrilldownService.showPlaceholder(title, `No detailed data available.`);
+                    }
+
+                    let filteredData = [...rawData];
+
+                    // Handle Chart Segment Filtering
+                    if (context.dataIndex !== undefined) {
+                        const chart = chartInstances[componentId];
+                        if (chart && chart.data.labels[context.dataIndex] !== undefined) {
+                            const label = chart.data.labels[context.dataIndex];
+                            title += ` (${label})`;
+
+                            if (filterMapping) {
+                                if (filterMapping === 'Week') {
+                                    // INTELLIGENT WEEKLY FILTERING
+                                    if (label === 'Current Week' || label === 'Current') {
+                                        // Get the unique weeks and pick the last one (most recent)
+                                        const uniqueWeeks = [...new Set(rawData.map(item => item.Week))].sort();
+                                        const latestWeek = uniqueWeeks[uniqueWeeks.length - 1];
+                                        filteredData = rawData.filter(item => item.Week === latestWeek);
+                                    } else {
+                                        // Map "Week 1", "Week 2" etc to the actual data
+                                        const uniqueWeeks = [...new Set(rawData.map(item => item.Week))].sort();
+                                        const weekIndex = parseInt(label.replace('Week ', '')) - 1;
+                                        if (!isNaN(weekIndex) && uniqueWeeks[weekIndex]) {
+                                            filteredData = rawData.filter(item => item.Week === uniqueWeeks[weekIndex]);
+                                        }
+                                    }
+                                } else if (filterMapping === 'date_month_short') {
+                                    filteredData = rawData.filter(item => new Date(item.date).toLocaleString('default', { month: 'short' }) === label);
+                                } else {
+                                    // Standard mapping (Stage, Sentiment, Reason, MachineID)
+                                    filteredData = rawData.filter(item => String(item[filterMapping]).toLowerCase() === String(label).toLowerCase());
+                                }
+                            }
+                        }
+                    }
+
+                    DrilldownService.show(title, drilldownConfig, filteredData);
+                }
+
+                // --- ADDED: New orchestrator function for all drilldown actions ---
+
+                const DocFormHandler = {
+                    show(docId, config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        const data = rawData.find(item => item.id === docId);
+                        if (!data) { alert(`Details for ${docId} not found.`); return; }
+                        const bodyHtml = `<div class="row">${config.fields.map(field => `<div class="col-md-6 form-readonly-group"><label>${field.label}</label><input type="text" class="form-control" value="${Utils.formatMetric(data[field.key], field.format)}" readonly></div>`).join('')}</div>`;
+                        document.getElementById('docFormModalLabel').textContent = `Details for: ${docId}`;
+                        document.getElementById('docFormBody').innerHTML = bodyHtml;
+                        modals.drilldownModal.classList.add('is-blurred');
+                        modals.docFormModal.show();
+                    }
+                };
+
+
+                const ExpandChartHandler = {
+                    show(componentId) {
+                        const originalChart = chartInstances[componentId];
+                        const config = Utils.getComponentConfig(componentId);
+                        if (!originalChart || !config) { alert('Cannot expand: chart instance not found.'); return; }
+
+                        const ctx = document.getElementById('expandedChartCanvas').getContext('2d');
+                        const chartData = JSON.parse(JSON.stringify(originalChart.data));
+
+                        const originalOptions = originalChart.config.options;
+                        const expansionOverrides = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    enabled: true,
+                                    external: null
+                                }
+                            }
+                        };
+
+                        const finalOptions = Utils.deepMerge(JSON.parse(JSON.stringify(originalOptions)), expansionOverrides);
+
+                        const isKpiCard = dashboardConfig.kpis.some(k => k.id === componentId);
+                        if (isKpiCard) {
+                            const kpiData = StateManager.getState('kpiData')[config.dataKey];
+                            if (kpiData && kpiData.trend_labels) {
+                                chartData.labels = kpiData.trend_labels;
+                            }
+                            chartData.datasets[0].label = config.label;
+
+                            // START: MODIFICATION
+                            // Dynamically set colors based on the source KPI's configured CSS variable
+                            if (config.cssVar) {
+                                const trendColor = getComputedStyle(document.documentElement).getPropertyValue(config.cssVar).trim();
+                                const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                                if (trendColor && trendColorRGB) {
+                                    chartData.datasets[0].borderColor = trendColor;
+                                    chartData.datasets[0].backgroundColor = `rgba(${trendColorRGB}, 0.2)`;
+                                    chartData.datasets[0].fill = true;
+                                    chartData.datasets[0].tension = 0.3;
+                                }
+                            }
+                            // END: MODIFICATION
+                        }
+
+                        document.getElementById('expandChartModalLabel').textContent = `Expanded View: ${config.label || config.title}`;
+
+                        if (chartInstances['expandedChart']) chartInstances['expandedChart'].destroy();
+                        chartInstances['expandedChart'] = new Chart(ctx, { type: originalChart.config.type, data: chartData, options: finalOptions });
+                        modals.expandChartModal.show();
+                    }
+                };
+
+                const GuideHandler = { show(kpiConfig) { if (!kpiConfig?.guide) { alert('No guide available for this KPI.'); return; } const { title, definition, interpretation, calculation } = kpiConfig.guide; document.getElementById('kpiGuideModalLabel').textContent = `Guide: ${title}`; document.getElementById('guide-definition').textContent = definition; document.getElementById('guide-interpretation').textContent = interpretation; document.getElementById('guide-calculation').textContent = calculation; modals.kpiGuideModal.show(); } };
+
+                const InteractivityHandler = {
+                    init() {
+                        const mainContent = document.getElementById('main-dashboard-content');
+                        const modalIds = ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'];
+
+                        modalIds.forEach(id => {
+                            const modalEl = document.getElementById(id);
+                            if (modalEl) {
+                                // Add blur when any modal opens
+                                modalEl.addEventListener('show.bs.modal', () => {
+                                    mainContent.classList.add('dashboard-blur');
+                                });
+
+                                // Remove blur only if NO other modals are currently open (handles stacked modals)
+                                modalEl.addEventListener('hidden.bs.modal', () => {
+                                    const isAnyModalOpen = modalIds.some(mid => {
+                                        const m = document.getElementById(mid);
+                                        // Bootstrap adds the 'show' class to visible modals
+                                        return m && m.classList.contains('show');
+                                    });
+
+                                    if (!isAnyModalOpen) {
+                                        mainContent.classList.remove('dashboard-blur');
+                                    }
+                                });
+                            }
+                        });
+                        const menu = document.getElementById('customContextMenu');
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        const drilldownModalEl = document.getElementById('drilldownModal');
+                        const hideMenu = () => menu.style.display = 'none';
+                        const hideTooltip = () => { if (tooltipEl) { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; } };
+                        document.addEventListener('click', hideMenu);
+                        document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+                        document.body.addEventListener('contextmenu', e => { const target = e.target.closest('.context-menu-target'); if (target) { e.preventDefault(); this.showContextMenu(e, target.dataset.componentId); } });
+                        document.body.addEventListener('click', e => {
+                            const target = e.target.closest('.kpi-card');
+                            if (target) initiateDrilldown(target.dataset.componentId);
+                        });
+                        tooltipEl.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+                        tooltipEl.addEventListener('mouseleave', () => { tooltipHideTimer = setTimeout(hideTooltip, 300); });
+                        tooltipEl.querySelector('.drilldown-btn').addEventListener('click', (e) => {
+                            const componentId = tooltipEl.dataset.componentId;
+                            const dataIndex = tooltipEl.dataset.dataIndex;
+                            if (componentId && dataIndex !== undefined) {
+                                initiateDrilldown(componentId, { dataIndex: parseInt(dataIndex) });
+                                // Hide tooltip after clicking
+                                tooltipEl.style.opacity = 0;
+                                tooltipEl.style.pointerEvents = 'none';
+                            }
+                        });
+                        document.getElementById('drilldownFilterControls').addEventListener('change', e => { if (e.target.name === 'drilldownFilter') { const filterValue = e.target.value; document.getElementById('drilldownTbody').querySelectorAll('tr').forEach(row => { row.style.display = (filterValue === 'all' || row.dataset.status === filterValue) ? '' : 'none'; }); } });
+
+                        // --- FIX: Add delegated event listener for drilldown table rows ---
+                        drilldownModalEl.addEventListener('click', e => {
+                            const row = e.target.closest('tr[data-doc-id]');
+                            const configStr = drilldownModalEl.querySelector('.modal-body').dataset.docFormConfig;
+                            if (row && configStr) {
+                                const config = JSON.parse(configStr);
+                                DocFormHandler.show(row.dataset.docId, config);
+                            }
+                        });
+
+                        drilldownModalEl.addEventListener('hidden.bs.modal', () => {
+                            const modalBody = drilldownModalEl.querySelector('.modal-body');
+                            if (modalBody.dataset.docFormConfig) {
+                                delete modalBody.dataset.docFormConfig;
+                            }
+                        });
+
+                        document.getElementById('docFormModal').addEventListener('hidden.bs.modal', () => modals.drilldownModal.classList.remove('is-blurred'));
+
+                        const salesToggle = document.getElementById('sales-view-toggle-actual-vs-target-chart');
+                        if (salesToggle) {
+                            salesToggle.addEventListener('change', (e) => {
+                                StateManager.setState('salesChartView', e.target.value);
+                            });
+                        }
+
+                        const funnelToggle = document.getElementById('funnel-view-toggle-funnel-chart');
+                        if (funnelToggle) {
+                            funnelToggle.addEventListener('change', (e) => {
+                                StateManager.setState('funnelChartView', e.target.value);
+                            });
+                        }
+
+                        const fgDelayToggle = document.getElementById('fg-delay-view-toggle-weekly-fg-delay-chart');
+                        if (fgDelayToggle) {
+                            fgDelayToggle.addEventListener('change', (e) => {
+                                StateManager.setState('fgDelayChartView', e.target.value);
+                            });
+                        }
+
+                        const agingToggle = document.getElementById('aging-view-toggle-aging-chart');
+                        if (agingToggle) {
+                            agingToggle.addEventListener('change', (e) => {
+                                StateManager.setState('agingChartView', e.target.value);
+                            });
+                        }
+
+                        document.getElementById('expandChartModal').addEventListener('hidden.bs.modal', () => {
+                            if (chartInstances['expandedChart']) {
+                                chartInstances['expandedChart'].destroy();
+                                chartInstances['expandedChart'] = null;
+                            }
+                        });
+                    },
+                    showContextMenu(event, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        const menu = document.getElementById('customContextMenu');
+                        const menuList = document.getElementById('contextMenuList');
+                        const componentActions = config?.actions || dashboardConfig.contextMenu.actions.map(a => a.id);
+                        let actions = dashboardConfig.contextMenu.actions.filter(a => componentActions.includes(a.id) || a.type === 'separator');
+                        const renderItems = items => items.map(a => a.type === 'separator' ? '<li class="context-menu-separator"></li>' : `<li class="context-menu-item" data-action="${a.id}"><i class="bi ${a.icon}"></i><span>${a.label}</span>${a.submenu ? `<i class="bi bi-chevron-right"></i><ul class="context-menu-sublist">${renderItems(a.submenu)}</ul>` : ''}</li>`).join('');
+                        menuList.innerHTML = renderItems(actions);
+                        menu.querySelectorAll('.context-menu-item').forEach(item => { if (!item.querySelector('.context-menu-sublist')) item.addEventListener('click', () => this.handleContextMenuAction(item.dataset.action, componentId)); });
+                        menu.style.visibility = 'hidden';
+                        menu.style.display = 'block';
+
+                        const { offsetWidth: menuW, offsetHeight: menuH } = menu;
+                        const { clientX: mouseX, clientY: mouseY } = event;
+                        const { innerWidth: viewportW, innerHeight: viewportH } = window;
+                        const padding = 5; // A small buffer from the viewport edge
+                        let finalLeft = mouseX;
+                        if ((mouseX + menuW + padding) > viewportW) {
+                            finalLeft = mouseX - menuW; // Flip to the left of the cursor
+                        }
+                        let finalTop = mouseY;
+                        if ((mouseY + menuH + padding) > viewportH) {
+                            finalTop = mouseY - menuH; // Flip above the cursor
+                        }
+                        menu.style.left = `${finalLeft + window.scrollX}px`;
+                        menu.style.top = `${finalTop + window.scrollY}px`;
+                        menu.style.visibility = 'visible';
+                    },
+                    handleContextMenuAction(action, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        switch (action) {
+                            case 'drilldown': initiateDrilldown(componentId); break;
+                            case 'refresh': refreshDashboardData(); break;
+                            case 'expand': ExpandChartHandler.show(componentId); break;
+                            case 'guide': if (config.guide) GuideHandler.show(config); break;
+                            case 'share': window.location.href = `mailto:?subject=Dashboard Insight: ${config.label || config.title}&body=Review data for ${config.label || config.title}.`; break;
+                            case 'export-png': const chart = chartInstances[componentId]; if (chart) { const a = document.createElement('a'); a.href = chart.toBase64Image(); a.download = `${componentId}.png`; a.click(); } break;
+                            default: alert(`Action '${action}' is not yet implemented.`);
+                        }
+                    },
+
+                    customTooltip(context) {
+                        const { chart, tooltip } = context;
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        clearTimeout(tooltipHideTimer);
+                        if (tooltip.opacity === 0) { tooltipHideTimer = setTimeout(() => { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; }, 300); return; }
+
+                        const titleEl = tooltipEl.querySelector('.tooltip-main-title');
+                        const headerEl = tooltipEl.querySelector('.tooltip-header');
+                        const valueEl = tooltipEl.querySelector('.tooltip-value');
+                        const seriesTitleEl = tooltipEl.querySelector('.tooltip-title');
+                        const deltaEl = tooltipEl.querySelector('.tooltip-delta');
+                        const footerEl = tooltipEl.querySelector('.tooltip-footer');
+
+                        // Reset common elements
+                        headerEl.style.display = 'flex';
+                        deltaEl.style.display = 'none';
+                        footerEl.style.display = 'none';
+
+                        // --- FIX: Changed chart.config.id to chart.canvas.id ---
+                        if (chart.canvas.id.startsWith('pareto')) {
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            headerEl.style.display = 'none';
+                            valueEl.textContent = '';
+                            const footerContent = tooltip.dataPoints.map(dp => {
+                                const isPercentage = dp.dataset.label.includes('%');
+                                const value = isPercentage ? `${dp.raw.toFixed(1)}%` : Utils.formatMetric(dp.raw);
+                                return `<div class="footer-row"><span>${dp.dataset.label}</span><span>${value}</span></div>`;
+                            }).join('');
+                            footerEl.innerHTML = footerContent;
+                            footerEl.style.display = 'flex';
+                        } else { // Default handler for bar, line, doughnut, radar etc.
+                            const dp = tooltip.dataPoints[0];
+                            if (!dp) return;
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            seriesTitleEl.textContent = dp.dataset.label || '';
+                            valueEl.textContent = Utils.formatMetric(dp.raw);
+                            const prev = dp.dataIndex > 0 ? chart.data.datasets[dp.datasetIndex].data[dp.dataIndex - 1] : null;
+                            if (prev !== null && prev !== 0 && typeof dp.raw === 'number') { const change = ((dp.raw - prev) / prev) * 100, isPos = change >= 0; deltaEl.className = `tooltip-delta ${isPos ? 'positive' : 'negative'}`; deltaEl.innerHTML = `<i class="bi ${isPos ? 'bi-arrow-up' : 'bi-arrow-down'}"></i> ${Math.abs(change).toFixed(1)}%`; deltaEl.style.display = 'flex'; }
+                            const footerContent = chart.data.datasets.map((ds, i) => i !== dp.datasetIndex && ds.data[dp.dataIndex] !== undefined ? `<div class="footer-row"><span>${ds.label}</span><span>${Utils.formatMetric(ds.data[dp.dataIndex])}</span></div>` : null).filter(Boolean);
+                            if (footerContent.length > 0) { footerEl.innerHTML = footerContent.join(''); footerEl.style.display = 'flex'; }
+                        }
+
+                        tooltipEl.dataset.componentId = chart.canvas.id;
+                        tooltipEl.dataset.dataIndex = tooltip.dataPoints[0].dataIndex;
+                        const canvasRect = chart.canvas.getBoundingClientRect();
+                        tooltipEl.style.opacity = 1;
+                        tooltipEl.style.pointerEvents = 'all';
+
+                        tooltipEl.style.left = (canvasRect.left + window.scrollX + tooltip.caretX) + 'px';
+                        tooltipEl.style.top = (canvasRect.top + window.scrollY + tooltip.caretY) + 'px';
+                    }
+                };
+
+                const ConfigValidator = {
+                    validate(config) {
+                        if (!config.title) throw new Error("`title` is missing.");
+                        if (!Array.isArray(config.kpis)) throw new Error("`kpis` must be an array.");
+                        if (!Array.isArray(config.layout)) throw new Error("`layout` must be an array.");
+                        config.kpis.forEach((kpi, i) => {
+                            if (!kpi.id || !kpi.dataKey || !kpi.label) throw new Error(`KPI at index ${i} is missing required keys (id, dataKey, label).`);
+                        });
+                        config.layout.forEach((item, i) => {
+                            if (!item.type || !item.width || !item.config) throw new Error(`Layout item at index ${i} is missing required keys (type, width, config).`);
+                            const chartConfig = item.config;
+                            if (chartConfig.drilldownConfig && !Array.isArray(chartConfig.drilldownConfig.columns)) {
+                                throw new Error(`Drilldown config for chart '${chartConfig.id}' is missing a 'columns' array.`);
+                            }
+                            if (typeof chartConfig.transformer !== 'function' && !SharedTransformers[chartConfig.transformer]) {
+                                throw new Error(`Transformer for chart '${chartConfig.id}' must be a function or a key in SharedTransformers.`);
+                            }
+                        });
+                    }
+                };
+
+                return { init };
+            })();
+
+            // Initialize the application
+            APP_CORE.init();
+        })();
+    </script>
+</body>
+
+</html>

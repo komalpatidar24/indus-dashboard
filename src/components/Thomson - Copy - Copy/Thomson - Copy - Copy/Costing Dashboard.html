@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required by DevExtreme) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DevExtreme JS & CSS (Theme and Core) -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+    <link rel="stylesheet" href="common_styles.css">
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <style>
+        /* =========================================
+1. GLOBAL VARIABLES & THEME
+========================================= */
+        :root {
+            --app-primary-color: #003366;
+            --app-primary-rgb: 0, 51, 102;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-color-default: #344767;
+            --bs-primary: var(--app-primary-color);
+            --bs-primary-rgb: var(--app-primary-rgb);
+
+            /* Glow Colors */
+            --glow-green: #4CAF50;
+            --glow-blue: #003366;
+            --glow-lightblue: #03A9F4;
+            --glow-orange: #FF9800;
+            --glow-purple: #9C27B0;
+            --glow-red: #f44336;
+            --glow-gray: #9E9E9E;
+
+            /* Chart Grid Colors */
+            --chart-grid-color: #E5E7EB;
+        }
+
+        /* =========================================
+2. BASE STYLES & TYPOGRAPHY
+========================================= */
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background-color: #F8FAFC;
+            color: #1F2937;
+            font-size: 0.9rem;
+            overflow-x: hidden;
+            /* Prevents horizontal scrolling globally */
+        }
+
+        .dashboard-header h3 {
+            color: #003366;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        /* =========================================
+3. KPI CARD COMPONENT
+========================================= */
+        .kpi-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0, 43, 92, 0.07);
+            color: #374151;
+            cursor: pointer;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            z-index: 1;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 43, 92, 0.12);
+        }
+
+        .kpi-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            padding: 0.75rem;
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 0.5rem;
+        }
+
+        .kpi-title-container {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6B7280;
+        }
+
+        .kpi-title-container i {
+            font-size: 1rem;
+        }
+
+        .kpi-title {
+            font-size: inherit;
+            font-weight: inherit;
+            text-transform: inherit;
+            color: inherit;
+        }
+
+        .kpi-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-grow: 1;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .kpi-footer {
+            width: calc(100% + 1.5rem);
+            height: 50px;
+            margin: 0.75rem -0.75rem -0.75rem -0.75rem;
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        /* KPI Metrics */
+        .kpi-primary-metrics {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .kpi-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .kpi-previous-value {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #6B7280;
+            opacity: 0.8;
+        }
+
+        .kpi-growth {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .kpi-growth.positive {
+            color: #10B981;
+        }
+
+        .kpi-growth.negative {
+            color: #EF4444;
+        }
+
+        .kpi-secondary-metrics {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            font-size: 0.9rem;
+            gap: 0.25rem;
+            padding-left: 1rem;
+        }
+
+        .kpi-secondary-metrics .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.55rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .kpi-chart-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* =========================================
+4. CONTENT WRAPPERS & CHARTS
+========================================= */
+        .content-wrapper {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            padding: 0.1rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-title {
+            font-size: 0.95rem;
+            margin: 0.75rem 0.5rem 0.5rem 1rem !important;
+            white-space: normal !important;
+            /* Enable wrapping */
+            line-height: 1.2;
+            flex: 1;
+            min-width: 0;
+            /* Allows flex-item to shrink/wrap correctly */
+        }
+
+        .content-header {
+            padding: 0.75rem 1rem 0rem 1rem;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            flex-grow: 1;
+            height: 220px;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #64748B;
+            text-align: center;
+            padding: 1rem;
+            z-index: 10;
+        }
+
+        .chart-feedback-overlay i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Chart Tooltips */
+        .chart-tooltip {
+            background-color: #002a55;
+            color: #E5E7EB;
+            border-radius: 0.6rem;
+            padding: 0.75rem 1rem;
+            font-family: 'Inter', sans-serif;
+            width: 220px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            border: 1px solid #374151;
+            transform: translate(-50%, calc(-100% - 15px));
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            transition: opacity 0.2s ease;
+        }
+
+        .chart-tooltip .tooltip-main-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #374151;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+
+        .chart-tooltip .tooltip-main-content {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        .chart-tooltip .tooltip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-tooltip .tooltip-title {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #9CA3AF;
+        }
+
+        .chart-tooltip .tooltip-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .chart-tooltip .tooltip-delta {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+
+        .chart-tooltip .tooltip-delta.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+        }
+
+        .chart-tooltip .tooltip-delta.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #EF4444;
+        }
+
+        .chart-tooltip .tooltip-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-top: 0.25rem;
+            border-top: 1px solid #374151;
+            margin-top: 0.25rem;
+        }
+
+        .chart-tooltip .footer-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .chart-tooltip .footer-row span:first-child {
+            color: #9CA3AF;
+        }
+
+        .chart-tooltip .footer-row span:last-child {
+            font-weight: 500;
+            color: #E5E7EB;
+        }
+
+        .chart-tooltip .drilldown-btn {
+            background: none;
+            border: none;
+            color: #60A5FA;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.25rem 0;
+            margin-top: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* =========================================
+5. UI CONTROLS (Context Menu, Tables, Forms)
+========================================= */
+        /* Context Menu */
+        #customContextMenu {
+            position: absolute;
+            z-index: 1056;
+            display: none;
+            width: 260px;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 5px 20px rgba(0, 43, 92, 0.15);
+            padding: 0.5rem 0;
+            border: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            transform: translateZ(0);
+        }
+
+        .context-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.3rem 0.8rem;
+            cursor: pointer;
+            color: #344767;
+            transition: background-color 0.2s ease;
+            gap: 0.85rem;
+            position: relative;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f0f2f5;
+            color: #003366;
+        }
+
+        .context-menu-item:hover>i {
+            color: #003366;
+        }
+
+        .context-menu-item i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 0.3rem 0;
+        }
+
+        .context-menu-item .bi-chevron-right {
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .context-menu-sublist {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: -0.5rem;
+            list-style: none;
+            padding: 0.5rem 0;
+            margin: 0;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0, 43, 92, 0.12);
+            border: 1px solid #e9ecef;
+            min-width: 180px;
+        }
+
+        .context-menu-item:hover .context-menu-sublist {
+            display: block;
+        }
+
+        /* Tables & Drilldown */
+        #drilldownFilterControls {
+            margin-left: auto;
+            z-index: 100;
+        }
+
+        #drilldownTbody tr {
+            cursor: pointer;
+        }
+
+        .table-hover>tbody>tr:hover {
+            background-color: #E0F7FA;
+            color: #1F2937;
+        }
+
+        /* Forms */
+        .form-readonly-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-readonly-group label {
+            font-size: 0.8rem;
+            color: #6B7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-readonly-group .form-control[readonly] {
+            background-color: #F3F4F6;
+            opacity: 1;
+            border-color: #D1D5DB;
+        }
+
+        /* Modals */
+        #kpiGuideContent h6 {
+            margin-bottom: 0.75rem;
+            color: #003366;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #drilldownModal.is-blurred .modal-dialog {
+            filter: blur(4px);
+            transition: filter 0.2s ease;
+            pointer-events: none;
+        }
+
+        .modal-backdrop {
+            background-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* Blur effect for background when modal is open */
+        .dashboard-blur {
+            filter: blur(6px);
+            transition: filter 0.3s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* =========================================
+6. DASHBOARD SPECIFIC MODULES
+========================================= */
+
+        /* --- Pre-Press Specifics (Calendar & OTIF) --- */
+        .otif-toggle-group {
+            display: inline-flex;
+            background-color: #f8f9fa;
+            border-radius: 50px;
+            padding: 0px;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .otif-toggle-group .btn {
+            border-radius: 50px !important;
+            border: none;
+            font-weight: 500;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.85rem;
+            color: var(--text-color-default);
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .otif-toggle-group .btn.active {
+            background-color: var(--app-primary-color) !important;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .otif-toggle-group input[type="radio"]:checked+.btn {
+            background-color: var(--app-primary-color) !important;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        #main-dashboard-content.content-blur {
+            filter: blur(4px);
+            pointer-events: none;
+            transition: filter 0.2s ease-in-out;
+        }
+
+        #filter-popup-panel {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 340px;
+            height: calc(100vh - 2rem);
+            max-height: 700px;
+            z-index: 1050;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #filter-popup-panel.d-none {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .otif-filter-panel-title {
+            font-weight: 600;
+            color: var(--app-primary-color);
+        }
+
+        .filter-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group .form-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+        }
+
+        /* Calendar Styles */
+        #calendar-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 0.5rem;
+            border: 1px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-today {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+        }
+
+        .month-year-selector-btn {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0 0.5rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+        }
+
+        .calendar-grid span {
+            font-size: 0.75rem;
+            padding: 0.3rem 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-names span {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        #calendar-grid .day {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #calendar-grid .day:not(.disabled):hover {
+            background-color: #e0f7fa;
+        }
+
+        #calendar-grid .day.selected {
+            background-color: var(--app-primary-color);
+            color: #fff;
+        }
+
+        #calendar-grid .day.in-range {
+            background-color: rgba(var(--app-primary-rgb), 0.1);
+            border-radius: 0;
+        }
+
+        #calendar-grid .day.start-date {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            border-top-left-radius: 50%;
+            border-bottom-left-radius: 50%;
+        }
+
+        #calendar-grid .day.end-date {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            border-top-right-radius: 50%;
+            border-bottom-right-radius: 50%;
+        }
+
+        #calendar-grid .day.disabled {
+            color: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        #calendar-grid .day.today {
+            font-weight: 700;
+            border: 1px solid var(--app-primary-color);
+        }
+
+        .date-range-box {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .date-range-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .date-range-item label {
+            display: block;
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+
+        .date-range-item span {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Dropdown Popup */
+        .newdropdown-popup {
+            position: absolute;
+            z-index: 1100;
+            width: 280px;
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .newdropdown-popup__header {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .newdropdown-popup__title {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--app-primary-color);
+        }
+
+        .newdropdown-popup__title .form-check-input {
+            margin-right: 0.5rem;
+        }
+
+        .newdropdown-popup__search {
+            padding: 0.5rem 0.75rem;
+        }
+
+        .newdropdown-popup__search .form-control {
+            font-size: 0.8rem;
+        }
+
+        .newdropdown-popup__list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0 0.75rem;
+        }
+
+        .newdropdown-popup__list .form-check {
+            padding-top: 0.4rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .newdropdown-popup__footer {
+            padding: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .newdropdown-popup__footer .btn {
+            width: 100%;
+            font-size: 0.8rem;
+        }
+
+        #timeFilterContainer .btn.filtered {
+            background-color: #e0e7ff !important;
+            color: #3730a3;
+            font-weight: 600;
+        }
+
+        /* --- Maintenance, RMQC, Costing, CAPA (Toggles) --- */
+        /* Custom Toggle Button Styling */
+        #pmTypeToggle .btn-check:not(:checked)+.btn-outline-primary,
+        #sopViewToggle .btn-check:not(:checked)+.btn-outline-primary,
+        #funnelTypeToggle .btn-check:not(:checked)+.btn-outline-primary {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #344767;
+            box-shadow: none;
+        }
+
+        #pmTypeToggle .btn-check:not(:checked)+.btn-outline-primary:hover,
+        #sopViewToggle .btn-check:not(:checked)+.btn-outline-primary:hover,
+        #funnelTypeToggle .btn-check:not(:checked)+.btn-outline-primary:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: var(--app-primary-color);
+        }
+
+        #pmTypeToggle .btn-check:checked+.btn-outline-primary,
+        #sopViewToggle .btn-check:checked+.btn-outline-primary,
+        #funnelTypeToggle .btn-check:checked+.btn-outline-primary {
+            background-color: var(--app-primary-color);
+            border-color: var(--app-primary-color);
+            color: #ffffff;
+            box-shadow: none;
+        }
+
+        #pmTypeToggle .btn-check:checked+.btn-outline-primary:hover,
+        #sopViewToggle .btn-check:checked+.btn-outline-primary:hover,
+        #funnelTypeToggle .btn-check:checked+.btn-outline-primary:hover {
+            background-color: var(--app-primary-color);
+            border-color: var(--app-primary-color);
+            color: #ffffff;
+        }
+
+        /* --- Sales/CRM Specifics --- */
+        .dashboard-toggle-group .btn-outline-primary {
+            --bs-btn-color: #003366;
+            --bs-btn-border-color: #003366;
+            --bs-btn-hover-bg: #003366;
+            --bs-btn-hover-border-color: #003366;
+            --bs-btn-active-bg: #003366;
+            --bs-btn-active-border-color: #003366;
+            --bs-btn-active-color: #FFFFFF;
+        }
+
+        .dashboard-toggle-group {
+            flex-shrink: 0 !important;
+            /* Prevents the buttons from being squeezed */
+            margin-top: 0.75rem;
+            margin-right: 0.75rem;
+        }
+
+        .dashboard-toggle-group .btn {
+            padding: 0.3rem 0.6rem !important;
+            font-size: 0.7rem !important;
+        }
+
+        .content-title {
+            flex-shrink: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 10px !important;
+        }
+
+        .btn-custom-xs {
+            padding: 0.3rem 0.5rem !important;
+            font-size: 0.8rem !important;
+            line-height: 1.2 !important;
+            border-radius: 0.3rem;
+            min-height: 0;
+        }
+
+        .chart-controls .btn {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-color: #D1D5DB;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid py-4">
+        <header class="dashboard-header pb-2 d-flex justify-content-between align-items-center">
+            <h3 id="dashboardTitle" class="mb-0"></h3>
+        </header>
+        <section class="kpi-section mb-3">
+            <div id="kpi-container" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+        <section class="main-content-section">
+            <div id="content-grid" class="row g-3"></div>
+        </section>
+        <section class="grid-section mt-3">
+            <div id="grid-container-wrapper" class="content-wrapper">
+                <div id="grid-container" class="p-3"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="drilldownModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="drilldownModalLabel"></h5>
+                    <div id="drilldownFilterControls"></div><button type="button" class="btn-close ms-2"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="drilldownModalBody"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="expandChartModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expandChartModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="chart-canvas-container flex-grow-1"><canvas id="expandedChartCanvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="kpiGuideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kpiGuideModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="kpiGuideContent">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-card-text"></i> Definition</h6>
+                            <p id="guide-definition" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-graph-up"></i> Interpretation</h6>
+                            <p id="guide-interpretation" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calculator"></i> Calculation</h6>
+                            <p id="guide-calculation" class="small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="docFormModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docFormModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docFormBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div id="custom-tooltip" class="chart-tooltip">
+        <div class="tooltip-main-title"></div>
+        <div class="tooltip-main-content">
+            <div class="tooltip-header"><span class="tooltip-title"></span><span class="tooltip-delta"></span></div>
+            <div class="tooltip-value"></div>
+        </div>
+        <div class="tooltip-footer" style="display: none;"></div>
+        <div class="tooltip-drilldown"><button type="button" class="drilldown-btn">View Details <i
+                    class="bi bi-box-arrow-up-right"></i></button></div>
+    </div>
+    <div id="customContextMenu">
+        <ul class="context-menu-list" id="contextMenuList"></ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const dashboardApp = (function () {
+            const Utils = {
+                formatMetric(value, format, suffix = '') {
+                    if (value === null || value === undefined) return 'N/A';
+                    const currencyCode = 'INR';
+
+                    if (format === 'compact_number') {
+                        if (Math.abs(value) >= 10000000) return `${(value / 10000000).toFixed(2)} Cr`;
+                        if (Math.abs(value) >= 100000) return `${(value / 100000).toFixed(2)} L`;
+                        if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(1)} K`;
+                        return value.toLocaleString('en-IN');
+                    }
+
+                    if (format === 'currency') return new Intl.NumberFormat('en-IN', { style: 'currency', currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+                    if (format === 'percent') return `${value.toFixed(1)}%`;
+                    if (format === 'date') return new Date(value).toLocaleString('en-GB');
+                    if (typeof value === 'number') return value.toLocaleString('en-IN');
+                    return `${value}${suffix}`;
+                },
+                hexToRgb(hex) {
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                },
+                deepMerge(target, source) {
+                    const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+                    let output = { ...target };
+                    if (isObject(target) && isObject(source)) {
+                        Object.keys(source).forEach(key => {
+                            if (isObject(source[key])) {
+                                if (key in target) {
+                                    output[key] = this.deepMerge(target[key], source[key]);
+                                } else {
+                                    Object.assign(output, { [key]: source[key] });
+                                }
+                            } else {
+                                Object.assign(output, { [key]: source[key] });
+                            }
+                        });
+                    }
+                    return output;
+                }
+            };
+            // ========================================================================================================
+            // SECTION 1: CONFIGURATION (COSTING DASHBOARD)
+            // ========================================================================================================
+            const CONFIGURATION = (() => {
+                const dashboardTitle = 'Costing Dashboard';
+
+                const kpiConfig = [
+                    {
+                        id: 'kpi-order-cash', dataKey: 'order_to_cash', label: 'Order-to-Cash Health', isCurrency: true, cssVar: '--glow-blue',
+                        secondaryMetrics: [
+                            { icon: 'bi-cart-plus', dataKey: 'fresh_orders', label: 'Fresh Orders', format: 'currency_compact' },
+                            { icon: 'bi-receipt', dataKey: 'billing_sales', label: 'Billing', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Order-to-Cash', definition: 'Total value of fresh orders received vs billing generated.', interpretation: 'Indicates the health of the sales pipeline and cash realization.', calculation: 'Sum of Fresh Orders + Billing Sales.' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'drilldown_orders',
+                            columns: [
+                                { dataField: 'id', caption: 'Order/Inv ID', width: 120 },
+                                { dataField: 'date', caption: 'Date', dataType: 'date' },
+                                { dataField: 'client', caption: 'Client Name' },
+                                { dataField: 'type', caption: 'Type' }, // Fresh Order or Billing
+                                { dataField: 'amount', caption: 'Amount', dataType: 'number', format: 'currency' },
+                                { dataField: 'status', caption: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-profitability', dataKey: 'profitability_efficiency', label: 'Profitability (T%)', valueSuffix: '%', cssVar: '--glow-green',
+                        secondaryMetrics: [
+                            { icon: 'bi-crosshair', dataKey: 'target_t_percent', label: 'Target', valueSuffix: '%' },
+                            { icon: 'bi-graph-up-arrow', dataKey: 'actual_t_percent', label: 'Actual', valueSuffix: '%' }
+                        ],
+                        guide: { title: 'Throughput % (T%)', definition: 'Value added contribution margin percentage.', interpretation: 'Higher T% indicates better profitability per job.', calculation: '((Sales - Material Cost) / Sales) * 100' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'drilldown_profitability',
+                            columns: [
+                                { dataField: 'job_id', caption: 'Job ID', width: 100 },
+                                { dataField: 'client', caption: 'Client' },
+                                { dataField: 'sales_value', caption: 'Sales Value', dataType: 'number', format: 'currency' },
+                                { dataField: 'material_cost', caption: 'Mat. Cost', dataType: 'number', format: 'currency' },
+                                { dataField: 'contribution', caption: 'Contribution', dataType: 'number', format: 'currency' },
+                                { dataField: 't_percent', caption: 'T %', dataType: 'number', format: 'percent' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-cost-control', dataKey: 'production_cost_control', label: 'Job Cost Variance', valueSuffix: '%', cssVar: '--glow-red', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { icon: 'bi-clipboard-data', dataKey: 'estimated_cost', label: 'Est', format: 'currency_compact' },
+                            { icon: 'bi-clipboard-check', dataKey: 'actual_cost', label: 'Act', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Job Costing Variance', definition: 'Percentage difference between estimated and actual production costs.', interpretation: 'Positive variance means cost overrun.', calculation: '((Actual - Estimated) / Estimated) * 100' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'drilldown_costing',
+                            columns: [
+                                { dataField: 'job_id', caption: 'Job ID', width: 100 },
+                                { dataField: 'job_name', caption: 'Job Name' },
+                                { dataField: 'estimated', caption: 'Est. Cost', dataType: 'number', format: 'currency' },
+                                { dataField: 'actual', caption: 'Act. Cost', dataType: 'number', format: 'currency' },
+                                { dataField: 'variance_val', caption: 'Var (₹)', dataType: 'number', format: 'currency' },
+                                { dataField: 'variance_pct', caption: 'Var %', dataType: 'number', format: 'percent' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-leakage', dataKey: 'operational_leakage', label: 'Operational Leakage', isCurrency: true, cssVar: '--glow-orange', invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { icon: 'bi-trash', dataKey: 'oddment_value', label: 'Oddment', format: 'currency_compact' },
+                            { icon: 'bi-recycle', dataKey: 'wastage_value', label: 'Wastage', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Operational Leakage', definition: 'Total monetary loss due to oddments and material wastage.', interpretation: 'Direct impact on bottom-line profitability.', calculation: 'Oddment Value + Wastage Value' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'drilldown_leakage',
+                            columns: [
+                                { dataField: 'date', caption: 'Date', dataType: 'date' },
+                                { dataField: 'category', caption: 'Category' }, // Oddment or Wastage
+                                { dataField: 'reason', caption: 'Reason' },
+                                { dataField: 'department', caption: 'Department' },
+                                { dataField: 'value', caption: 'Loss Value', dataType: 'number', format: 'currency' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-output', dataKey: 'production_output', label: 'Total Impressions', cssVar: '--glow-purple',
+                        secondaryMetrics: [
+                            { icon: 'bi-speedometer2', dataKey: 'efficiency_percent', label: 'Efficiency', valueSuffix: '%' },
+                            { icon: 'bi-printer', dataKey: 'machine_count', label: 'Active Machines' }
+                        ],
+                        guide: { title: 'Production Output', definition: 'Total number of impressions (prints) produced.', interpretation: 'Measure of factory utilization and volume.', calculation: 'Sum of impressions across all machines.' },
+                        drilldownConfig: {
+                            renderAs: 'grid',
+                            dataKey: 'drilldown_production',
+                            columns: [
+                                { dataField: 'date', caption: 'Date', dataType: 'date' },
+                                { dataField: 'machine', caption: 'Machine' },
+                                { dataField: 'shift', caption: 'Shift' },
+                                { dataField: 'impressions', caption: 'Impressions', dataType: 'number' },
+                                { dataField: 'speed', caption: 'Avg Speed', dataType: 'number' },
+                                { dataField: 'operator', caption: 'Operator' }
+                            ]
+                        }
+                    }
+                ];
+
+                const layoutConfig = [
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'sales-billing-chart',
+                            chartType: 'bar',
+                            title: 'Sales Billing Analysis',
+                            // 3-Way Toggle Configuration
+                            views: [
+                                { id: 'category', label: 'Category', dataKey: 'sales_category_data', transformer: 'transformSalesCategory' },
+                                { id: 'color', label: 'Color', dataKey: 'sales_color_data', transformer: 'transformSalesColor' },
+                                { id: 'segment', label: 'Segment', dataKey: 'sales_segment_data', transformer: 'transformSalesSegment' }
+                            ],
+                            dataKey: 'sales_category_data',
+                            transformer: 'transformSalesCategory',
+                            drilldownConfig: {
+                                renderAs: 'grid', dataKey: 'dd_sales_mix',
+                                columns: [
+                                    { dataField: 'month', caption: 'Month' },
+                                    { dataField: 'client', caption: 'Client' },
+                                    { dataField: 'type', caption: 'Type' },
+                                    { dataField: 'value', caption: 'Value', dataType: 'number', format: 'currency' }
+                                ]
+                            },
+                            options: { scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Value (₹)' } } } }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'fresh-order-chart',
+                            chartType: 'line',
+                            title: 'Fresh Order Analysis',
+                            views: [
+                                { id: 'category', label: 'Category', dataKey: 'fresh_order_category_data', transformer: 'transformFreshOrderCategory' },
+                                { id: 'color', label: 'Color', dataKey: 'fresh_order_color_data', transformer: 'transformFreshOrderColor' },
+                                { id: 'segment', label: 'Segment', dataKey: 'fresh_order_segment_data', transformer: 'transformFreshOrderSegment' }
+                            ],
+                            dataKey: 'fresh_order_category_data',
+                            transformer: 'transformFreshOrderCategory',
+                            drilldownConfig: {
+                                renderAs: 'grid', dataKey: 'dd_sales_mix', columns: [{ dataField: 'month', caption: 'Month' }, { dataField: 'client', caption: 'Client' },
+                                { dataField: 'value', caption: 'Value', dataType: 'number', format: 'currency' }]
+                            },
+                            options: {
+                                scales: {
+                                    x: { stacked: true },
+                                    y: { stacked: true, title: { display: true, text: 'Order Value (₹)' } }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'throughput-analysis-chart',
+                            chartType: 'bar',
+                            title: 'Throughput Analysis',
+                            views: [
+                                { id: 'category', label: 'Category', dataKey: 'throughput_category_data', transformer: 'transformThroughputCategory' },
+                                { id: 'color', label: 'Color', dataKey: 'throughput_color_data', transformer: 'transformThroughputColor' },
+                                { id: 'segment', label: 'Segment', dataKey: 'throughput_segment_monthly_data', transformer: 'transformThroughputSegment' }
+                            ],
+                            dataKey: 'throughput_category_data',
+                            transformer: 'transformThroughputCategory',
+                            drilldownConfig: { renderAs: 'grid', dataKey: 'dd_throughput', columns: [{ dataField: 'segment', caption: 'Segment' }, { dataField: 'job_id', caption: 'Job ID' }, { dataField: 't_percent', caption: 'T %', dataType: 'number', format: 'percent' }] },
+                            options: {
+                                indexAxis: 'y', // Horizontal
+                                scales: {
+                                    // CRITICAL FIX: Both axes must be stacked for the segments to appear side-by-side (cumulatively)
+                                    x: { stacked: true, title: { display: true, text: 'Throughput (₹)' } },
+                                    y: { stacked: true }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'cost-variance-chart', chartType: 'bar', title: 'Cost Variance: Top 10 Jobs',
+                            dataKey: 'job_costing_data',
+                            drilldownConfig: {
+                                renderAs: 'grid', dataKey: 'dd_cost_breakdown', filterMapping: 'job_id',
+                                columns: [
+                                    { dataField: 'job_id', caption: 'Job ID' },
+                                    { dataField: 'cost_head', caption: 'Cost Head' }, // Paper, Ink, Labor
+                                    { dataField: 'estimated', caption: 'Est. Cost', dataType: 'number', format: 'currency' },
+                                    { dataField: 'actual', caption: 'Act. Cost', dataType: 'number', format: 'currency' },
+                                    { dataField: 'variance', caption: 'Variance', dataType: 'number', format: 'currency' }
+                                ]
+                            },
+                            transformer: (data) => ({
+                                labels: data.map(d => d.job_id),
+                                datasets: [
+                                    { label: 'Estimated Cost', data: data.map(d => d.estimated), backgroundColor: '#003366' },
+                                    { label: 'Actual Cost', data: data.map(d => d.actual), backgroundColor: '#6fa2be' }
+                                ]
+                            }),
+                            options: { scales: { y: { title: { display: true, text: 'Cost (₹)' } } } }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'oddment-trend-chart',
+                            chartType: 'bar', // Base type
+                            title: 'Oddment Trend Analysis (Value vs Count)',
+                            dataKey: 'oddment_trend_data',
+                            transformer: 'transformOddmentTrend',
+                            drilldownConfig: {
+                                renderAs: 'grid',
+                                dataKey: 'dd_oddment_trend',
+                                columns: [
+                                    { dataField: 'month', caption: 'Month' },
+                                    { dataField: 'job_id', caption: 'Job ID' },
+                                    { dataField: 'reason', caption: 'Reason' },
+                                    { dataField: 'value', caption: 'Value', dataType: 'number', format: 'currency' }
+                                ]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'left',
+                                        title: { display: true, text: 'Value (₹)' }
+                                    },
+                                    y1: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'right',
+                                        title: { display: true, text: 'Count' },
+                                        grid: { drawOnChartArea: false } // Hides grid lines for the secondary axis
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4', config: {
+                            id: 'impression-trend-chart',
+                            chartType: 'bar',
+                            title: 'Impression Trend Analysis',
+                            views: [
+                                { id: 'machine', label: 'Machine', dataKey: 'impression_machine_data', transformer: 'transformImpressionMachine' },
+                                { id: 'shift', label: 'Shift', dataKey: 'impression_shift_data', transformer: 'transformImpressionShift' },
+                                { id: 'color', label: 'Color', dataKey: 'impression_color_data', transformer: 'transformImpressionColor' }
+                            ],
+                            dataKey: 'impression_machine_data',
+                            transformer: 'transformImpressionMachine',
+                            drilldownConfig: { renderAs: 'grid', dataKey: 'dd_impression_trend', columns: [{ dataField: 'month', caption: 'Month' }, { dataField: 'machine', caption: 'Machine' }, { dataField: 'shift', caption: 'Shift' }, { dataField: 'impressions', caption: 'Impressions', dataType: 'number' }] },
+                            options: { scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Impressions' } } } }
+                        }
+                    }
+                ];
+
+                const gridConfig = {
+                    id: 'job-costing-grid',
+                    dataKey: 'job_costing_details',
+                    summaryValueColumn: 'actual_cost',
+                    columns: [
+                        { dataField: 'job_id', caption: 'Job ID', width: 100, fixed: true },
+                        { dataField: 'client_name', caption: 'Client' },
+                        { dataField: 'job_name', caption: 'Job Name' },
+                        { dataField: 'estimated_cost', caption: 'Est. Cost', dataType: 'number', format: 'currency' },
+                        { dataField: 'actual_cost', caption: 'Act. Cost', dataType: 'number', format: 'currency' },
+                        { dataField: 'variance', caption: 'Variance', dataType: 'number', format: 'currency' },
+                        { dataField: 't_percent', caption: 'T %', dataType: 'number', format: 'percent' },
+                        { dataField: 'status', caption: 'Status' }
+                    ]
+                };
+
+                const contextMenuConfig = {
+                    actions: [
+                        { id: 'drilldown', label: 'View Details', icon: 'bi-table' },
+                        { id: 'expand', label: 'Expand View', icon: 'bi-arrows-fullscreen' },
+                        { id: 'guide', label: 'Definition / Guide', icon: 'bi-question-circle' },
+                        { type: 'separator' },
+                        { id: 'share', label: 'Share via Email', icon: 'bi-envelope' },
+                        {
+                            id: 'export', label: 'Export', icon: 'bi-download', submenu: [
+                                { id: 'export-png', label: 'Export as PNG', icon: 'bi-file-earmark-image' },
+                                { id: 'export-pdf', label: 'Export as PDF', icon: 'bi-filetype-pdf' }
+                            ]
+                        },
+                        { id: 'refresh', label: 'Refresh Data', icon: 'bi-arrow-clockwise' },
+                        { type: 'separator' },
+                        { id: 'ai-insight', label: 'AI Insight', icon: 'bi-magic' }
+                    ]
+                };
+                const filterConfig = {
+                    region: { dataSource: ['Press', 'Pre-Press', 'Post-Press'], defaultValue: [] },
+                    sales_category: { dataSource: ['Commercial', 'Packaging', 'Publishing'], defaultValue: [] },
+                    client_type: { dataSource: ['Key Account', 'Regular'], defaultValue: [] }
+                };
+                return {
+                    title: dashboardTitle,
+                    kpis: kpiConfig,
+                    layout: layoutConfig,
+                    grid: gridConfig,
+                    contextMenu: contextMenuConfig,
+                    filters: filterConfig
+                };
+            })();
+
+            // ===================================  =====================================================================
+            // SECTION 2: DATA PROVIDER MODULE
+            // ========================================================================================================
+            const DATA_PROVIDER = (() => {
+
+                const SharedTransformers = {
+                    aggregateByStatus: (data, periodIndex) => {
+                        const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const statusCounts = filteredData.reduce((acc, d) => { acc[d.status] = (acc[d.status] || 0) + 1; return acc; }, {});
+                        return {
+                            labels: Object.keys(statusCounts), datasets: [{
+                                data: Object.values(statusCounts),
+                                backgroundColor: ['#03A9F4', '#003366', '#4CAF50', '#9E9E9E']
+                            }]
+                        };
+                    },
+
+                    transformForPareto: (data) => {
+                        const sortedData = [...data].sort((a, b) => b.count - a.count);
+                        const labels = sortedData.map(d => d.reason); const counts = sortedData.map(d => d.count); const total = counts.reduce((sum, val) => sum + val, 0); let cumulative = 0; const cumulativePercentage = counts.map(count => { cumulative += count; return total > 0 ? (cumulative / total) * 100 : 0; }); return {
+                            labels, datasets: [{
+                                type: 'bar', label: 'Loss Value', data: counts,
+                                backgroundColor: '#003366', yAxisID: 'y'
+                            },
+                            { type: 'line', label: 'Cumulative %', data: cumulativePercentage, borderColor: '#EF4444', tension: 0.1, yAxisID: 'y1' }]
+                        };
+                    },
+
+                    transformForTopN: (data, periodIndex, config) => {
+                        const { n = 5, categoryKey, valueKey, datasetLabel = 'Value', chartType = 'bar', backgroundColor: customBackgroundColor } = config.transformerConfig;
+                        if (!categoryKey || !valueKey) { throw new Error(`'transformerConfig' for TopN must include 'categoryKey' and 'valueKey'.`); }
+                        const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data;
+                        const totals = filteredData.reduce((acc, d) => {
+                            const category = d[categoryKey];
+                            const value = d[valueKey]; if (category !== undefined && typeof value === 'number') { acc[category] = (acc[category] || 0) + value; } return acc;
+                        }, {});
+                        const topN = Object.entries(totals).sort(([, a], [, b]) => b - a).slice(0, n); const labels = topN.map(([key]) => key);
+                        const values = topN.map(([, val]) => val); const backgroundColor = customBackgroundColor || (chartType === 'line' ? 'rgba(16, 185, 129, 0.2)' : '#003366');
+                        const borderColor = chartType === 'line' ? '#10B981' : undefined;
+                        return { labels, datasets: [{ label: datasetLabel, data: values, backgroundColor: backgroundColor, borderColor: borderColor, fill: chartType === 'line', tension: 0.3 }] };
+                    },
+                    // 1. Transformer for Color View (SF 1+2c, 4c, WEB)
+                    transformSalesCategory: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Domestic', data: data.map(d => d.domestic), backgroundColor: '#003366', stack: 'Stack 0' },
+                            { label: 'Export', data: data.map(d => d.export), backgroundColor: '#4b6a9b', stack: 'Stack 0' },
+                            { label: 'Deemed Export', data: data.map(d => d.deemed), backgroundColor: '#b4c3d2', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformSalesColor: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'SF 1c+2c', data: data.map(d => d.sf_1_2c), backgroundColor: '#0c98ba', stack: 'Stack 0' }, // Indigo
+                            { label: 'SF 4c', data: data.map(d => d.sf_4c), backgroundColor: '#06b6d4', stack: 'Stack 0' },   // Light Blue
+                            { label: 'Web', data: data.map(d => d.web), backgroundColor: '#b4e9f2', stack: 'Stack 0' }         // Teal
+                        ]
+                    }),
+                    transformSalesSegment: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Printing', data: data.map(d => d.printing), backgroundColor: '#023859', stack: 'Stack 0' },   // Deep Blue
+                            { label: 'Binding', data: data.map(d => d.binding), backgroundColor: '#26658C', stack: 'Stack 0' },    // Purple
+                            { label: 'Lamination', data: data.map(d => d.lamination), backgroundColor: '#6fa2be', stack: 'Stack 0' }, // Pink
+                            { label: 'Foiling', data: data.map(d => d.foiling), backgroundColor: '#b4c3d2', stack: 'Stack 0' },    // Amber
+                            { label: 'Die-Cutting', data: data.map(d => d.die_cutting), backgroundColor: '#e5eaef', stack: 'Stack 0' } // Blue Grey
+                        ]
+                    }),
+                    transformFreshOrderCategory: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Domestic', data: data.map(d => d.domestic), backgroundColor: 'rgba(167, 235, 242, 0.5)', borderColor: '#0c98ba', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'Export', data: data.map(d => d.export), backgroundColor: 'rgba(84, 172, 191, 0.3)', borderColor: '#69d3e5', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'Deemed', data: data.map(d => d.deemed), backgroundColor: 'rgba(12, 152, 186, 0.2)', borderColor: '#a7e5de', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformOddmentTrend: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            {
+                                type: 'bar',
+                                label: 'Oddment Value (₹)',
+                                data: data.map(d => d.value),
+                                backgroundColor: '#003366',
+                                order: 2,
+                                yAxisID: 'y'
+                            },
+                            {
+                                type: 'line',
+                                label: 'No. of Oddments',
+                                data: data.map(d => d.count),
+                                borderColor: '#FF9800',
+                                backgroundColor: '#FF9800',
+                                borderWidth: 2,
+                                pointRadius: 4,
+                                tension: 0.3,
+                                fill: false,
+                                order: 1,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    }),
+                    transformFreshOrderColor: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'SF 1c+2c', data: data.map(d => d.sf_1_2c), backgroundColor: 'rgba(163, 55, 87, 0.5)', borderColor: '#A33757', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'SF 4c', data: data.map(d => d.sf_4c), backgroundColor: 'rgba(133, 46, 78, 0.3)', borderColor: '#852E4E', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'Web', data: data.map(d => d.web), backgroundColor: 'rgba(76, 29, 61, 0.2)', borderColor: '#4C1D3D', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformFreshOrderSegment: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Commercial', data: data.map(d => d.commercial), backgroundColor: 'rgba(180, 195, 210, 0.5)', borderColor: '#b4c3d2', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'Packaging', data: data.map(d => d.packaging), backgroundColor: 'rgba(50, 90, 136, 0.3)', borderColor: '#325a88', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' },
+                            { label: 'Publishing', data: data.map(d => d.publishing), backgroundColor: 'rgba(0, 51, 102, 0.2)', borderColor: '#003366', fill: true, tension: 0.4, pointRadius: 0, stack: 'Stack 0' }
+                        ]
+                    }),
+
+
+                    // --- THROUGHPUT TRANSFORMERS ---
+                    transformThroughputCategory: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Domestic', data: data.map(d => d.domestic), backgroundColor: '#235347', stack: 'Stack 0' },
+                            { label: 'Export', data: data.map(d => d.export), backgroundColor: '#8EB69B', stack: 'Stack 0' },
+                            { label: 'Deemed', data: data.map(d => d.deemed), backgroundColor: '#DAF1DE', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformThroughputColor: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'SF 1c+2c', data: data.map(d => d.sf_1_2c), backgroundColor: '#003366', stack: 'Stack 0' },
+                            { label: 'SF 4c', data: data.map(d => d.sf_4c), backgroundColor: '#325a88', stack: 'Stack 0' },
+                            { label: 'Web', data: data.map(d => d.web), backgroundColor: '#b4c3d2', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformThroughputSegment: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Commercial', data: data.map(d => d.commercial), backgroundColor: '#003366', stack: 'Stack 0' },
+                            { label: 'Packaging', data: data.map(d => d.packaging), backgroundColor: '#03A9F4', stack: 'Stack 0' },
+                            { label: 'Publishing', data: data.map(d => d.publishing), backgroundColor: '#FF9800', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformImpressionMachine: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Sheetfed Offset', data: data.map(d => d.sheetfed), backgroundColor: '#003366', stack: 'Stack 0' },
+                            { label: 'Web Offset', data: data.map(d => d.web), backgroundColor: '#03A9F4', stack: 'Stack 0' },
+                            { label: 'Digital', data: data.map(d => d.digital), backgroundColor: '#FF9800', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformImpressionShift: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'Day Shift', data: data.map(d => d.day), backgroundColor: '#4CAF50', stack: 'Stack 0' },
+                            { label: 'Night Shift', data: data.map(d => d.night), backgroundColor: '#37474F', stack: 'Stack 0' }
+                        ]
+                    }),
+                    transformImpressionColor: (data) => ({
+                        labels: data.map(d => d.month),
+                        datasets: [
+                            { label: 'SF 1c+2c', data: data.map(d => d.sf_1_2c), backgroundColor: '#3F51B5', stack: 'Stack 0' },
+                            { label: 'SF 4c', data: data.map(d => d.sf_4c), backgroundColor: '#03A9F4', stack: 'Stack 0' },
+                            { label: 'Web', data: data.map(d => d.web), backgroundColor: '#009688', stack: 'Stack 0' }
+                        ]
+                    })
+                };
+
+
+                class MockDataProvider {
+                    constructor(cacheTTL = 300000) { this.cache = new Map(); this.cacheTTL = cacheTTL; }
+
+                    async fetchKpiData() {
+                        await new Promise(r => setTimeout(r, 250));
+                        return {
+                            order_to_cash: { current: 4500000, previous: 4100000, fresh_orders: 2500000, billing_sales: 2000000, trend: [40, 42, 45, 44, 48, 50, 45] },
+                            profitability_efficiency: { current: 32.5, previous: 30.1, target_t_percent: 35.0, actual_t_percent: 32.5, trend: [28, 29, 30, 31, 32, 32.5, 32.5] },
+                            production_cost_control: { current: 8.4, previous: 5.2, estimated_cost: 1200000, actual_cost: 1300800, trend: [2, 3, 4, 5, 6, 7, 8.4] },
+                            operational_leakage: { current: 150000, previous: 120000, oddment_value: 90000, wastage_value: 60000, trend: [10, 12, 11, 13, 14, 15, 15] },
+                            production_output: { current: 1250000, previous: 1100000, efficiency_percent: 88, machine_count: 12, trend: [100, 105, 110, 115, 120, 122, 125] }
+                        };
+                    }
+
+                    async fetchRawData(dataKey) {
+                        await new Promise(r => setTimeout(r, 400));
+                        const mockData = {
+                            // --- 1. SALES BILLING DATA ---
+                            sales_category_data: [
+                                { month: 'Jan', domestic: 450000, export: 200000, deemed: 50000 },
+                                { month: 'Feb', domestic: 470000, export: 210000, deemed: 40000 },
+                                { month: 'Mar', domestic: 500000, export: 250000, deemed: 60000 },
+                                { month: 'Apr', domestic: 480000, export: 240000, deemed: 55000 },
+                                { month: 'May', domestic: 550000, export: 300000, deemed: 70000 },
+                                { month: 'Jun', domestic: 530000, export: 280000, deemed: 65000 }
+                            ],
+                            oddment_trend_data: [
+                                { month: 'Jan', value: 120000, count: 45 },
+                                { month: 'Feb', value: 115000, count: 42 },
+                                { month: 'Mar', value: 140000, count: 55 },
+                                { month: 'Apr', value: 110000, count: 38 },
+                                { month: 'May', value: 135000, count: 50 },
+                                { month: 'Jun', value: 125000, count: 46 }
+                            ],
+                            // 1. Order-to-Cash Drilldown
+                            drilldown_orders: Array.from({ length: 50 }, (_, i) => ({
+                                id: i % 2 === 0 ? `ORD-${202400 + i}` : `INV-${202400 + i}`,
+                                date: new Date(2024, 5, (i % 30) + 1),
+                                client: ['Unilever', 'Nestle', 'P&G', 'ITC', 'Dabur'][i % 5],
+                                type: i % 2 === 0 ? 'Fresh Order' : 'Billing',
+                                amount: Math.floor(Math.random() * 500000) + 50000,
+                                status: ['Approved', 'Pending', 'Paid'][i % 3]
+                            })),
+
+                            // 2. Profitability Drilldown
+                            drilldown_profitability: Array.from({ length: 40 }, (_, i) => {
+                                const sales = Math.floor(Math.random() * 200000) + 50000;
+                                const mat = sales * (0.6 + (Math.random() * 0.1));
+                                return {
+                                    job_id: `JOB-${500 + i}`,
+                                    client: ['Unilever', 'Nestle', 'P&G'][i % 3],
+                                    sales_value: sales,
+                                    material_cost: mat,
+                                    contribution: sales - mat,
+                                    t_percent: ((sales - mat) / sales) * 100
+                                };
+                            }),
+
+                            // 3. Cost Control Drilldown
+                            drilldown_costing: Array.from({ length: 40 }, (_, i) => {
+                                const est = Math.floor(Math.random() * 100000) + 20000;
+                                const act = est * (0.9 + (Math.random() * 0.3));
+                                return {
+                                    job_id: `JOB-${500 + i}`,
+                                    job_name: `Packaging Box Type ${String.fromCharCode(65 + (i % 5))}`,
+                                    estimated: est,
+                                    actual: act,
+                                    variance_val: act - est,
+                                    variance_pct: ((act - est) / est) * 100
+                                };
+                            }),
+
+                            // 4. Leakage Drilldown
+                            drilldown_leakage: Array.from({ length: 30 }, (_, i) => ({
+                                date: new Date(2024, 5, (i % 30) + 1),
+                                category: i % 3 === 0 ? 'Oddment' : 'Wastage',
+                                reason: ['Color Matching', 'Registration', 'Paper Jam', 'Plate Defect'][i % 4],
+                                department: ['Press', 'Post-Press', 'Finishing'][i % 3],
+                                value: Math.floor(Math.random() * 5000) + 500
+                            })),
+
+                            // 5. Production Output Drilldown
+                            drilldown_production: Array.from({ length: 60 }, (_, i) => ({
+                                date: new Date(2024, 5, (i % 30) + 1),
+                                machine: ['Heidelberg XL', 'Komori', 'Bobst'][i % 3],
+                                shift: ['Morning', 'Evening', 'Night'][i % 3],
+                                impressions: Math.floor(Math.random() * 15000) + 5000,
+                                speed: Math.floor(Math.random() * 5000) + 8000,
+                                operator: ['Rajesh', 'Suresh', 'Amit', 'Dinesh'][i % 4]
+                            })),
+                            // --- NEW: DRILLDOWN FOR ODDMENT ---
+                            dd_oddment_trend: Array.from({ length: 30 }, (_, i) => ({
+                                month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i % 6],
+                                job_id: `JOB-${800 + i}`,
+                                reason: ['Color Matching', 'Registration', 'Paper Jam'][i % 3],
+                                value: Math.floor(Math.random() * 5000) + 500
+                            })),
+                            impression_machine_data: [
+                                { month: 'Jan', sheetfed: 5000000, web: 3000000, digital: 500000 },
+                                { month: 'Feb', sheetfed: 5200000, web: 3100000, digital: 550000 },
+                                { month: 'Mar', sheetfed: 5800000, web: 3500000, digital: 600000 },
+                                { month: 'Apr', sheetfed: 5500000, web: 3300000, digital: 580000 },
+                                { month: 'May', sheetfed: 6000000, web: 3800000, digital: 700000 },
+                                { month: 'Jun', sheetfed: 5900000, web: 3600000, digital: 650000 }
+                            ],
+                            impression_shift_data: [
+                                { month: 'Jan', day: 4500000, night: 4000000 },
+                                { month: 'Feb', day: 4600000, night: 4250000 },
+                                { month: 'Mar', day: 5200000, night: 4700000 },
+                                { month: 'Apr', day: 4900000, night: 4480000 },
+                                { month: 'May', day: 5500000, night: 5000000 },
+                                { month: 'Jun', day: 5300000, night: 4850000 }
+                            ],
+                            impression_color_data: [
+                                { month: 'Jan', sf_1_2c: 2000000, sf_4c: 3500000, web: 3000000 },
+                                { month: 'Feb', sf_1_2c: 2100000, sf_4c: 3650000, web: 3100000 },
+                                { month: 'Mar', sf_1_2c: 2400000, sf_4c: 4000000, web: 3500000 },
+                                { month: 'Apr', sf_1_2c: 2200000, sf_4c: 3880000, web: 3300000 },
+                                { month: 'May', sf_1_2c: 2500000, sf_4c: 4200000, web: 3800000 },
+                                { month: 'Jun', sf_1_2c: 2400000, sf_4c: 4150000, web: 3600000 }
+                            ],
+
+                            // --- NEW: DRILLDOWN FOR IMPRESSIONS ---
+                            dd_impression_trend: Array.from({ length: 50 }, (_, i) => ({
+                                month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i % 6],
+                                machine: ['Heidelberg XL', 'Komori', 'Bobst', 'HP Indigo'][i % 4],
+                                shift: ['Day', 'Night'][i % 2],
+                                impressions: Math.floor(Math.random() * 50000) + 10000
+                            })),
+                            sales_color_data: [
+                                { month: 'Jan', sf_1_2c: 150000, sf_4c: 300000, web: 250000 },
+                                { month: 'Feb', sf_1_2c: 160000, sf_4c: 310000, web: 250000 },
+                                { month: 'Mar', sf_1_2c: 180000, sf_4c: 350000, web: 280000 },
+                                { month: 'Apr', sf_1_2c: 170000, sf_4c: 330000, web: 275000 },
+                                { month: 'May', sf_1_2c: 200000, sf_4c: 380000, web: 340000 },
+                                { month: 'Jun', sf_1_2c: 190000, sf_4c: 360000, web: 325000 }
+                            ],
+                            sales_segment_data: [
+                                { month: 'Jan', printing: 250000, binding: 150000, lamination: 50000, foiling: 30000, die_cutting: 40000 },
+                                { month: 'Feb', printing: 260000, binding: 155000, lamination: 52000, foiling: 32000, die_cutting: 42000 },
+                                { month: 'Mar', printing: 300000, binding: 180000, lamination: 60000, foiling: 40000, die_cutting: 50000 },
+                                { month: 'Apr', printing: 280000, binding: 170000, lamination: 55000, foiling: 35000, die_cutting: 45000 },
+                                { month: 'May', printing: 320000, binding: 200000, lamination: 70000, foiling: 45000, die_cutting: 55000 },
+                                { month: 'Jun', printing: 310000, binding: 190000, lamination: 65000, foiling: 42000, die_cutting: 52000 }
+                            ],
+
+                            // --- 2. FRESH ORDER DATA ---
+                            fresh_order_category_data: [
+                                { month: 'Jan', domestic: 480000, export: 220000, deemed: 60000 },
+                                { month: 'Feb', domestic: 500000, export: 230000, deemed: 50000 },
+                                { month: 'Mar', domestic: 550000, export: 280000, deemed: 70000 },
+                                { month: 'Apr', domestic: 520000, export: 260000, deemed: 65000 },
+                                { month: 'May', domestic: 600000, export: 320000, deemed: 80000 },
+                                { month: 'Jun', domestic: 580000, export: 300000, deemed: 75000 }
+                            ],
+                            fresh_order_color_data: [
+                                { month: 'Jan', sf_1_2c: 180000, sf_4c: 320000, web: 260000 },
+                                { month: 'Feb', sf_1_2c: 190000, sf_4c: 330000, web: 260000 },
+                                { month: 'Mar', sf_1_2c: 210000, sf_4c: 380000, web: 310000 },
+                                { month: 'Apr', sf_1_2c: 200000, sf_4c: 360000, web: 285000 },
+                                { month: 'May', sf_1_2c: 230000, sf_4c: 410000, web: 360000 },
+                                { month: 'Jun', sf_1_2c: 220000, sf_4c: 390000, web: 345000 }
+                            ],
+                            fresh_order_segment_data: [
+                                { month: 'Jan', commercial: 250000, packaging: 400000, publishing: 110000 },
+                                { month: 'Feb', commercial: 260000, packaging: 410000, publishing: 110000 },
+                                { month: 'Mar', commercial: 290000, packaging: 460000, publishing: 150000 },
+                                { month: 'Apr', commercial: 280000, packaging: 440000, publishing: 125000 },
+                                { month: 'May', commercial: 320000, packaging: 500000, publishing: 180000 },
+                                { month: 'Jun', commercial: 310000, packaging: 480000, publishing: 165000 }
+                            ],
+
+                            // --- 3. THROUGHPUT DATA ---
+                            throughput_category_data: [
+                                { month: 'Jan', domestic: 150000, export: 80000, deemed: 20000 },
+                                { month: 'Feb', domestic: 160000, export: 85000, deemed: 15000 },
+                                { month: 'Mar', domestic: 180000, export: 100000, deemed: 25000 },
+                                { month: 'Apr', domestic: 170000, export: 95000, deemed: 22000 },
+                                { month: 'May', domestic: 200000, export: 120000, deemed: 30000 },
+                                { month: 'Jun', domestic: 190000, export: 110000, deemed: 28000 }
+                            ],
+                            throughput_color_data: [
+                                { month: 'Jan', sf_1_2c: 60000, sf_4c: 120000, web: 70000 },
+                                { month: 'Feb', sf_1_2c: 65000, sf_4c: 125000, web: 70000 },
+                                { month: 'Mar', sf_1_2c: 75000, sf_4c: 145000, web: 85000 },
+                                { month: 'Apr', sf_1_2c: 70000, sf_4c: 135000, web: 82000 },
+                                { month: 'May', sf_1_2c: 85000, sf_4c: 160000, web: 105000 },
+                                { month: 'Jun', sf_1_2c: 80000, sf_4c: 150000, web: 98000 }
+                            ],
+                            throughput_segment_monthly_data: [
+                                { month: 'Jan', commercial: 90000, packaging: 140000, publishing: 20000 },
+                                { month: 'Feb', commercial: 95000, packaging: 145000, publishing: 20000 },
+                                { month: 'Mar', commercial: 110000, packaging: 165000, publishing: 30000 },
+                                { month: 'Apr', commercial: 105000, packaging: 155000, publishing: 27000 },
+                                { month: 'May', commercial: 125000, packaging: 185000, publishing: 40000 },
+                                { month: 'Jun', commercial: 120000, packaging: 175000, publishing: 33000 }
+                            ],
+
+                            // --- 4. COST VARIANCE DATA ---
+                            job_costing_data: Array.from({ length: 10 }, (_, i) => ({
+                                job_id: `JOB-${5001 + i}`,
+                                estimated: Math.floor(Math.random() * 50000) + 20000,
+                                actual: Math.floor(Math.random() * 60000) + 22000
+                            })),
+
+                            // --- DRILLDOWN DATA ---
+                            dd_sales_mix: Array.from({ length: 60 }, (_, i) => ({
+                                month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i % 6],
+                                client: `Client ${String.fromCharCode(65 + (i % 10))}`,
+                                type: ['Domestic', 'Export', 'Interunit'][i % 3],
+                                value: Math.floor(Math.random() * 100000) + 10000
+                            })),
+                            dd_throughput: Array.from({ length: 50 }, (_, i) => {
+                                const sales = Math.floor(Math.random() * 50000) + 20000;
+                                const mat = sales * 0.65;
+                                return {
+                                    segment: ['Commercial', 'Packaging', 'Publishing', 'Digital'][i % 4],
+                                    job_id: `JOB-${300 + i}`,
+                                    sales: sales,
+                                    material: mat,
+                                    t_percent: ((sales - mat) / sales) * 100
+                                };
+                            }),
+                            dd_cost_breakdown: Array.from({ length: 40 }, (_, i) => ({
+                                job_id: `JOB-${5001 + (i % 10)}`,
+                                cost_head: ['Paper', 'Ink', 'Plates', 'Labor', 'Overhead'][i % 5],
+                                estimated: 10000,
+                                actual: 10000 + (Math.random() * 2000 - 500),
+                                variance: (Math.random() * 2000 - 500)
+                            })),
+
+                            // --- GRID DATA (Keep for the bottom grid) ---
+                            job_costing_details: Array.from({ length: 50 }, (_, i) => {
+                                const est = Math.floor(Math.random() * 100000) + 10000;
+                                const act = est + (Math.random() > 0.5 ? Math.floor(Math.random() * 10000) : -Math.floor(Math.random() * 5000));
+                                return {
+                                    job_id: `JOB-${100 + i}`,
+                                    client_name: `Client ${String.fromCharCode(65 + (i % 26))}`,
+                                    job_name: `Job Description ${i}`,
+                                    estimated_cost: est,
+                                    actual_cost: act,
+                                    variance: act - est,
+                                    t_percent: (Math.random() * 0.3) + 0.1,
+                                    status: ['Completed', 'WIP', 'Invoiced'][i % 3]
+                                };
+                            })
+                        };
+                        const data = mockData[dataKey];
+                        this.cache.set(dataKey, { data, timestamp: Date.now() });
+                        return data;
+                    }
+                }
+                return { SharedTransformers, getInstance: () => new MockDataProvider() };
+            })();
+
+            // ========================================================================================================
+            // SECTION 3: APPLICATION CORE
+            // ========================================================================================================
+            const APP_CORE = (() => {
+                const dashboardConfig = CONFIGURATION;
+                const DataProvider = DATA_PROVIDER.getInstance();
+                const SharedTransformers = DATA_PROVIDER.SharedTransformers;
+                let chartInstances = {};
+                let modals = {};
+                let tooltipHideTimer = null;
+                Utils.getComponentConfig = (id) => dashboardConfig.kpis.find(c => c.id === id) || dashboardConfig.layout.find(c => c.config.id === id)?.config;
+                const StateManager = (() => {
+                    const state = { selectedPeriodIndex: null };
+                    const subscribers = {};
+                    return {
+                        getState: (key) => key ? state[key] : state,
+                        subscribe: (key, callback) => {
+                            if (!subscribers[key]) subscribers[key] = [];
+                            subscribers[key].push(callback);
+                        },
+                        setState: (key, data) => {
+                            const currentState = state[key];
+                            let hasChanged = false;
+                            if (typeof currentState === 'object' && currentState !== null && typeof data === 'object' && data !== null) {
+                                if (JSON.stringify(currentState) !== JSON.stringify(data)) hasChanged = true;
+                            } else {
+                                if (currentState !== data) hasChanged = true;
+                            }
+                            if (!hasChanged) return;
+                            state[key] = data;
+                            if (subscribers[key]) subscribers[key].forEach(callback => callback(data));
+                        }
+                    };
+                })();
+
+                const ChartDefaults = {
+                    getChartOptions(config) {
+                        const isHorizontal = config.options?.indexAxis === 'y';
+                        const valueAxis = isHorizontal ? 'x' : 'y';
+
+                        const compactFormatter = (value) => {
+                            if (value === 0) return '0';
+                            const abs = Math.abs(value);
+                            if (abs >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
+                            if (abs >= 100000) return `${(value / 100000).toFixed(1)}L`;
+                            if (abs >= 1000) return `${(value / 1000).toFixed(1)}K`;
+                            return value;
+                        };
+
+                        const baseOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            // CRITICAL FIX: 'index' mode ensures tooltip shows ALL segments in the stack
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            onHover: (e, el) => { e.native.target.style.cursor = el.length > 0 ? 'pointer' : 'default'; },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+                                tooltip: { enabled: false, external: InteractivityHandler.customTooltip }
+                            },
+                            scales: {
+                                [valueAxis]: {
+                                    ticks: { callback: compactFormatter }
+                                }
+                            }
+                        };
+
+                        // Cleanup for non-cartesian charts
+                        if (['doughnut', 'pie', 'polarArea'].includes(config.chartType)) {
+                            delete baseOptions.scales;
+                            delete baseOptions.interaction;
+                        }
+
+                        return Utils.deepMerge(baseOptions, config.options || {});
+                    }
+                };
+                const ActionRegistry = {
+                    setPeriodIndex: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const newIndex = elements[0].index;
+                            StateManager.setState('selectedPeriodIndex', newIndex);
+                            chart.setActiveElements([{ datasetIndex: 0, index: newIndex }]);
+                            chart.update();
+                        }
+                    }
+                };
+
+                async function init() {
+                    try {
+                        ConfigValidator.validate(dashboardConfig);
+                    } catch (error) {
+                        console.error("Dashboard Configuration Error:", error.message);
+                        document.body.innerHTML = `<div class="alert alert-danger m-4" role="alert"><strong>Configuration Error:</strong> ${error.message}</div>`;
+                        return;
+                    }
+
+                    Chart.register(ChartDataLabels);
+                    Chart.defaults.plugins.datalabels.display = false;
+                    const centerTextPlugin = { id: 'centerText', afterDraw: (chart) => { const { centerText } = chart.config.options.plugins; if (centerText?.display) { const { ctx, chartArea: { top, left, width, height } } = chart; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = left + width / 2, valueY = top + height / 2 - 10, labelY = valueY + 22; ctx.font = `700 ${centerText.fontSize || '24px'} Inter`; ctx.fillStyle = centerText.color || '#212529'; ctx.fillText(centerText.text, centerX, valueY); if (centerText.label) { ctx.font = `500 1rem Inter`; ctx.fillStyle = '#6B7280'; ctx.fillText(centerText.label, centerX, labelY); } ctx.restore(); } } };
+                    Chart.register(centerTextPlugin);
+
+                    document.title = dashboardConfig.title;
+                    document.getElementById('dashboardTitle').textContent = dashboardConfig.title;
+                    ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'].forEach(id => { modals[id] = new bootstrap.Modal(document.getElementById(id)); });
+                    FilterHandler.init();
+                    renderLayoutShells();
+                    InteractivityHandler.init();
+                    setupSubscriptions();
+
+                    await refreshDashboardData();
+                }
+
+                async function refreshDashboardData() {
+                    const filters = StateManager.getState('filters');
+
+                    const kpiDataPromise = DataProvider.fetchKpiData(filters);
+                    const rawDataKeys = [...new Set([
+                        ...dashboardConfig.kpis.map(kpi => kpi.drilldownConfig?.dataKey),
+                        ...dashboardConfig.layout.map(item => item.config.dataKey),
+                        ...dashboardConfig.layout.map(item => item.config.drilldownConfig?.dataKey), // <--- ADDED THIS LINE
+                        ...(dashboardConfig.grid ? [dashboardConfig.grid.dataKey] : [])
+                    ].filter(Boolean))];
+
+                    const rawDataPromises = rawDataKeys.map(key => DataProvider.fetchRawData(key, filters));
+
+                    const [kpiData] = await Promise.all([kpiDataPromise]);
+                    StateManager.setState('kpiData', kpiData);
+                    renderKpis();
+
+                    const allRawData = await Promise.all(rawDataPromises);
+                    allRawData.forEach((data, index) => {
+                        StateManager.setState(rawDataKeys[index], data);
+                    });
+                }
+
+                function setupSubscriptions() {
+                    StateManager.subscribe('filters', refreshDashboardData);
+
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                        }
+                    });
+
+                    if (dashboardConfig.grid) {
+                        StateManager.subscribe(dashboardConfig.grid.dataKey, () => GridHandler.render(dashboardConfig.grid));
+                    }
+                }
+
+                function renderLayoutShells() {
+                    document.getElementById('kpi-container').innerHTML = dashboardConfig.kpis.map(c => `<div class="col" id="shell-${c.id}"></div>`).join('');
+                    const loadingSpinner = `<div class="chart-feedback-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+
+                    document.getElementById('content-grid').innerHTML = dashboardConfig.layout.map(item => {
+                        // CHANGE: Added 'btn-custom-xs' to the label class list below
+                        const toggleHtml = item.config.views ? `
+            <div class="btn-group btn-group-sm dashboard-toggle-group ms-auto me-2" role="group">
+                ${item.config.views.map((v, i) => `
+                    <input type="radio" class="btn-check view-toggle" name="toggle-${item.config.id}" id="btn-${item.config.id}-${v.id}" autocomplete="off" data-component-id="${item.config.id}" data-view-index="${i}" ${i === 0 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary btn-custom-xs" for="btn-${item.config.id}-${v.id}">${v.label}</label>
+                `).join('')}
+            </div>` : '';
+
+                        return `<div class="${item.width}" id="container-${item.config.id}">
+            <div class="content-wrapper context-menu-target" data-component-id="${item.config.id}">
+                <div class="chart-header mt-2 mb-0">
+                    <h3 class="content-title mt-0">${item.config.title}</h3>
+                    ${toggleHtml}
+                </div>
+                <div class="chart-canvas-container">${loadingSpinner}<canvas id="${item.config.id}"></canvas></div>
+            </div>
+        </div>`;
+                    }).join('');
+
+                    setupViewToggles();
+                }
+                // 2. Add this new function to handle toggle clicks
+                function setupViewToggles() {
+                    document.querySelectorAll('.view-toggle').forEach(toggle => {
+                        toggle.addEventListener('change', (e) => {
+                            const componentId = e.target.dataset.componentId;
+                            const viewIndex = e.target.dataset.viewIndex;
+                            const config = Utils.getComponentConfig(componentId);
+                            const selectedView = config.views[viewIndex];
+
+                            // Update Config
+                            config.dataKey = selectedView.dataKey;
+                            config.transformer = selectedView.transformer;
+
+                            // Check if data exists, if not fetch it (handling lazy loading)
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (rawData) {
+                                ChartHandler.render(config);
+                            } else {
+                                DataProvider.fetchRawData(config.dataKey).then(data => {
+                                    StateManager.setState(config.dataKey, data);
+                                    ChartHandler.render(config);
+                                });
+                            }
+                        });
+                    });
+                }
+                function renderKpis() {
+                    const { kpiData } = StateManager.getState();
+                    if (!kpiData) return;
+                    dashboardConfig.kpis.forEach(config => {
+                        const data = kpiData[config.dataKey];
+                        if (!data) return;
+                        const growth = data.previous > 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
+                        const container = document.getElementById(`shell-${config.id}`);
+
+                        const isPositiveGrowth = growth >= 0;
+                        const isGood = config.invertGrowthColor ? !isPositiveGrowth : isPositiveGrowth;
+
+                        container.innerHTML = `<div class="card kpi-card context-menu-target" data-component-id="${config.id}">
+                    <div class="card-body">
+                        <div class="kpi-header">
+                            <div class="kpi-title-container">
+                                ${config.mainIcon ? `<i class="bi ${config.mainIcon}"></i>` : ''}
+                                <span class="kpi-title">${config.label}</span>
+                            </div>
+                            <div class="kpi-growth ${isGood ? 'positive' : 'negative'}">
+                                <i class="bi ${isPositiveGrowth ? 'bi-arrow-up-short' : 'bi-arrow-down-short'}"></i> ${Math.abs(growth).toFixed(1)}%
+                            </div>
+                        </div>
+
+                        <div class="kpi-body">
+                            <div class="kpi-primary-metrics">
+                                <span class="kpi-value">${Utils.formatMetric(data.current, config.isCurrency ? 'currency_compact' : (config.valueSuffix === '%' ? 'percent' : 'number'), config.valueSuffix)}</span>
+                                <span class="kpi-previous-value">Prev: ${Utils.formatMetric(data.previous, config.isCurrency ? 'currency_compact' : (config.valueSuffix === '%' ? 'percent' : 'number'), config.valueSuffix)}</span>
+                            </div>
+                            <div class="kpi-secondary-metrics">
+                                ${config.secondaryMetrics.map(sm => `<div class="metric-item"><i class="bi ${sm.icon}"></i><span>${sm.label ? sm.label + ': ' : ''}${Utils.formatMetric(data[sm.dataKey], sm.format, sm.valueSuffix)}</span></div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="kpi-footer">
+                            <div class="kpi-chart-container">
+                                <canvas id="sparkline-${config.id}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                        renderSparkline(config.id, data.trend, config.cssVar);
+                    });
+                }
+
+                function renderSparkline(id, data, colorVarName) {
+                    const ctx = document.getElementById(`sparkline-${id}`)?.getContext('2d');
+                    if (!ctx) return;
+                    const trendColor = getComputedStyle(document.documentElement).getPropertyValue(colorVarName);
+                    const trendColorRGB = Utils.hexToRgb(trendColor);
+                    if (!trendColorRGB) { console.error(`Invalid color format or CSS variable not found for: ${colorVarName}`); return; }
+                    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                    gradient.addColorStop(0, `rgba(${trendColorRGB}, 0.3)`);
+                    gradient.addColorStop(1, `rgba(${trendColorRGB}, 0)`);
+                    if (chartInstances[id]) chartInstances[id].destroy();
+                    chartInstances[id] = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: data.map(() => ''), datasets: [{ data: data, borderColor: trendColor, borderWidth: 2, fill: true, backgroundColor: gradient, tension: 0.4, pointRadius: 0 }] },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, layout: { padding: 0 } }
+                    });
+                }
+
+                const ChartHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        const feedbackEl = canvasContainer.querySelector('.chart-feedback-overlay');
+                        try {
+                            const ctx = canvasContainer.querySelector('canvas')?.getContext('2d');
+                            if (!ctx) throw new Error(`Canvas with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) { return; }
+                            const periodIndex = StateManager.getState('selectedPeriodIndex');
+                            let transformer;
+                            if (typeof config.transformer === 'function') {
+                                transformer = config.transformer;
+                            } else if (typeof config.transformer === 'string' && SharedTransformers[config.transformer]) {
+                                transformer = SharedTransformers[config.transformer];
+                            } else {
+                                throw new Error(`Transformer '${config.transformer}' is not a valid function or a key in SharedTransformers.`);
+                            }
+                            const data = transformer(rawData, periodIndex, config);
+                            if (chartInstances[config.id]) chartInstances[config.id].destroy();
+
+                            let finalOptions = ChartDefaults.getChartOptions(config);
+                            if (config.onClickAction && ActionRegistry[config.onClickAction]) { finalOptions.onClick = ActionRegistry[config.onClickAction]; }
+                            if (config.chartType === 'doughnut') {
+                                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (finalOptions.plugins.centerText) { finalOptions.plugins.centerText.text = Utils.formatMetric(total); }
+                                finalOptions.onHover = (event, elements, chart) => { const centerText = chart.config.options.plugins.centerText; if (elements.length > 0) { const index = elements[0].index; centerText.text = Utils.formatMetric(chart.data.datasets[0].data[index]); centerText.label = chart.data.labels[index]; } else { centerText.text = Utils.formatMetric(total); centerText.label = 'Total'; } chart.update('none'); };
+                                if (config.drilldownTarget) { finalOptions.onClick = () => DrilldownHandler.show(config.drilldownTarget); }
+                            }
+                            if (feedbackEl) feedbackEl.remove();
+                            chartInstances[config.id] = new Chart(ctx, { type: config.chartType, data, options: finalOptions });
+                        } catch (error) {
+                            console.error(`Failed to render chart '${config.id}':`, error);
+                            this.renderErrorState(canvasContainer, error);
+                        }
+                    },
+                    renderErrorState(container, error) {
+                        container.innerHTML = `<div class="chart-feedback-overlay"><i class="bi bi-exclamation-triangle-fill"></i><strong>Chart Failed to Load</strong><small class="mt-1">${error.message}</small></div>`;
+                    }
+                };
+
+                const GridHandler = {
+                    render(config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        if (!rawData) return;
+                        $(`#grid-container`).dxDataGrid({
+                            dataSource: rawData, keyExpr: config.key || undefined, columns: config.columns,
+                            showBorders: true, rowAlternationEnabled: true, hoverStateEnabled: true, columnAutoWidth: true, wordWrapEnabled: true, showColumnLines: false, showRowLines: false,
+                            allowColumnReordering: true, allowColumnResizing: true, columnResizingMode: "widget",
+                            paging: { pageSize: 10 }, pager: { showPageSizeSelector: false, allowedPageSizes: false, showInfo: true, showNavigationButtons: true, visible: true },
+                            searchPanel: { visible: true, width: 240, placeholder: "Search..." }, filterRow: { visible: true }, headerFilter: { visible: true }, filterPanel: { visible: false }, groupPanel: { visible: true }, grouping: { autoExpandAll: false },
+                            sorting: { mode: "multiple" }, columnChooser: { enabled: true, mode: "select" }, columnFixing: { enabled: true },
+                            toolbar: { items: ["searchPanel", "groupPanel", "exportButton", "columnChooserButton", { location: "after", widget: "dxButton", options: { icon: "refresh", hint: "Refresh", onClick: () => $(`#grid-container`).dxDataGrid("instance").refresh() } }, { location: "after", widget: "dxButton", options: { icon: "clear", hint: "Clear Filters", onClick: () => $(`#grid-container`).dxDataGrid("instance").clearFilter() } }] },
+                            export: { enabled: true, formats: ["xlsx", "pdf"] },
+                            stateStoring: { enabled: true, type: "localStorage", storageKey: `${config.dataKey}-gridState` },
+                            scrolling: { mode: "standard" }, loadPanel: { enabled: true, text: "Loading..." },
+                            summary: {
+                                totalItems: [
+                                    { column: config.summaryColumn || "id", summaryType: "count", displayFormat: "Total Rows: {0}" },
+                                    { column: config.summaryValueColumn || "amount", summaryType: "sum", valueFormat: { type: 'currency', currency: 'INR', precision: 0 }, displayFormat: "Total: {0}" },
+                                    { column: config.summaryValueColumn || "amount", summaryType: "avg", valueFormat: { type: 'currency', currency: 'INR', precision: 0 }, displayFormat: "Avg: {0}" }
+                                ],
+                                groupItems: [{ column: config.summaryValueColumn || "amount", summaryType: "sum", valueFormat: { type: 'currency', currency: 'INR', precision: 0 }, displayFormat: "Group Total: {0}", alignByColumn: true }]
+                            },
+                            onRowClick: (e) => config.onRowClick && config.onRowClick(e), onCellPrepared: (e) => config.onCellPrepared && config.onCellPrepared(e)
+                        });
+                    }
+                };
+
+                const DrilldownService = {
+                    show(title, config, dataRows) {
+                        const { columns, filters, docFormConfig, renderAs } = config;
+                        const filterControls = document.getElementById('drilldownFilterControls');
+                        const modalBody = document.getElementById('drilldownModalBody');
+                        document.getElementById('drilldownModalLabel').textContent = title;
+                        modalBody.innerHTML = '';
+
+                        if (docFormConfig) { modalBody.dataset.docFormConfig = JSON.stringify(docFormConfig); } else { delete modalBody.dataset.docFormConfig; }
+
+                        if (filters) {
+                            filterControls.innerHTML = filters.map(opt => `<div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="drilldownFilter" id="filter_${opt.value}" value="${opt.value}" ${opt.default ? 'checked' : ''}><label class="form-check-label small" for="filter_${opt.value}">${opt.label}</label></div>`).join('');
+                        } else {
+                            filterControls.innerHTML = '';
+                        }
+
+                        if (renderAs === 'grid') {
+                            const gridContainer = document.createElement('div');
+                            gridContainer.style.height = '60vh';
+                            modalBody.appendChild(gridContainer);
+
+                            $(gridContainer).dxDataGrid({
+                                dataSource: dataRows,
+                                columns: columns,
+                                showBorders: true,
+                                rowAlternationEnabled: true,
+                                hoverStateEnabled: true,
+                                filterRow: { visible: true },
+                                headerFilter: { visible: true },
+                                searchPanel: { visible: true },
+                                groupPanel: { visible: true },
+                                paging: { pageSize: 15 },
+                                pager: { showPageSizeSelector: true, allowedPageSizes: [15, 30, 50], showInfo: true },
+                                columnAutoWidth: true,
+                                export: { enabled: false } // <--- CHANGED TO FALSE TO FIX W1024
+                            });
+                        } else {
+                            const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+                            const rows = dataRows.map(row => `<tr data-doc-id="${row.id}" data-status="${row.status}">${columns.map(col => `<td>${Utils.formatMetric(row[col.key], col.format)}</td>`).join('')}</tr>`).join('');
+                            modalBody.innerHTML = `<div class="table-responsive"><table class="table table-hover"><thead id="drilldownThead"><tr>${headers}</tr></thead><tbody id="drilldownTbody">${rows}</tbody></table></div>`;
+                        }
+                        modals.drilldownModal.show();
+                    },
+                    showPlaceholder(title, message) { alert(message); }
+                };
+
+                function initiateDrilldown(componentId, context = {}) {
+                    const config = Utils.getComponentConfig(componentId);
+                    if (config.drilldownTarget && !context.dataIndex) { return initiateDrilldown(config.drilldownTarget); }
+                    const drilldownConfig = config?.drilldownConfig;
+                    if (!drilldownConfig) { return DrilldownService.showPlaceholder(config.label || config.title, `No drilldown configured.`); }
+                    const { dataKey, filterMapping } = drilldownConfig;
+                    let title = `Detailed View: ${config.label || config.title}`;
+                    const rawData = StateManager.getState(dataKey);
+                    if (!rawData) { return DrilldownService.showPlaceholder(title, `No detailed data available.`); }
+                    let filteredData = [...rawData];
+                    if (context.dataIndex !== undefined) {
+                        const chart = chartInstances[componentId];
+                        if (chart && chart.data.labels[context.dataIndex] !== undefined) {
+                            const label = chart.data.labels[context.dataIndex];
+                            title += ` (${label})`;
+                            if (filterMapping === 'date_month_short') { filteredData = rawData.filter(item => item.date.toLocaleString('default', { month: 'short' }) === label); } else if (filterMapping) { filteredData = rawData.filter(item => item[filterMapping] === label); }
+                        }
+                    }
+                    DrilldownService.show(title, drilldownConfig, filteredData);
+                }
+
+                const DocFormHandler = {
+                    show(docId, config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        const data = rawData.find(item => item.id === docId);
+                        if (!data) { alert(`Details for ${docId} not found.`); return; }
+                        const bodyHtml = `<div class="row">${config.fields.map(field => `<div class="col-md-6 form-readonly-group"><label>${field.label}</label><input type="text" class="form-control" value="${Utils.formatMetric(data[field.key], field.format)}" readonly></div>`).join('')}</div>`;
+                        document.getElementById('docFormModalLabel').textContent = `Details for: ${docId}`;
+                        document.getElementById('docFormBody').innerHTML = bodyHtml;
+                        modals.drilldownModal.classList.add('is-blurred');
+                        modals.docFormModal.show();
+                    }
+                };
+
+                const ExpandChartHandler = {
+                    show(componentId) {
+                        const originalChart = chartInstances[componentId];
+                        const config = Utils.getComponentConfig(componentId);
+                        if (!originalChart || !config) { alert('Cannot expand: chart instance not found.'); return; }
+                        const ctx = document.getElementById('expandedChartCanvas').getContext('2d');
+                        const chartData = JSON.parse(JSON.stringify(originalChart.data));
+                        const originalOptions = originalChart.config.options;
+                        const expansionOverrides = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true }, tooltip: { enabled: true, external: null } } };
+                        const finalOptions = Utils.deepMerge(JSON.parse(JSON.stringify(originalOptions)), expansionOverrides);
+                        const isKpiCard = dashboardConfig.kpis.some(k => k.id === componentId);
+                        if (isKpiCard) {
+                            const kpiData = StateManager.getState('kpiData')[config.dataKey];
+                            if (kpiData && kpiData.trend_labels) { chartData.labels = kpiData.trend_labels; }
+                            chartData.datasets[0].label = config.label;
+                            if (config.cssVar) {
+                                const trendColor = getComputedStyle(document.documentElement).getPropertyValue(config.cssVar).trim();
+                                const trendColorRGB = Utils.hexToRgb(trendColor);
+                                if (trendColor && trendColorRGB) { chartData.datasets[0].borderColor = trendColor; chartData.datasets[0].backgroundColor = `rgba(${trendColorRGB}, 0.2)`; chartData.datasets[0].fill = true; chartData.datasets[0].tension = 0.3; }
+                            }
+                        }
+                        document.getElementById('expandChartModalLabel').textContent = `Expanded View: ${config.label || config.title}`;
+                        if (chartInstances['expandedChart']) chartInstances['expandedChart'].destroy();
+                        chartInstances['expandedChart'] = new Chart(ctx, { type: originalChart.config.type, data: chartData, options: finalOptions });
+                        modals.expandChartModal.show();
+                    }
+                };
+
+                const GuideHandler = { show(kpiConfig) { if (!kpiConfig?.guide) { alert('No guide available for this KPI.'); return; } const { title, definition, interpretation, calculation } = kpiConfig.guide; document.getElementById('kpiGuideModalLabel').textContent = `Guide: ${title}`; document.getElementById('guide-definition').textContent = definition; document.getElementById('guide-interpretation').textContent = interpretation; document.getElementById('guide-calculation').textContent = calculation; modals.kpiGuideModal.show(); } };
+
+                const InteractivityHandler = {
+                    init() {
+                        const menu = document.getElementById('customContextMenu');
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        const drilldownModalEl = document.getElementById('drilldownModal');
+                        const hideMenu = () => menu.style.display = 'none';
+                        const hideTooltip = () => { if (tooltipEl) { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; } };
+                        document.addEventListener('click', hideMenu);
+                        document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+                        document.body.addEventListener('contextmenu', e => { const target = e.target.closest('.context-menu-target'); if (target) { e.preventDefault(); this.showContextMenu(e, target.dataset.componentId); } });
+                        document.body.addEventListener('click', e => { const target = e.target.closest('.kpi-card'); if (target) initiateDrilldown(target.dataset.componentId); });
+                        tooltipEl.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+                        tooltipEl.addEventListener('mouseleave', () => { tooltipHideTimer = setTimeout(hideTooltip, 300); });
+                        document.getElementById('drilldownFilterControls').addEventListener('change', e => { if (e.target.name === 'drilldownFilter') { const filterValue = e.target.value; document.getElementById('drilldownTbody').querySelectorAll('tr').forEach(row => { row.style.display = (filterValue === 'all' || row.dataset.status === filterValue) ? '' : 'none'; }); } });
+                        drilldownModalEl.addEventListener('click', e => { const row = e.target.closest('tr[data-doc-id]'); const configStr = drilldownModalEl.querySelector('.modal-body').dataset.docFormConfig; if (row && configStr) { const config = JSON.parse(configStr); DocFormHandler.show(row.dataset.docId, config); } });
+                        drilldownModalEl.addEventListener('hidden.bs.modal', () => {
+                            const modalBody = drilldownModalEl.querySelector('.modal-body');
+                            if (modalBody.dataset.docFormConfig) {
+                                delete modalBody.dataset.docFormConfig;
+                            }
+                        }); document.getElementById('docFormModal').addEventListener('hidden.bs.modal', () => modals.drilldownModal.classList.remove('is-blurred'));
+                        document.getElementById('expandChartModal').addEventListener('hidden.bs.modal', () => { if (chartInstances['expandedChart']) { chartInstances['expandedChart'].destroy(); chartInstances['expandedChart'] = null; } });
+                    },
+                    showContextMenu(event, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        const menu = document.getElementById('customContextMenu');
+                        const menuList = document.getElementById('contextMenuList');
+                        const componentActions = config?.actions || dashboardConfig.contextMenu.actions.map(a => a.id);
+                        let actions = dashboardConfig.contextMenu.actions.filter(a => componentActions.includes(a.id) || a.type === 'separator');
+                        const renderItems = items => items.map(a => a.type === 'separator' ? '<li class="context-menu-separator"></li>' : `<li class="context-menu-item" data-action="${a.id}"><i class="bi ${a.icon}"></i><span>${a.label}</span>${a.submenu ? `<i class="bi bi-chevron-right"></i><ul class="context-menu-sublist">${renderItems(a.submenu)}</ul>` : ''}</li>`).join('');
+                        menuList.innerHTML = renderItems(actions);
+                        menu.querySelectorAll('.context-menu-item').forEach(item => { if (!item.querySelector('.context-menu-sublist')) item.addEventListener('click', () => this.handleContextMenuAction(item.dataset.action, componentId)); });
+                        menu.style.visibility = 'hidden'; menu.style.display = 'block';
+                        const { offsetWidth: menuW, offsetHeight: menuH } = menu;
+                        const { clientX: mouseX, clientY: mouseY } = event;
+                        const { innerWidth: viewportW, innerHeight: viewportH } = window;
+                        const padding = 5;
+                        let finalLeft = mouseX; if ((mouseX + menuW + padding) > viewportW) { finalLeft = mouseX - menuW; }
+                        let finalTop = mouseY; if ((mouseY + menuH + padding) > viewportH) { finalTop = mouseY - menuH; }
+                        menu.style.left = `${finalLeft + window.scrollX}px`; menu.style.top = `${finalTop + window.scrollY}px`; menu.style.visibility = 'visible';
+                    },
+                    handleContextMenuAction(action, componentId) {
+                        const config = Utils.getComponentConfig(componentId);
+                        switch (action) {
+                            case 'drilldown': initiateDrilldown(componentId); break;
+                            case 'refresh': refreshDashboardData(); break;
+                            case 'expand': ExpandChartHandler.show(componentId); break;
+                            case 'guide': if (config.guide) GuideHandler.show(config); break;
+                            case 'share': window.location.href = `mailto:?subject=Dashboard Insight: ${config.label || config.title}&body=Review data for ${config.label || config.title}.`; break;
+                            case 'export-png': const chart = chartInstances[componentId]; if (chart) { const a = document.createElement('a'); a.href = chart.toBase64Image(); a.download = `${componentId}.png`; a.click(); } break;
+                            default: alert(`Action '${action}' is not yet implemented.`);
+                        }
+                    },
+                    customTooltip(context) {
+                        const { chart, tooltip } = context;
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        clearTimeout(tooltipHideTimer);
+                        if (tooltip.opacity === 0) { tooltipHideTimer = setTimeout(() => { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; }, 300); return; }
+                        const titleEl = tooltipEl.querySelector('.tooltip-main-title');
+                        const headerEl = tooltipEl.querySelector('.tooltip-header');
+                        const valueEl = tooltipEl.querySelector('.tooltip-value');
+                        const seriesTitleEl = tooltipEl.querySelector('.tooltip-title');
+                        const deltaEl = tooltipEl.querySelector('.tooltip-delta');
+                        const footerEl = tooltipEl.querySelector('.tooltip-footer');
+                        headerEl.style.display = 'flex'; deltaEl.style.display = 'none'; footerEl.style.display = 'none';
+                        if (chart.canvas.id.startsWith('loss-analysis')) {
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            headerEl.style.display = 'none';
+                            valueEl.textContent = '';
+                            const footerContent = tooltip.dataPoints.map(dp => {
+                                const isPercentage = dp.dataset.label.includes('%');
+                                const value = isPercentage ? `${dp.raw.toFixed(1)}%` : Utils.formatMetric(dp.raw);
+                                return `<div class="footer-row"><span>${dp.dataset.label}</span><span>${value}</span></div>`;
+                            }).join('');
+                            footerEl.innerHTML = footerContent;
+                            footerEl.style.display = 'flex';
+                        } else {
+                            const dp = tooltip.dataPoints[0];
+                            if (!dp) return;
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            seriesTitleEl.textContent = dp.dataset.label || '';
+                            valueEl.textContent = Utils.formatMetric(dp.raw);
+                            const prev = dp.dataIndex > 0 ? chart.data.datasets[dp.datasetIndex].data[dp.dataIndex - 1] : null;
+                            if (prev !== null && prev !== 0 && typeof dp.raw === 'number') { const change = ((dp.raw - prev) / prev) * 100, isPos = change >= 0; deltaEl.className = `tooltip-delta ${isPos ? 'positive' : 'negative'}`; deltaEl.innerHTML = `<i class="bi ${isPos ? 'bi-arrow-up' : 'bi-arrow-down'}"></i> ${Math.abs(change).toFixed(1)}%`; deltaEl.style.display = 'flex'; }
+                            const footerContent = chart.data.datasets.map((ds, i) => i !== dp.datasetIndex && ds.data[dp.dataIndex] !== undefined ? `<div class="footer-row"><span>${ds.label}</span><span>${Utils.formatMetric(ds.data[dp.dataIndex])}</span></div>` : null).filter(Boolean);
+                            if (footerContent.length > 0) { footerEl.innerHTML = footerContent.join(''); footerEl.style.display = 'flex'; }
+                        }
+                        tooltipEl.querySelector('.drilldown-btn').onclick = () => initiateDrilldown(chart.canvas.id, { dataIndex: tooltip.dataPoints[0].dataIndex });
+                        const canvasRect = chart.canvas.getBoundingClientRect();
+                        tooltipEl.style.opacity = 1; tooltipEl.style.pointerEvents = 'all';
+                        tooltipEl.style.left = (canvasRect.left + window.scrollX + tooltip.caretX) + 'px';
+                        tooltipEl.style.top = (canvasRect.top + window.scrollY + tooltip.caretY) + 'px';
+                    }
+                };
+                const FilterHandler = {
+                    init() {
+                        const { filters } = dashboardConfig;
+                        const now = new Date();
+                        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                        const defaultFilters = { startDate: startOfMonth, endDate: now, region: filters.region.defaultValue, sales_category: filters.sales_category.defaultValue, client_type: filters.client_type.defaultValue };
+                        StateManager.setState('filters', defaultFilters);
+                    },
+                };
+
+                const ConfigValidator = {
+                    validate(config) {
+                        if (!config.title) throw new Error("`title` is missing.");
+                        if (!Array.isArray(config.kpis)) throw new Error("`kpis` must be an array.");
+                        if (!Array.isArray(config.layout)) throw new Error("`layout` must be an array.");
+                        config.kpis.forEach((kpi, i) => { if (!kpi.id || !kpi.dataKey || !kpi.label) throw new Error(`KPI at index ${i} is missing required keys (id, dataKey, label).`); });
+                        config.layout.forEach((item, i) => {
+                            if (!item.type || !item.width || !item.config) throw new Error(`Layout item at index ${i} is missing required keys (type, width, config).`);
+                            const chartConfig = item.config;
+                            if (chartConfig.drilldownConfig && !Array.isArray(chartConfig.drilldownConfig.columns)) { throw new Error(`Drilldown config for chart '${chartConfig.id}' is missing a 'columns' array.`); }
+                            if (typeof chartConfig.transformer !== 'function' && !SharedTransformers[chartConfig.transformer]) { throw new Error(`Transformer for chart '${chartConfig.id}' must be a function or a key in SharedTransformers.`); }
+                        });
+                    }
+                };
+
+                return { init };
+            })();
+
+            APP_CORE.init();
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Template (v16.1)</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required by DevExtreme) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DevExtreme JS & CSS (Theme and Core) -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- Dashboard Filters CSS -->
+    <link rel="stylesheet" href="dashboard-filters.css">
+
+</head>
+
+<body>
+
+    <div id="main-dashboard-content" class="container-fluid py-4 modal-body">
+        <header class="dashboard-header pb-2 d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h3 id="dashboardTitle" class="mb-0">Dispatch & Invoicing Dashboard <span id="activeFiltersDisplay"
+                    class="filter-display-container"></span></h3>
+
+            <div class="d-flex align-items-center ms-auto">
+                <!-- 1. Job/Value Toggle -->
+                <!--<div class="btn-group otif-toggle-group me-2" id="jobValueToggle" role="group">
+                    <input type="radio" class="btn-check" name="jobValueType" id="jobType" checked>
+                    <label class="btn" for="jobType">Job</label>
+                    <input type="radio" class="btn-check" name="jobValueType" id="valueType">
+                    <label class="btn" for="valueType">Value</label>
+                </div> -->
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 2. Moving Average Dropdown -->
+                <div class="btn-group me-2" id="ma-dropdown-container">
+                    <button type="button" class="btn otif-ma-button active" id="maButton">
+                        <span id="maButtonText">Loading...</span>
+                    </button>
+                    <button type="button" class="btn otif-ma-button dropdown-toggle dropdown-toggle-split active"
+                        data-bs-toggle="dropdown">
+                    </button>
+                    <ul class="dropdown-menu otif-ma-dropdown-menu" id="maDropdownMenu" style="position: relative;">
+                        <!-- Clear Button Removed -->
+                        <li class="px-3 py-2">
+                            <input type="text" class="form-control form-control-sm" id="maSearchInput"
+                                placeholder="Search weeks...">
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item active" href="#" data-ma-type="full" data-ma-week="52">(last)
+                                13-Week-MA</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <div id="maWeekOptions"></div>
+                    </ul>
+                </div>
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 3. Time Filter Toggles -->
+                <div class="btn-group otif-toggle-group me-2" id="timeFilterContainer">
+                    <button type="button" class="btn" data-category="Day">Day</button>
+                    <button type="button" class="btn" data-category="Week">Week</button>
+                    <button type="button" class="btn" data-category="Month">Month</button>
+                    <button type="button" class="btn" data-category="Quarter">Quarter</button>
+                    <button type="button" class="btn" data-category="Year">Year</button>
+                </div>
+
+                <!-- 4. Filter Panel Toggle -->
+                <button class="btn btn-link text-secondary me-1" type="button" id="toggle-filter-panel-btn"
+                    title="Filters">
+                    <i class="bi bi-filter fs-5"></i>
+                </button>
+            </div>
+        </header>
+        <section class="kpi-section mb-3">
+            <div id="kpi-container" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+        <section class="main-content-section">
+            <div id="content-grid" class="row g-3"></div>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="drilldownModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="drilldownModalLabel"></h5>
+                    <div id="drilldownFilterControls"></div><button type="button" class="btn-close ms-2"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="drilldownModalBody"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="expandChartModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expandChartModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="chart-canvas-container flex-grow-1"><canvas id="expandedChartCanvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="kpiGuideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kpiGuideModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="kpiGuideContent">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-card-text"></i> Definition</h6>
+                            <p id="guide-definition" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-graph-up"></i> Interpretation</h6>
+                            <p id="guide-interpretation" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calculator"></i> Calculation</h6>
+                            <p id="guide-calculation" class="small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="docFormModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docFormModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docFormBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div id="custom-tooltip" class="chart-tooltip">
+        <div class="tooltip-main-title"></div>
+        <div class="tooltip-main-content">
+            <div class="tooltip-header"><span class="tooltip-title"></span><span class="tooltip-delta"></span></div>
+            <div class="tooltip-value"></div>
+        </div>
+        <div class="tooltip-footer" style="display: none;"></div>
+        <div class="tooltip-drilldown"><button type="button" class="drilldown-btn">View Details <i
+                    class="bi bi-box-arrow-up-right"></i></button></div>
+    </div>
+    <div id="customContextMenu">
+        <ul class="context-menu-list" id="contextMenuList"></ul>
+    </div>
+    <div id="filter-popup-panel" class="d-none">
+        <div class="p-2 border-bottom position-relative text-center">
+            <h6 class="otif-filter-panel-title mb-0 m-auto">Filters</h6>
+            <button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-2"
+                id="close-filter-panel-btn"></button>
+        </div>
+        <div class="flex-grow-1" style="overflow-y: auto;">
+            <div class="p-2">
+                <div class="filter-section" id="dropdown-filters-section"></div>
+                <div class="filter-section">
+                    <div id="calendar-container">
+                        <div id="calendar-view">
+                            <div class="calendar-header">
+                                <button type="button" class="btn btn-today" id="today-btn">Today</button>
+                                <div class="d-flex align-items-center">
+                                    <button id="prev-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-left"></i></button>
+                                    <div id="month-year-selector" class="month-year-selector-btn">
+                                        <span id="month-year-display" class="month-year-text"></span>
+                                    </div>
+                                    <button id="next-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid day-names">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+                            <div id="calendar-grid" class="calendar-grid"></div>
+                        </div>
+                        <!-- Month/Year Picker Overlay (Hidden by default) -->
+                        <div id="month-year-picker-overlay" class="d-none">
+                            <div class="picker-header">
+                                <span>Select Date</span>
+                                <button type="button" class="btn btn-apply btn-sm" id="picker-done-btn">Done</button>
+                            </div>
+                            <div class="picker-body">
+                                <div class="picker-column" id="picker-month-column">
+                                    <div class="picker-column-header">Month</div>
+                                    <!-- Months will be rendered by JS -->
+                                </div>
+                                <div class="picker-column" id="picker-year-column">
+                                    <div class="picker-column-header">Year</div>
+                                    <!-- Years will be rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="date-range-display" class="date-range-box">
+                        <div class="date-range-item"><label>From</label><span id="selected-from-date">--</span></div>
+                        <div class="date-range-item"><label>To</label><span id="selected-to-date">--</span></div>
+                    </div>
+                    <div class="p-2 d-flex gap-2">
+                        <button type="button" class="btn btn-reset w-100" id="reset-filters-btn-new">Reset</button>
+                        <button type="button" class="btn btn-apply w-100" id="apply-filters-btn-new">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="dashboard-filters.js"></script>
+    <script>
+
+        const dashboardApp = (function () {
+
+            const Utils = {
+                formatMetric(value, format, suffix = '') {
+                    if (value === null || value === undefined) return 'N/A';
+
+                    if (format === 'currency_compact') {
+                        if (Math.abs(value) >= 10000000) { // Crore
+                            return (value / 10000000).toFixed(2) + ' Cr';
+                        }
+                        if (Math.abs(value) >= 100000) { // Lakh
+                            return (value / 100000).toFixed(2) + ' L';
+                        }
+                        if (Math.abs(value) >= 1000) { // Thousand
+                            return (value / 1000).toFixed(1) + ' K';
+                        }
+                        return value.toLocaleString('en-US');
+                    }
+
+                    if (format === 'currency') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+                    if (format === 'date') return new Date(value).toLocaleString('en-GB');
+                    if (typeof value === 'number') return value.toLocaleString('en-US');
+                    return `${value}${suffix}`;
+                }, hexToRgb(hex) {
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                },
+                getComponentConfig: (id, dashboardConfig) => dashboardConfig.kpis.find(c => c.id === id) || dashboardConfig.layout.find(c => c.config.id === id)?.config,
+
+                // --- ADDED: Shared deepMerge utility ---
+                deepMerge(target, source) {
+                    const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+                    let output = { ...target };
+                    if (isObject(target) && isObject(source)) {
+                        Object.keys(source).forEach(key => {
+                            if (isObject(source[key])) {
+                                if (key in target) {
+                                    output[key] = this.deepMerge(target[key], source[key]);
+                                } else {
+                                    Object.assign(output, { [key]: source[key] });
+                                }
+                            } else {
+                                Object.assign(output, { [key]: source[key] });
+                            }
+                        });
+                    }
+                    return output;
+                }
+            };
+            // ========================================================================================================
+            // SECTION 1: CONFIGURATION (THE ONLY PART TO EDIT FOR A NEW DASHBOARD)
+            // This section simulates `config.js`.
+            // ========================================================================================================
+
+            const SharedTransformers = {
+                transformForPareto: (data) => {
+                    const sortedData = [...data].sort((a, b) => b.count - a.count);
+                    const labels = sortedData.map(d => d.reason);
+                    const counts = sortedData.map(d => d.count);
+                    const total = counts.reduce((sum, val) => sum + val, 0);
+                    let cumulative = 0;
+                    const cumulativePercentage = counts.map(count => { cumulative += count; return total > 0 ? (cumulative / total) * 100 : 0; });
+                    const primaryColor = '#003366';
+                    const secondaryColor = '#9E9E9E';
+                    let eightyPercentReached = false;
+                    const backgroundColors = cumulativePercentage.map(p => {
+                        if (eightyPercentReached) return secondaryColor;
+                        if (p >= 80) eightyPercentReached = true;
+                        return primaryColor;
+                    });
+                    return {
+                        labels,
+                        datasets: [
+                            { type: 'bar', label: 'Value', data: counts, backgroundColor: backgroundColors, yAxisID: 'y', order: 2 },
+                            { type: 'line', label: 'Cumulative %', data: cumulativePercentage, borderColor: '#EF4444', tension: 0.4, yAxisID: 'y1', order: 1, pointBackgroundColor: '#EF4444' }
+                        ]
+                    };
+                }
+            };
+            const CONFIGURATION = (() => {
+                /**
+                 * HOW TO USE THIS TEMPLATE:
+                 * 1.  Update `dashboardTitle` with the title for your dashboard.
+                 * 2.  Define your Key Performance Indicators (KPIs) in the `kpiConfig` array.
+                 * 3.  Define your chart layout and configurations in the `layoutConfig` array.
+                 * 4.  Update the `DATA_PROVIDER` section to connect to your live backend API.
+                 * 5.  Ensure your data provider returns data objects with keys that match the `dataKey` properties defined here.
+                 */
+                const kpiConfig = [
+                    {
+                        id: 'kpi-1', dataKey: 'net_fg', label: 'Net FG', cssVar: '--glow-green',
+                        secondaryMetrics: [{ icon: 'bi-box-seam', dataKey: 'delivered', label: 'Delivered' }, { icon: 'bi-hourglass-split', dataKey: 'undelivered', label: 'Undelivered' }],
+                        guide: { title: 'Net Finished Goods', definition: 'The total quantity of finished goods that have been produced and are either delivered or pending delivery.', interpretation: 'Represents the total output of production available to fulfill orders.', calculation: 'Delivered Quantity + Undelivered Quantity' },
+                        drilldownConfig: {
+                            dataKey: 'net_fg_details',
+                            columns: [
+                                { key: 'product_sku', label: 'Product SKU' }, { key: 'description', label: 'Description' },
+                                { key: 'status', label: 'Status' }, { key: 'quantity', label: 'Quantity' }, { key: 'location', label: 'Location' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-2', dataKey: 'schedule_adherence', label: 'Schedule Adherence', valueSuffix: ' Jobs', cssVar: '--glow-orange',
+                        secondaryMetrics: [{ icon: 'bi-exclamation-triangle', dataKey: 'critical', label: 'Critical' }, { icon: 'bi-clock-history', dataKey: 'delayed', label: 'Delayed' }],
+                        guide: { title: 'Schedule Adherence', definition: 'The total count of dispatch jobs, categorized by their status relative to the schedule.', interpretation: 'Provides a snapshot of operational performance against planned timelines.', calculation: 'Sum of jobs in all status categories.' },
+                        drilldownConfig: {
+                            dataKey: 'schedule_adherence_details',
+                            columns: [
+                                { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' }, { key: 'status', label: 'Status' },
+                                { key: 'scheduled_date', label: 'Scheduled', format: 'date' }, { key: 'actual_date', label: 'Actual', format: 'date' }
+                            ],
+                            filters: [{ label: 'All', value: 'all', default: true }, { label: 'On Time', value: 'On Time' }, { label: 'Delayed', value: 'Delayed' }, { label: 'Critical', value: 'Critical' }, { label: 'Early', value: 'Early' }]
+                        }
+                    },
+                    {
+                        id: 'kpi-3', dataKey: 'on_time_percent', label: 'On Time %', valueSuffix: '%', cssVar: '--glow-lightblue',
+                        secondaryMetrics: [{ icon: 'bi-calendar-check', dataKey: 'on_time_orders', label: 'On-Time' }, { icon: 'bi-box-seam', dataKey: 'total_orders', label: 'Total' }],
+                        guide: { title: 'On Time Percentage', definition: 'The percentage of orders dispatched on or before the scheduled date.', interpretation: 'A primary measure of logistical reliability.', calculation: '(On-Time Orders / Total Orders) * 100' },
+                        drilldownConfig: {
+                            dataKey: 'on_time_details',
+                            columns: [
+                                { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' },
+                                { key: 'scheduled_dod', label: 'Scheduled DOD', format: 'date' }, { key: 'actual_dispatch', label: 'Actual Dispatch', format: 'date' }, { key: 'variance_days', label: 'Variance (Days)' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-4', dataKey: 'in_full_percent', label: 'In Full %', valueSuffix: '%', cssVar: '--glow-red',
+                        secondaryMetrics: [{ icon: 'bi-check-all', dataKey: 'in_full_orders', label: 'In-Full' }, { icon: 'bi-box-seam', dataKey: 'total_orders', label: 'Total' }],
+                        guide: { title: 'In Full Percentage', definition: 'The percentage of orders delivered with the complete quantity requested by the customer.', interpretation: 'Measures order accuracy and inventory management effectiveness.', calculation: '(Orders Delivered In Full / Total Orders) * 100' },
+                        drilldownConfig: {
+                            dataKey: 'in_full_details',
+                            columns: [
+                                { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' }, { key: 'status', label: 'Status' },
+                                { key: 'ordered_qty', label: 'Ordered Qty' }, { key: 'shipped_qty', label: 'Shipped Qty' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-5', dataKey: 'invoicing_percent', label: 'Invoicing %', valueSuffix: '%', cssVar: '--glow-purple',
+                        secondaryMetrics: [{ icon: 'bi-receipt', dataKey: 'invoiced_orders', label: 'Invoiced' }, { icon: 'bi-truck', dataKey: 'delivered_orders', label: 'Delivered' }],
+                        guide: { title: 'Invoicing Percentage', definition: 'The percentage of delivered orders for which an invoice has been successfully generated and sent.', interpretation: 'Tracks the efficiency of the order-to-cash cycle.', calculation: '(Invoiced Orders / Total Delivered Orders) * 100' },
+                        drilldownConfig: {
+                            dataKey: 'invoicing_details',
+                            columns: [
+                                { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' },
+                                { key: 'delivery_date', label: 'Delivery Date', format: 'date' }, { key: 'invoice_status', label: 'Invoice Status' }, { key: 'invoice_date', label: 'Invoice Date', format: 'date' }
+                            ]
+                        }
+                    }
+                ];
+
+                const layoutConfig = [
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'scheduled-vs-actual-dispatch', chartType: 'line', title: 'Scheduled vs. Actual Dispatch (Weekly)',
+                            dataKey: 'dispatch_timeseries_data',
+                            transformer: (data) => ({
+                                labels: data.map(d => d.week_label),
+                                datasets: [
+                                    {
+                                        label: 'Actual Dispatch',
+                                        data: data.map(d => d.actual),
+                                        borderColor: '#003366',
+                                        backgroundColor: '#003366',
+                                        fill: false,
+                                        tension: 0.3,
+                                        type: 'line'
+                                    },
+                                    {
+                                        label: 'Scheduled Dispatch',
+                                        data: data.map(d => d.scheduled),
+                                        backgroundColor: '#54ACBF',
+                                        type: 'bar'
+                                    }
+                                ]
+                            }),
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: { display: true, text: 'Value (INR)' },
+                                        ticks: {
+                                            callback: function (value) {
+                                                if (value >= 10000000) return (value / 10000000).toFixed(1) + 'Cr';
+                                                if (value >= 100000) return (value / 100000).toFixed(1) + 'L';
+                                                return value;
+                                            }
+                                        }
+                                    },
+                                    x: { grid: { display: false }, title: { display: true, text: 'Week' } }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'dispatch_timeseries_details',
+                                columns: [
+                                    { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' },
+                                    { key: 'scheduled_date', label: 'Scheduled', format: 'date' }, { key: 'actual_date', label: 'Actual', format: 'date' },
+                                    { key: 'value', label: 'Value', format: 'currency' }, { key: 'status', label: 'Status' }
+                                ],
+                                filters: [{ label: 'All', value: 'all', default: true }, { label: 'On Time', value: 'On Time' }, { label: 'Delayed', value: 'Delayed' }]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'dispatch-delay-reasons', chartType: 'bar', title: 'Top 5 Reasons for Dispatch Delay',
+                            dataKey: 'dispatch_delay_reasons_data',
+                            transformer: (data) => {
+                                const sortedData = [...data].sort((a, b) => b.count - a.count);
+                                return {
+                                    labels: sortedData.map(d => d.reason),
+                                    datasets: [{
+                                        label: 'Number of Incidents', data: sortedData.map(d => d.count),
+                                        backgroundColor: '#023859'
+                                    }]
+                                };
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    x: { beginAtZero: true, title: { display: true, text: 'Number of Incidents' } },
+                                    y: {
+                                        grid: { display: false },
+                                        ticks: {
+                                            autoSkip: false,
+                                            callback: function (value) {
+                                                const label = this.getLabelForValue(value);
+                                                return label.length > 15 ? label.substring(0, 15) + '...' : label;
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'dispatch_delay_details',
+                                columns: [
+                                    { key: 'incident_id', label: 'Incident ID' }, { key: 'reason', label: 'Reason' },
+                                    { key: 'department', label: 'Department' }, { key: 'impact_days', label: 'Delay (Days)' },
+                                    { key: 'status', label: 'Status' }
+                                ],
+                                filterMapping: 'reason' // Filter drilldown data by the clicked reason
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'dispatch-funnel', chartType: 'bar', title: 'Dispatch Funnel',
+                            dataKey: 'dispatch_funnel_data',
+                            transformer: (data) => ({
+                                labels: data.map(d => d.stage),
+                                datasets: [{
+                                    label: 'Volume', data: data.map(d => d.value),
+                                    backgroundColor: ['#26658C', '#54ACBF', '#023859', '#A7EBF2']
+                                }]
+                            }),
+                            options: {
+                                indexAxis: 'y',
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    x: { beginAtZero: true, title: { display: true, text: 'Volume' } },
+                                    y: { grid: { display: false } }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'dispatch_funnel_details',
+                                columns: [
+                                    { key: 'order_id', label: 'Order ID' }, { key: 'client', label: 'Client' },
+                                    { key: 'stage', label: 'Stage' }, { key: 'value', label: 'Value', format: 'currency' },
+                                    { key: 'last_updated', label: 'Last Updated', format: 'date' }
+                                ],
+                                filterMapping: 'stage' // Filter drilldown data by the clicked stage
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'client-billing-delay-combo',
+                            chartType: 'bar',
+                            title: 'Top 10 Client Billing Delay due to Dispatch delays',
+                            dataKey: 'client_billing_delay_data',
+                            transformer: (data) => {
+                                const top10 = [...data].sort((a, b) => b.delayed_amount - a.delayed_amount).slice(0, 10);
+                                return {
+                                    labels: top10.map(d => d.client),
+                                    datasets: [
+                                        { type: 'bar', label: 'Delayed Amount', data: top10.map(d => d.delayed_amount), backgroundColor: '#008080', yAxisID: 'y', order: 2 },
+                                        { type: 'line', label: 'Avg. Delay Days', data: top10.map(d => d.avg_delay_days), borderColor: '#AE445A', backgroundColor: '#AE445A', yAxisID: 'y1', tension: 0.3, order: 1 }
+                                    ]
+                                };
+                            },
+                            options: {
+                                plugins: { tooltip: { mode: 'index', intersect: false } },
+                                scales: {
+                                    y: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'left',
+                                        title: { display: true, text: 'Delayed Billing Amount (INR)' },
+                                        // --- START: MODIFICATION ---
+                                        ticks: {
+                                            callback: function (value) {
+                                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                                if (value >= 1000) return (value / 1000) + 'K';
+                                                return value;
+                                            }
+                                        }
+                                        // --- END: MODIFICATION ---
+                                    },
+                                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg. Delay (Days)' } },
+                                    x: {
+                                        grid: {
+                                            display: false // Hides vertical gridlines
+                                        }
+                                    }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'client_billing_delay_details',
+                                columns: [
+                                    { key: 'client', label: 'Client' }, { key: 'order_id', label: 'Order ID' },
+                                    { key: 'delayed_amount', label: 'Delayed Amount', format: 'currency' }, { key: 'delay_days', label: 'Delay Days' },
+                                    { key: 'reason', label: 'Reason' }
+                                ],
+                                filterMapping: 'client' // Filter drilldown data by the clicked client
+                            }
+                        }
+                    }
+                ];
+
+                // --- FIX: Restored the original, valid gridConfig object ---
+                const gridConfig = {
+                    id: 'dispatch-orders-grid',
+                    dataKey: 'dispatch_order_details',
+                    summaryValueColumn: 'order_value',
+                    columns: [
+                        { dataField: 'order_id', caption: 'Order ID', fixed: true, width: 120 },
+                        { dataField: 'client_name', caption: 'Client', width: 200 },
+                        { dataField: 'status', caption: 'Status' },
+                        { dataField: 'scheduled_dod', caption: 'Scheduled DOD', dataType: 'date' },
+                        { dataField: 'actual_dispatch_date', caption: 'Actual Dispatch', dataType: 'date' },
+                        { dataField: 'order_value', caption: 'Order Value', dataType: 'number', format: { type: 'currency', currency: 'USD', precision: 0 } }
+                    ]
+                };
+                const contextMenuConfig = {
+                    actions: [
+                        { id: 'drilldown', label: 'View Details', icon: 'bi-table' },
+                        { id: 'expand', label: 'Expand View', icon: 'bi-arrows-fullscreen' },
+                        { id: 'guide', label: 'Definition / Guide', icon: 'bi-question-circle' },
+                        { type: 'separator' },
+                        { id: 'share', label: 'Share via Email', icon: 'bi-envelope' },
+                        {
+                            id: 'export', label: 'Export', icon: 'bi-download', submenu: [
+                                { id: 'export-png', label: 'Export as PNG', icon: 'bi-file-earmark-image' },
+                                { id: 'export-pdf', label: 'Export as PDF', icon: 'bi-filetype-pdf' }
+                            ]
+                        },
+                        { id: 'refresh', label: 'Refresh Data', icon: 'bi-arrow-clockwise' },
+                        { type: 'separator' },
+                        { id: 'ai-insight', label: 'AI Insight', icon: 'bi-magic' }
+                    ]
+                };
+
+                return {
+                    title: 'Dispatch & Invoicing Dashboard',
+                    kpis: kpiConfig,
+                    layout: layoutConfig,
+                    grid: gridConfig,
+                    contextMenu: contextMenuConfig
+                };
+            })();
+            // ========================================================================================================
+            // SECTION 2: DATA PROVIDER MODULE
+            // This section simulates `dataProvider.js`. Swap the provider class to connect to a live backend.
+            // ========================================================================================================
+            const DATA_PROVIDER = (() => {
+                // SharedTransformers is now defined in the parent scope
+                class MockDataProvider {
+                    constructor(cacheTTL = 300000) { this.cache = new Map(); this.cacheTTL = cacheTTL; }
+                    async fetchKpiData(filterParams = {}) {
+                        console.log('Fetching KPI Data with filters:', filterParams);
+                        await new Promise(r => setTimeout(r, 250));
+                        const trend_labels = ['Wk1', 'Wk2', 'Wk3', 'Wk4', 'Wk5', 'Wk6', 'Wk7'];
+                        return {
+                            net_fg: { current: 15000, previous: 14500, delivered: 13800, undelivered: 1200, trend: [14200, 14500, 14400, 14800, 15100, 14900, 15000], trend_labels },
+                            schedule_adherence: { current: 500, previous: 490, on_time: 450, critical: 10, delayed: 25, early: 15, trend: [480, 490, 485, 495, 500, 498, 500], trend_labels },
+                            on_time_percent: { current: 95.5, previous: 94.0, on_time_orders: 955, total_orders: 1000, trend: [93.0, 94.0, 93.5, 94.5, 95.0, 95.2, 95.5], trend_labels },
+                            in_full_percent: { current: 98.2, previous: 98.5, in_full_orders: 982, total_orders: 1000, trend: [98.0, 98.5, 98.3, 98.1, 98.2, 98.4, 98.2], trend_labels },
+                            invoicing_percent: { current: 92.0, previous: 90.0, invoiced_orders: 1288, delivered_orders: 1400, trend: [88.0, 90.0, 89.5, 91.0, 91.5, 91.8, 92.0], trend_labels }
+                        };
+                    }
+                    async fetchRawData(dataKey, filterParams = {}) {
+                        const cached = this.cache.get(dataKey);
+                        if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) { return cached.data; }
+                        await new Promise(r => setTimeout(r, 400));
+                        const mockData = {
+                            dispatch_timeseries_details: Array.from({ length: 50 }, (_, i) => {
+                                const status = ['On Time', 'Delayed', 'On Time', 'On Time', 'Delayed'][i % 5];
+                                return {
+                                    id: `D-TS-${i}`, order_id: `ORD-${3000 + i}`, client: `Client ${['A', 'B', 'C', 'D'][i % 4]}`,
+                                    scheduled_date: new Date(new Date().setDate(new Date().getDate() - (i % 20))),
+                                    actual_date: new Date(new Date().setDate(new Date().getDate() - (i % 20) + (status === 'Delayed' ? 3 : 0))),
+                                    value: Math.floor(Math.random() * 500000) + 100000,
+                                    status: status
+                                };
+                            }),
+                            dispatch_delay_details: Array.from({ length: 30 }, (_, i) => {
+                                const reasons = ['Delayed Packing Material', 'Defective Packing Material', 'Late Instructions', 'Change in Instructions', 'Vehicle Unavailability'];
+                                return {
+                                    id: `D-DD-${i}`, incident_id: `INC-${5000 + i}`, reason: reasons[i % reasons.length],
+                                    department: ['Logistics', 'Packaging', 'Sales', 'Production'][i % 4],
+                                    impact_days: Math.floor(Math.random() * 5) + 1,
+                                    status: ['Resolved', 'Open', 'Investigating'][i % 3]
+                                };
+                            }),
+                            dispatch_funnel_details: Array.from({ length: 40 }, (_, i) => {
+                                const stages = ['Packing', 'Delivered', 'Invoiced', 'Sales Returned'];
+                                return {
+                                    id: `D-FD-${i}`, order_id: `ORD-${6000 + i}`, client: `Client ${['X', 'Y', 'Z'][i % 3]}`,
+                                    stage: stages[i % stages.length],
+                                    value: Math.floor(Math.random() * 1000000) + 200000,
+                                    last_updated: new Date(new Date().setDate(new Date().getDate() - (i % 10)))
+                                };
+                            }),
+                            client_billing_delay_details: Array.from({ length: 30 }, (_, i) => ({
+                                id: `CBD-${i}`, client: `Client ${['A', 'B', 'C', 'D', 'E', 'F', 'G'][i % 7]}`,
+                                order_id: `ORD-${8000 + i}`,
+                                delayed_amount: Math.floor(Math.random() * 2000000) + 500000,
+                                delay_days: Math.floor(Math.random() * 15) + 2,
+                                reason: ['Pending Documentation', 'System Error', 'Client Request'][i % 3]
+                            })),
+                            dispatch_funnel_data: [{ stage: 'Packing', value: 1200 }, { stage: 'Delivered', value: 1150 }, { stage: 'Invoiced', value: 1100 }, { stage: 'Sales Returned', value: 50 }],
+                            dispatch_timeseries_data: (() => {
+                                const data = [];
+                                const today = new Date();
+
+                                // Helper to get ISO week number
+                                const getWeek = (d) => {
+                                    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                                    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                                    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                                };
+
+                                for (let i = 12; i >= 0; i--) { // Last 13 weeks
+                                    const date = new Date(today);
+                                    date.setDate(today.getDate() - (i * 7));
+
+                                    const weekNum = getWeek(date);
+
+                                    // Scheduled: Random between 5 Lakhs and 25 Lakhs
+                                    const scheduled = Math.floor(Math.random() * 2000000) + 500000;
+                                    // Actual: +/- 15% of scheduled
+                                    const variance = (Math.random() * 0.3) - 0.15;
+                                    const actual = Math.floor(scheduled * (1 + variance));
+
+                                    data.push({
+                                        week_label: `Week ${weekNum}`,
+                                        scheduled: scheduled,
+                                        actual: actual
+                                    });
+                                }
+                                return data;
+                            })(),
+                            dispatch_order_details: Array.from({ length: 20 }, (_, i) => ({ order_id: `ORD-2000${i}`, client_name: `Client ${['A', 'B', 'C', 'D'][i % 4]}`, status: ['Invoiced', 'Delivered', 'Packing'][i % 3], scheduled_dod: new Date(), actual_dispatch_date: new Date(), order_value: Math.floor(Math.random() * 2000) + 500 })),
+                            net_fg_details: Array.from({ length: 20 }, (_, i) => ({ id: `FG-${i}`, product_sku: `SKU-00${i + 1}`, description: `Product ${i + 1}`, status: i < 15 ? 'Delivered' : 'Undelivered', quantity: Math.floor(Math.random() * 100) + 50, location: i < 15 ? 'Shipped' : 'Warehouse A' })),
+                            schedule_adherence_details: Array.from({ length: 20 }, (_, i) => { const s = ['On Time', 'Delayed', 'Critical', 'Early']; return { id: `JOB-${i}`, order_id: `ORD-300${i}`, client: `Client ${['A', 'B', 'C'][i % 3]}`, status: s[i % 4], scheduled_date: new Date(), actual_date: new Date() }; }),
+                            on_time_details: Array.from({ length: 20 }, (_, i) => { const l = Math.random() > 0.7; const s = new Date(); const a = l ? new Date(s.getTime() + (86400000 * 2)) : s; return { id: `OTD-${i}`, order_id: `ORD-400${i}`, client: `Client ${['D', 'E', 'F'][i % 3]}`, scheduled_dod: s, actual_dispatch: a, variance_days: l ? 2 : 0 }; }),
+                            in_full_details: Array.from({ length: 20 }, (_, i) => { const f = Math.random() > 0.8; const o = 100; return { id: `IFD-${i}`, order_id: `ORD-500${i}`, client: `Client ${['G', 'H'][i % 2]}`, status: f ? 'Partial' : 'Full', ordered_qty: o, shipped_qty: f ? o - 10 : o }; }),
+                            invoicing_details: Array.from({ length: 20 }, (_, i) => { const inv = Math.random() > 0.3; return { id: `INV-${i}`, order_id: `ORD-600${i}`, client: `Client ${['I', 'J', 'K'][i % 3]}`, delivery_date: new Date(), invoice_status: inv ? 'Invoiced' : 'Pending', invoice_date: inv ? new Date() : null }; }),
+                            dispatch_delay_reasons_data: [
+                                { reason: 'Delayed Packing Material', count: 45 },
+                                { reason: 'Defective Packing Material', count: 32 },
+                                { reason: 'Late Instructions', count: 25 },
+                                { reason: 'Change in Instructions', count: 18 },
+                                { reason: 'Late FG QC Clearance', count: 11 }
+                            ],
+                            client_billing_delay_data: [{ client: 'Client A', delayed_amount: 150000, avg_delay_days: 5 }, { client: 'Client B', delayed_amount: 95000, avg_delay_days: 12 }, { client: 'Client C', delayed_amount: 40000, avg_delay_days: 3 }, { client: 'Client D', delayed_amount: 25000, avg_delay_days: 8 }, { client: 'Client E', delayed_amount: 15000, avg_delay_days: 15 }, { client: 'Client F', delayed_amount: 10000, avg_delay_days: 4 }, { client: 'Client G', delayed_amount: 8000, avg_delay_days: 20 }, { client: 'Client H', delayed_amount: 5000, avg_delay_days: 7 }, { client: 'Client I', delayed_amount: 3000, avg_delay_days: 10 }, { client: 'Client J', delayed_amount: 2000, avg_delay_days: 5 }, { client: 'Client K', delayed_amount: 1000, avg_delay_days: 2 }]
+                        };
+                        const data = mockData[dataKey];
+                        this.cache.set(dataKey, { data, timestamp: Date.now() });
+                        return data;
+                    }
+                }
+                return { getInstance: () => new MockDataProvider() };
+            })();
+
+            // ========================================================================================================
+            // SECTION 3: APPLICATION CORE
+            // This section simulates `app.js` and contains all the reusable logic.
+            // ========================================================================================================
+            const APP_CORE = (() => {
+                const dashboardConfig = CONFIGURATION;
+                const DataProvider = DATA_PROVIDER.getInstance();
+                const SharedTransformers = DATA_PROVIDER.SharedTransformers;
+                let chartInstances = {};
+                let modals = {};
+                let tooltipHideTimer = null;
+
+                const StateManager = (() => {
+                    const state = { selectedPeriodIndex: null };
+                    const subscribers = {};
+                    return {
+                        getState: (key) => key ? state[key] : state,
+                        subscribe: (key, callback) => {
+                            if (!subscribers[key]) subscribers[key] = [];
+                            subscribers[key].push(callback);
+                        },
+                        setState: (key, data) => {
+                            const currentState = state[key];
+                            let hasChanged = false;
+                            if (typeof currentState === 'object' && currentState !== null && typeof data === 'object' && data !== null) {
+                                if (JSON.stringify(currentState) !== JSON.stringify(data)) hasChanged = true;
+                            } else {
+                                if (currentState !== data) hasChanged = true;
+                            }
+                            if (!hasChanged) return;
+                            state[key] = data;
+                            if (subscribers[key]) subscribers[key].forEach(callback => callback(data));
+                        }
+                    };
+                })();
+
+                const ChartDefaults = {
+                    getChartOptions(config) {
+                        const baseOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            onHover: (e, el) => { e.native.target.style.cursor = el.length > 0 ? 'pointer' : 'default'; },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+                                tooltip: { enabled: false, external: InteractivityHandler.customTooltip }
+                            }
+                        };
+
+                        // Apply type-specific defaults
+                        switch (config.chartType) {
+                            case 'doughnut':
+                                baseOptions.plugins.legend.display = false;
+                                break;
+                            case 'bubble':
+                                baseOptions.plugins.legend.display = false;
+                                // Bubble chart tooltip is now handled by the main customTooltip handler
+                                break;
+                        }
+
+                        // Merge user-defined options from the config over the defaults
+                        return Utils.deepMerge(baseOptions, config.options || {});
+                    }
+
+                };
+                const ActionRegistry = {
+                    setPeriodIndex: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const newIndex = elements[0].index;
+                            StateManager.setState('selectedPeriodIndex', newIndex);
+                            chart.setActiveElements([{ datasetIndex: 0, index: newIndex }]);
+                            chart.update();
+                        }
+                    },
+                    chartDrilldown: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const componentId = chart.canvas.id;
+                            initiateDrilldown(componentId, { dataIndex });
+                        }
+                    }
+                };
+
+                async function init() {
+                    try {
+                        ConfigValidator.validate(dashboardConfig);
+                    } catch (error) {
+                        console.error("Dashboard Configuration Error:", error.message);
+                        document.body.innerHTML = `<div class="alert alert-danger m-4" role="alert"><strong>Configuration Error:</strong> ${error.message}</div>`;
+                        return;
+                    }
+
+                    Chart.register(ChartDataLabels);
+                    Chart.defaults.plugins.datalabels.display = false;
+                    const centerTextPlugin = { id: 'centerText', afterDraw: (chart) => { const { centerText } = chart.config.options.plugins; if (centerText?.display) { const { ctx, chartArea: { top, left, width, height } } = chart; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = left + width / 2, valueY = top + height / 2 - 10, labelY = valueY + 22; ctx.font = `700 ${centerText.fontSize || '24px'} Inter`; ctx.fillStyle = centerText.color || '#212529'; ctx.fillText(centerText.text, centerX, valueY); if (centerText.label) { ctx.font = `500 1rem Inter`; ctx.fillStyle = '#6B7280'; ctx.fillText(centerText.label, centerX, labelY); } ctx.restore(); } } };
+                    Chart.register(centerTextPlugin);
+
+                    document.title = dashboardConfig.title;
+                    document.getElementById('dashboardTitle').textContent = dashboardConfig.title;
+                    ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'].forEach(id => { modals[id] = new bootstrap.Modal(document.getElementById(id)); });
+
+                    renderLayoutShells();
+                    InteractivityHandler.init();
+                    setupSubscriptions();
+
+                    await initialDataFetch();
+
+                }
+
+                async function initialDataFetch(filterParams = {}) {
+                    const kpiDataPromise = DataProvider.fetchKpiData(filterParams);
+
+                    // --- START: MODIFICATION ---
+                    // Collect all unique dataKeys from KPIs (for drilldowns), layout, and grid.
+                    const kpiDrilldownDataKeys = dashboardConfig.kpis
+                        .map(kpi => kpi.drilldownConfig?.dataKey)
+                        .filter(Boolean);
+
+                    const chartDrilldownDataKeys = dashboardConfig.layout
+                        .map(item => item.config.drilldownConfig?.dataKey)
+                        .filter(Boolean);
+
+                    const layoutDataKeys = dashboardConfig.layout.map(item => item.config.dataKey);
+
+                    const allDataKeys = [...new Set([
+                        ...kpiDrilldownDataKeys,
+                        ...chartDrilldownDataKeys,
+                        ...layoutDataKeys,
+                        dashboardConfig.grid?.dataKey
+                    ].filter(Boolean))];
+                    // --- END: MODIFICATION ---
+
+                    const rawDataPromises = allDataKeys.map(key => DataProvider.fetchRawData(key, filterParams));
+
+                    const [kpiData] = await Promise.all([kpiDataPromise]);
+                    StateManager.setState('kpiData', kpiData);
+                    renderKpis();
+
+                    const allRawData = await Promise.all(rawDataPromises);
+                    allRawData.forEach((data, index) => {
+                        StateManager.setState(allDataKeys[index], data);
+                    });
+                }
+
+                function setupSubscriptions() {
+                    // 1. Subscribe charts (this part is correct)
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                        }
+                    });
+
+                    // 2. Subscribe grid (MOVED OUTSIDE the loop)
+                    if (dashboardConfig.grid) {
+                        StateManager.subscribe(dashboardConfig.grid.dataKey, () => GridHandler.render(dashboardConfig.grid));
+                    }
+                }
+
+                function renderLayoutShells() {
+                    document.getElementById('kpi-container').innerHTML = dashboardConfig.kpis.map(c => `<div class="col" id="shell-${c.id}"></div>`).join('');
+                    const loadingSpinner = `<div class="chart-feedback-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+                    document.getElementById('content-grid').innerHTML = dashboardConfig.layout.map(item => {
+                        const canvasOrDiv = item.type === 'chart' ? `<canvas id="${item.config.id}"></canvas>` : `<div id="${item.config.id}" style="width: 100%; height: 100%;"></div>`;
+                        return `<div class="${item.width}" id="container-${item.config.id}"><div class="content-wrapper context-menu-target" data-component-id="${item.config.id}"><h3 class="content-title">${item.config.title}</h3><div class="chart-canvas-container">${loadingSpinner}${canvasOrDiv}</div></div></div>`;
+                    }).join('');
+                }
+
+                function setupSubscriptions() {
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                        } else if (item.type === 'dx-widget') {
+                            StateManager.subscribe(item.config.dataKey, () => DxWidgetHandler.render(item.config));
+                        }
+                    });
+                    if (dashboardConfig.grid) {
+                        StateManager.subscribe(dashboardConfig.grid.dataKey, () => GridHandler.render(dashboardConfig.grid));
+                    }
+                }
+                const DxWidgetHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        const widgetContainer = document.getElementById(config.id);
+                        const feedbackEl = container.querySelector('.chart-feedback-overlay');
+                        try {
+                            if (!widgetContainer) throw new Error(`Container with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) return;
+
+                            const data = config.transformer(rawData);
+                            const options = { ...config.options, dataSource: data };
+
+                            // Initialize the DevExtreme widget
+                            $(widgetContainer)[config.widgetType](options);
+
+                            if (feedbackEl) feedbackEl.remove();
+                        } catch (error) {
+                            console.error(`Failed to render widget '${config.id}':`, error);
+                            ChartHandler.renderErrorState(container.querySelector('.chart-canvas-container'), error);
+                        }
+                    }
+                };
+
+                function renderKpis() {
+                    const { kpiData } = StateManager.getState();
+                    if (!kpiData) return;
+                    dashboardConfig.kpis.forEach(config => {
+                        const data = kpiData[config.dataKey];
+                        if (!data) return;
+                        const growth = data.previous > 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
+                        const container = document.getElementById(`shell-${config.id}`);
+
+                        const isPositiveGrowth = growth >= 0;
+                        const isGood = config.invertGrowthColor ? !isPositiveGrowth : isPositiveGrowth;
+
+                        container.innerHTML = `<div class="card kpi-card context-menu-target" data-component-id="${config.id}">
+                    <div class="card-body">
+                        <div class="kpi-header">
+                            <div class="kpi-title-container">
+                                ${config.mainIcon ? `<i class="bi ${config.mainIcon}"></i>` : ''}
+                                <span class="kpi-title">${config.label}</span>
+                            </div>
+                            <div class="kpi-growth ${isGood ? 'positive' : 'negative'}">
+                                <i class="bi ${isPositiveGrowth ? 'bi-arrow-up-short' : 'bi-arrow-down-short'}"></i> ${Math.abs(growth).toFixed(1)}%
+                            </div>
+                        </div>
+
+                        <div class="kpi-body">
+                            <div class="kpi-primary-metrics">
+                                <span class="kpi-value">${Utils.formatMetric(data.current, config.isCurrency, config.valueSuffix)}</span>
+                                <span class="kpi-previous-value">Prev: ${Utils.formatMetric(data.previous, config.isCurrency, config.valueSuffix)}</span>
+                            </div>
+                            <div class="kpi-secondary-metrics">
+                                ${config.secondaryMetrics.map(sm => `<div class="metric-item"><i class="bi ${sm.icon}"></i><span>${sm.label ? sm.label + ': ' : ''}${Utils.formatMetric(data[sm.dataKey], sm.format)}</span></div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="kpi-footer">
+                            <div class="kpi-chart-container">
+                                <canvas id="sparkline-${config.id}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                        renderSparkline(config.id, data.trend, config.cssVar);
+                    });
+                }
+
+                function renderSparkline(id, data, colorVarName) {
+                    const ctx = document.getElementById(`sparkline-${id}`)?.getContext('2d');
+                    if (!ctx) return;
+
+                    const trendColor = getComputedStyle(document.documentElement).getPropertyValue(colorVarName).trim();
+                    const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                    if (!trendColorRGB) {
+                        console.error(`Invalid color format or CSS variable not found for: ${colorVarName}`);
+                        return;
+                    }
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                    // MODIFIED: Implemented a 3-stop gradient for a darker top that fades out.
+                    gradient.addColorStop(0, `rgba(${trendColorRGB}, 0.45)`);  // Darker start color near the line
+                    gradient.addColorStop(0.4, `rgba(${trendColorRGB}, 0.1)`);   // Fade significantly by 40% height
+                    gradient.addColorStop(1, `rgba(${trendColorRGB}, 0)`);      // Fully transparent at the bottom
+
+                    if (chartInstances[id]) chartInstances[id].destroy();
+
+                    chartInstances[id] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(() => ''),
+                            datasets: [{
+                                data: data,
+                                borderColor: trendColor,
+                                borderWidth: 2,
+                                fill: true,
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                pointRadius: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { x: { display: false }, y: { display: false } },
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            layout: {
+                                padding: 0
+                            }
+                        }
+                    });
+                }
+                const ChartHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        if (!container) return; // Exit if container not found
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        const feedbackEl = canvasContainer.querySelector('.chart-feedback-overlay');
+                        try {
+                            const ctx = canvasContainer.querySelector('canvas')?.getContext('2d');
+                            if (!ctx) throw new Error(`Canvas with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) { return; }
+                            const periodIndex = StateManager.getState('selectedPeriodIndex');
+                            let transformer;
+                            if (typeof config.transformer === 'function') {
+                                transformer = config.transformer;
+                            } else if (typeof config.transformer === 'string' && SharedTransformers[config.transformer]) {
+                                transformer = SharedTransformers[config.transformer];
+                            } else {
+                                throw new Error(`Transformer '${config.transformer}' is not a valid function or a key in SharedTransformers.`);
+                            }
+                            const data = transformer(rawData, periodIndex, config);
+                            if (chartInstances[config.id]) chartInstances[config.id].destroy();
+
+                            let finalOptions = ChartDefaults.getChartOptions(config);
+
+                            if (config.onClickAction && ActionRegistry[config.onClickAction]) { finalOptions.onClick = ActionRegistry[config.onClickAction]; }
+
+                            if (config.chartType === 'doughnut') {
+                                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (finalOptions.plugins.centerText) {
+                                    finalOptions.plugins.centerText.text = Utils.formatMetric(total);
+                                }
+                                finalOptions.onHover = (event, elements, chart) => { const centerText = chart.config.options.plugins.centerText; if (elements.length > 0) { const index = elements[0].index; centerText.text = Utils.formatMetric(chart.data.datasets[0].data[index]); centerText.label = chart.data.labels[index]; } else { centerText.text = Utils.formatMetric(total); centerText.label = 'Total'; } chart.update('none'); };
+                                if (config.drilldownTarget) { finalOptions.onClick = () => initiateDrilldown(config.drilldownTarget); }
+                            }
+                            if (feedbackEl) feedbackEl.remove();
+                            chartInstances[config.id] = new Chart(ctx, { type: config.chartType, data, options: finalOptions });
+                        } catch (error) {
+                            console.error(`Failed to render chart '${config.id}':`, error);
+                            this.renderErrorState(canvasContainer, error);
+                        }
+                    },
+                    renderErrorState(container, error) {
+                        container.innerHTML = `<div class="chart-feedback-overlay"><i class="bi bi-exclamation-triangle-fill"></i><strong>Chart Failed to Load</strong><small class="mt-1">${error.message}</small></div>`;
+                    }
+                };
+
+                const GridHandler = {
+                    render(config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        if (!rawData) return;
+
+                        $(`#grid-container`).dxDataGrid({
+                            dataSource: rawData,
+                            keyExpr: config.key || undefined,
+                            columns: config.columns,
+
+                            //  UI Enhancements
+                            showBorders: true,
+                            rowAlternationEnabled: true,
+                            hoverStateEnabled: true,
+                            columnAutoWidth: true,
+                            wordWrapEnabled: true,  // better handling of long text
+                            showColumnLines: false,
+                            showRowLines: false,
+
+                            // Column interactions
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnResizingMode: "widget",
+
+                            //  Paging + Pager
+                            paging: { pageSize: 10 },
+                            pager: {
+                                showPageSizeSelector: false,
+                                allowedPageSizes: false,
+                                showInfo: true,
+                                showNavigationButtons: true,
+                                visible: true
+                            },
+
+                            //  Filtering + Searching
+                            searchPanel: { visible: true, width: 240, placeholder: "Search..." },
+                            filterRow: { visible: true },
+                            headerFilter: { visible: true },
+                            filterPanel: { visible: false },
+                            groupPanel: { visible: true },
+                            grouping: { autoExpandAll: false },
+
+                            // Sorting + Column Chooser
+                            sorting: { mode: "multiple" },
+                            columnChooser: { enabled: true, mode: "select" },
+                            columnFixing: { enabled: true }, // pin important columns
+
+                            // Toolbar with quick actions
+                            toolbar: {
+                                items: [
+                                    "searchPanel",
+                                    "groupPanel",
+                                    "exportButton",
+                                    "columnChooserButton",
+                                    {
+                                        location: "after",
+                                        widget: "dxButton",
+                                        options: {
+                                            icon: "refresh",
+                                            hint: "Refresh",
+                                            onClick: () => $(`#grid-container`).dxDataGrid("instance").refresh()
+                                        }
+                                    },
+                                    {
+                                        location: "after",
+                                        widget: "dxButton",
+                                        options: {
+                                            icon: "clear",
+                                            hint: "Clear Filters",
+                                            onClick: () => $(`#grid-container`).dxDataGrid("instance").clearFilter()
+                                        }
+                                    }
+                                ]
+                            },
+
+                            // Export Options
+                            export: { enabled: true, formats: ["xlsx", "pdf"] },
+                            onExporting(e) {
+                                if (e.format === "xlsx") {
+                                    // Customize Excel export
+                                } else if (e.format === "pdf") {
+                                    // Customize PDF export
+                                }
+                            },
+
+                            //  State Persistence (saves user preferences)
+                            stateStoring: {
+                                enabled: true,
+                                type: "localStorage",
+                                storageKey: `${config.dataKey}-gridState`
+                            },
+
+                            //  Scrolling
+                            scrolling: { mode: "standard" }, // smooth with big datasets
+                            loadPanel: { enabled: true, text: "Loading..." },
+
+                            //  Summary Section
+                            summary: {
+                                totalItems: [
+                                    {
+                                        column: config.summaryColumn || "id", // change to your numeric column
+                                        summaryType: "count",
+                                        displayFormat: "Total Rows: {0}"
+                                    },
+                                    {
+                                        column: config.summaryValueColumn || "amount", // change to your numeric column
+                                        summaryType: "sum",
+                                        valueFormat: { type: 'currency', currency: 'USD', precision: 0 },
+                                        displayFormat: "Total: {0}"
+                                    },
+                                    {
+                                        column: config.summaryValueColumn || "amount",
+                                        summaryType: "avg",
+                                        valueFormat: { type: 'currency', currency: 'USD', precision: 0 },
+                                        displayFormat: "Avg: {0}"
+                                    }
+                                ],
+                                groupItems: [
+                                    {
+                                        column: config.summaryValueColumn || "amount",
+                                        summaryType: "sum",
+                                        valueFormat: { type: 'currency', currency: 'USD', precision: 0 },
+                                        displayFormat: "Group Total: {0}",
+                                        alignByColumn: true
+                                    }
+                                ]
+                            },
+
+                            //  Events for extra control
+                            onRowClick: (e) => config.onRowClick && config.onRowClick(e),
+                            onCellPrepared: (e) => config.onCellPrepared && config.onCellPrepared(e)
+                        });
+
+                    }
+                };
+
+                const DrilldownService = {
+                    show(title, config, dataRows) {
+                        const modal = new bootstrap.Modal(document.getElementById('drilldownModal'));
+                        document.getElementById('drilldownModalLabel').textContent = title;
+                        const modalBody = document.querySelector('#drilldownModal .modal-body');
+
+                        // Clear previous content
+                        modalBody.innerHTML = '';
+                        modalBody.innerHTML = '<div id="drilldownGrid"></div>';
+
+                        const { columns, filters, renderAs = 'grid' } = config; // Default to grid if not specified
+
+                        // --- 1. Filter Controls Logic (Optional) ---
+                        // (You can keep your existing filter logic here if needed, 
+                        //  but typically for grids, we use the grid's built-in header filters)
+
+                        // --- 2. Render Data ---
+                        if (renderAs === 'grid') {
+                            // Render as DevExtreme DataGrid
+                            const gridContainer = document.getElementById('drilldownGrid');
+                            $(gridContainer).dxDataGrid({
+                                dataSource: dataRows,
+                                columns: columns, // Columns should now be normalized (dataField/caption)
+                                showBorders: true,
+                                scrolling: { mode: 'virtual' },
+                                height: 500,
+                                filterRow: { visible: true },
+                                headerFilter: { visible: true },
+                                export: {
+                                    enabled: true,
+                                    fileName: `${title.replace(/\s+/g, '_')}_Drilldown`
+                                },
+                                paging: { pageSize: 20 },
+                                pager: {
+                                    showPageSizeSelector: true,
+                                    allowedPageSizes: [10, 20, 50, 100],
+                                    showInfo: true
+                                }
+                            });
+                        } else {
+                            // Render as HTML Table (Legacy Fallback)
+                            const headers = columns.map(col => `<th>${col.caption || col.label}</th>`).join('');
+                            const rows = dataRows.map(row => {
+                                const cells = columns.map(col => {
+                                    const val = row[col.dataField || col.key];
+                                    return `<td>${val !== undefined && val !== null ? val : '-'}</td>`;
+                                }).join('');
+                                // Add click handler data if this is a document row
+                                const dataAttrs = row.doc_id ? `data-doc-id="${row.doc_id}"` : '';
+                                return `<tr ${dataAttrs}>${cells}</tr>`;
+                            }).join('');
+
+                            modalBody.innerHTML = `
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped">
+                                        <thead><tr>${headers}</tr></thead>
+                                        <tbody id="drilldownTbody">${rows}</tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+
+                        modal.show();
+
+                        // Add blur effect to main content
+                        document.getElementById('main-dashboard-content').classList.add('dashboard-blur');
+                        const modalEl = document.getElementById('drilldownModal');
+                        // modalEl.classList.add('is-blurred'); // REMOVED: This was causing the modal itself to blur
+                        modalEl.addEventListener('hidden.bs.modal', function () {
+                            document.getElementById('main-dashboard-content').classList.remove('dashboard-blur');
+                            // this.classList.remove('is-blurred');
+                        }, { once: true });
+                    }
+                };
+
+                // --- ADDED: New orchestrator function for all drilldown actions ---
+                function initiateDrilldown(componentId, context = {}) {
+                    const config = Utils.getComponentConfig(componentId, dashboardConfig);
+
+                    if (config.drilldownTarget && !context.dataIndex) {
+                        return initiateDrilldown(config.drilldownTarget);
+                    }
+
+                    const drilldownConfig = config?.drilldownConfig;
+                    if (!drilldownConfig) {
+                        alert(`No drilldown configured.`);
+                        return; // Added return to prevent further execution
+                    }
+
+                    const { dataKey, columns, filters, docFormConfig, filterMapping } = drilldownConfig;
+                    let title = `Detailed View: ${config.label || config.title}`;
+                    const rawData = StateManager.getState(dataKey);
+
+                    if (!rawData) {
+                        alert(`No detailed data available.`);
+                        return; // Added return 
+                    }
+
+                    let filteredData = [...rawData];
+
+                    // --- NEW: Chart Filtering Logic (Matches Pre-Press logic) ---
+                    if (context.dataIndex !== undefined) {
+                        const chart = chartInstances[componentId];
+                        if (chart && chart.data.labels[context.dataIndex] !== undefined) {
+                            const label = chart.data.labels[context.dataIndex];
+                            title += ` (${label})`; // Add context to the title
+
+                            // Special handling for monthly filtering
+                            if (filterMapping === 'date_month_short') {
+                                filteredData = rawData.filter(item => {
+                                    // Check if item has a date property, handle both string and Date objects
+                                    const dateVal = item.date || item.scheduled_date || item.actual_date; // Heuristic fallback
+                                    if (!dateVal) return false;
+                                    const d = new Date(dateVal);
+                                    return d.toLocaleString('default', { month: 'short' }) === label;
+                                });
+                            }
+                            // Generic property filtering
+                            else if (filterMapping) {
+                                // Handles nested properties if needed, but simple key access is standard
+                                // Also handles "Reason" maps where the label is the reason
+                                filteredData = rawData.filter(item => {
+                                    const itemValue = item[filterMapping];
+                                    // String comparison (trim to be safe)
+                                    return String(itemValue).trim() === String(label).trim();
+                                });
+
+                                // Regex Fallback for complex labels (e.g. "PFP Done (15)") -> matches "PFP Done"
+                                if (filteredData.length === 0 && typeof label === 'string') {
+                                    // Try to match start of string
+                                    filteredData = rawData.filter(item => label.startsWith(item[filterMapping]));
+                                }
+                            }
+                        }
+                    }
+
+                    // --- NEW: Column Normalizer ---
+                    // DevExtreme Grid expects `dataField` and `caption`. We support `key` and `label` for backward compat.
+                    const normalizedColumns = columns.map(col => ({
+                        ...col,
+                        dataField: col.dataField || col.key,
+                        caption: col.caption || col.label,
+                        // Infer data type from format if missing
+                        dataType: col.dataType || (col.format === 'date' ? 'date' : (col.format === 'currency' || col.format === 'number' ? 'number' : undefined)),
+                        // Carry over formatting for grid (simple currency/date)
+                        format: col.format === 'currency' ? { type: 'currency', currency: 'USD', precision: 0 } : (col.format === 'date' ? 'dd-MMM-yyyy' : undefined)
+                    }));
+
+                    const finalDrilldownConfig = {
+                        ...drilldownConfig,
+                        columns: normalizedColumns,
+                        // Default to grid render unless specified otherwise
+                        renderAs: drilldownConfig.renderAs || 'grid'
+                    };
+
+                    DrilldownService.show(title, finalDrilldownConfig, filteredData);
+                }
+
+                const DocFormHandler = {
+                    show(docId, config) {
+                        const data = rawData.find(item => item.id === docId);
+                        if (!data) { alert(`Details for ${docId} not found.`); return; }
+                        const bodyHtml = `<div class="row">${config.fields.map(field => `<div class="col-md-6 form-readonly-group"><label>${field.label}</label><input type="text" class="form-control" value="${Utils.formatMetric(data[field.key], field.format)}" readonly></div>`).join('')}</div>`;
+                        document.getElementById('docFormModalLabel').textContent = `Details for: ${docId}`;
+                        document.getElementById('docFormBody').innerHTML = bodyHtml;
+                        modals.drilldownModal.classList.add('is-blurred');
+                        modals.docFormModal.show();
+                    }
+                };
+
+                const ExpandChartHandler = {
+                    show(componentId) {
+                        const originalChart = chartInstances[componentId];
+                        const config = Utils.getComponentConfig(componentId, dashboardConfig);
+                        if (!originalChart || !config) { alert('Cannot expand: chart instance not found.'); return; }
+
+                        const ctx = document.getElementById('expandedChartCanvas').getContext('2d');
+                        const chartData = JSON.parse(JSON.stringify(originalChart.data));
+
+                        const originalOptions = originalChart.config.options;
+                        const expansionOverrides = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    enabled: true,
+                                    external: null
+                                }
+                            }
+                        };
+
+                        const finalOptions = Utils.deepMerge(JSON.parse(JSON.stringify(originalOptions)), expansionOverrides);
+
+                        const isKpiCard = dashboardConfig.kpis.some(k => k.id === componentId);
+                        if (isKpiCard) {
+                            const kpiData = StateManager.getState('kpiData')[config.dataKey];
+                            if (kpiData && kpiData.trend_labels) {
+                                chartData.labels = kpiData.trend_labels;
+                            }
+                            chartData.datasets[0].label = config.label;
+
+                            // START: MODIFICATION
+                            // Dynamically set colors based on the source KPI's configured CSS variable
+                            if (config.cssVar) {
+                                const trendColor = getComputedStyle(document.documentElement).getPropertyValue(config.cssVar).trim();
+                                const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                                if (trendColor && trendColorRGB) {
+                                    chartData.datasets[0].borderColor = trendColor;
+                                    chartData.datasets[0].backgroundColor = `rgba(${trendColorRGB}, 0.2)`;
+                                    chartData.datasets[0].fill = true;
+                                    chartData.datasets[0].tension = 0.3;
+                                }
+                            }
+                            // END: MODIFICATION
+                        }
+
+                        document.getElementById('expandChartModalLabel').textContent = `Expanded View: ${config.label || config.title}`;
+
+                        if (chartInstances['expandedChart']) chartInstances['expandedChart'].destroy();
+                        chartInstances['expandedChart'] = new Chart(ctx, { type: originalChart.config.type, data: chartData, options: finalOptions });
+                        modals.expandChartModal.show();
+                    }
+                };
+
+                const GuideHandler = { show(kpiConfig) { if (!kpiConfig?.guide) { alert('No guide available for this KPI.'); return; } const { title, definition, interpretation, calculation } = kpiConfig.guide; document.getElementById('kpiGuideModalLabel').textContent = `Guide: ${title}`; document.getElementById('guide-definition').textContent = definition; document.getElementById('guide-interpretation').textContent = interpretation; document.getElementById('guide-calculation').textContent = calculation; modals.kpiGuideModal.show(); } };
+
+                const InteractivityHandler = {
+                    init() {
+                        const mainContent = document.getElementById('main-dashboard-content');
+                        const modalIds = ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'];
+
+                        modalIds.forEach(id => {
+                            const modalEl = document.getElementById(id);
+                            if (modalEl) {
+                                // Add blur when any modal opens
+                                modalEl.addEventListener('show.bs.modal', () => {
+                                    mainContent.classList.add('dashboard-blur');
+                                });
+
+                                // Remove blur only if NO other modals are currently open (handles stacked modals)
+                                modalEl.addEventListener('hidden.bs.modal', () => {
+                                    const isAnyModalOpen = modalIds.some(mid => {
+                                        const m = document.getElementById(mid);
+                                        // Bootstrap adds the 'show' class to visible modals
+                                        return m && m.classList.contains('show');
+                                    });
+
+                                    if (!isAnyModalOpen) {
+                                        mainContent.classList.remove('dashboard-blur');
+                                    }
+                                });
+                            }
+                        });
+                        const menu = document.getElementById('customContextMenu');
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        const drilldownModalEl = document.getElementById('drilldownModal');
+                        const hideMenu = () => menu.style.display = 'none';
+                        const hideTooltip = () => { if (tooltipEl) { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; } };
+                        document.addEventListener('click', hideMenu);
+                        document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+                        document.body.addEventListener('contextmenu', e => { const target = e.target.closest('.context-menu-target'); if (target) { e.preventDefault(); this.showContextMenu(e, target.dataset.componentId); } });
+                        document.body.addEventListener('click', e => {
+                            const target = e.target.closest('.kpi-card');
+                            if (target) initiateDrilldown(target.dataset.componentId);
+                        });
+                        tooltipEl.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+                        tooltipEl.addEventListener('mouseleave', () => { tooltipHideTimer = setTimeout(hideTooltip, 300); });
+                        document.getElementById('drilldownFilterControls').addEventListener('change', e => { if (e.target.name === 'drilldownFilter') { const filterValue = e.target.value; document.getElementById('drilldownTbody').querySelectorAll('tr').forEach(row => { row.style.display = (filterValue === 'all' || row.dataset.status === filterValue) ? '' : 'none'; }); } });
+
+                        // --- FIX: Add delegated event listener for drilldown table rows ---
+                        drilldownModalEl.addEventListener('click', e => {
+                            const row = e.target.closest('tr[data-doc-id]');
+                            const configStr = drilldownModalEl.querySelector('.modal-body').dataset.docFormConfig;
+                            if (row && configStr) {
+                                const config = JSON.parse(configStr);
+                                DocFormHandler.show(row.dataset.docId, config);
+                            }
+                        });
+
+                        drilldownModalEl.addEventListener('hidden.bs.modal', () => {
+                            const modalBody = drilldownModalEl.querySelector('.modal-body');
+                            if (modalBody.dataset.docFormConfig) {
+                                delete modalBody.dataset.docFormConfig;
+                            }
+                        });
+
+                        document.getElementById('docFormModal').addEventListener('hidden.bs.modal', () => modals.drilldownModal.classList.remove('is-blurred'));
+                        document.getElementById('expandChartModal').addEventListener('hidden.bs.modal', () => {
+                            if (chartInstances['expandedChart']) {
+                                chartInstances['expandedChart'].destroy();
+                                chartInstances['expandedChart'] = null;
+                            }
+                        });
+                    },
+                    showContextMenu(event, componentId) {
+                        const config = Utils.getComponentConfig(componentId, dashboardConfig);
+                        const menu = document.getElementById('customContextMenu');
+                        const menuList = document.getElementById('contextMenuList');
+                        const componentActions = config?.actions || dashboardConfig.contextMenu.actions.map(a => a.id);
+                        let actions = dashboardConfig.contextMenu.actions.filter(a => componentActions.includes(a.id) || a.type === 'separator');
+
+                        const renderItems = items => items.map(a =>
+                            a.type === 'separator' ? '<li class="context-menu-separator"></li>' :
+                                `<li class="context-menu-item" data-action="${a.id}">
+                                <i class="bi ${a.icon}"></i>
+                                <span>${a.label}</span>
+                                ${a.submenu ? `<i class="bi bi-chevron-right"></i><ul class="context-menu-sublist">${renderItems(a.submenu)}</ul>` : ''}
+                            </li>`
+                        ).join('');
+
+                        menuList.innerHTML = renderItems(actions);
+
+                        // Add click listeners to items
+                        menu.querySelectorAll('.context-menu-item').forEach(item => {
+                            if (!item.querySelector('.context-menu-sublist')) {
+                                item.addEventListener('click', () => {
+                                    this.handleContextMenuAction(item.dataset.action, componentId);
+                                    menu.style.display = 'none'; // Close menu after action
+                                });
+                            }
+                        });
+
+                        menu.style.visibility = 'hidden';
+                        menu.style.display = 'block';
+
+                        const { offsetWidth: menuW, offsetHeight: menuH } = menu;
+                        const { clientX: mouseX, clientY: mouseY } = event;
+                        const { innerWidth: viewportW, innerHeight: viewportH } = window;
+
+                        // Positioning logic to keep menu on screen
+                        let finalLeft = mouseX;
+                        if ((mouseX + menuW) > viewportW) {
+                            finalLeft = mouseX - menuW;
+                        }
+
+                        let finalTop = mouseY;
+                        if ((mouseY + menuH) > viewportH) {
+                            finalTop = mouseY - menuH;
+                        }
+
+                        menu.style.left = `${finalLeft + window.scrollX}px`;
+                        menu.style.top = `${finalTop + window.scrollY}px`;
+                        menu.style.visibility = 'visible';
+                    },
+                    handleContextMenuAction(action, componentId) {
+                        const config = Utils.getComponentConfig(componentId, dashboardConfig);
+                        const chart = chartInstances[componentId];
+                        switch (action) {
+                            case 'drilldown': initiateDrilldown(componentId); break;
+                            case 'refresh': initialDataFetch(); break;
+                            case 'expand': ExpandChartHandler.show(componentId); break;
+                            case 'guide': if (config.guide) GuideHandler.show(config); break;
+                            case 'share': window.location.href = `mailto:?subject=Dashboard Insight: ${config.label || config.title}&body=Review data for ${config.label || config.title}.`; break;
+                            case 'export-png': if (chart) { const a = document.createElement('a'); a.href = chart.toBase64Image(); a.download = `${componentId}.png`; a.click(); } break;
+                            case 'export-pdf': alert(`PDF Export triggered for ${componentId}. (Requires jsPDF integration)`); break;
+                            case 'ai-insight': alert(`AI analyzing trends for ${config.label || config.title}...`); break;
+                            default: console.warn(`Action '${action}' not handled.`);
+                        }
+                    },
+
+                    customTooltip(context) {
+                        const { chart, tooltip } = context;
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        clearTimeout(tooltipHideTimer);
+                        if (tooltip.opacity === 0) { tooltipHideTimer = setTimeout(() => { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; }, 500); return; }
+
+                        const titleEl = tooltipEl.querySelector('.tooltip-main-title');
+                        const headerEl = tooltipEl.querySelector('.tooltip-header');
+                        const valueEl = tooltipEl.querySelector('.tooltip-value');
+                        const seriesTitleEl = tooltipEl.querySelector('.tooltip-title');
+                        const deltaEl = tooltipEl.querySelector('.tooltip-delta');
+                        const footerEl = tooltipEl.querySelector('.tooltip-footer');
+
+                        headerEl.style.display = 'flex';
+                        deltaEl.style.display = 'none';
+                        footerEl.innerHTML = '';
+                        footerEl.style.display = 'none';
+
+                        const isPareto = chart.data.datasets.some(ds => ds.type === 'line') && chart.data.datasets.some(ds => ds.type === 'bar');
+
+                        if (isPareto) {
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            headerEl.style.display = 'none';
+                            valueEl.textContent = '';
+
+                            const footerContent = tooltip.dataPoints.map(dp => {
+                                const isPercentage = dp.dataset.label.includes('%');
+                                const value = isPercentage ? `${dp.raw.toFixed(1)}%` : Utils.formatMetric(dp.raw, 'currency');
+                                return `<div class="footer-row"><span>${dp.dataset.label}</span><span>${value}</span></div>`;
+                            }).join('');
+                            footerEl.innerHTML = footerContent;
+
+                            if (chart.canvas.id === 'client-billing-delay-pareto') {
+                                const clientName = tooltip.title[0];
+                                const rawData = StateManager.getState('client_billing_delay_data');
+                                const clientData = rawData.find(d => d.client === clientName);
+                                if (clientData) {
+                                    footerEl.innerHTML += `<div class="footer-row"><span>Avg. Delay</span><span>${clientData.avg_delay_days} Days</span></div>`;
+                                }
+                            }
+                            footerEl.style.display = 'flex';
+                        } else {
+                            const dp = tooltip.dataPoints[0];
+                            if (!dp) return;
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            seriesTitleEl.textContent = dp.dataset.label || '';
+                            valueEl.textContent = Utils.formatMetric(dp.raw);
+                            const prev = dp.dataIndex > 0 ? chart.data.datasets[dp.datasetIndex].data[dp.dataIndex - 1] : null;
+                            if (prev !== null && prev !== 0 && typeof dp.raw === 'number') { const change = ((dp.raw - prev) / prev) * 100, isPos = change >= 0; deltaEl.className = `tooltip-delta ${isPos ? 'positive' : 'negative'}`; deltaEl.innerHTML = `<i class="bi ${isPos ? 'bi-arrow-up' : 'bi-arrow-down'}"></i> ${Math.abs(change).toFixed(1)}%`; deltaEl.style.display = 'flex'; }
+                            const footerContent = chart.data.datasets.map((ds, i) => i !== dp.datasetIndex && ds.data[dp.dataIndex] !== undefined ? `<div class="footer-row"><span>${ds.label}</span><span>${Utils.formatMetric(ds.data[dp.dataIndex])}</span></div>` : null).filter(Boolean);
+                            if (footerContent.length > 0) { footerEl.innerHTML = footerContent.join(''); footerEl.style.display = 'flex'; }
+                        }
+
+                        tooltipEl.querySelector('.drilldown-btn').onclick = () => initiateDrilldown(chart.canvas.id, { dataIndex: tooltip.dataPoints[0].dataIndex });
+                        const canvasRect = chart.canvas.getBoundingClientRect();
+                        tooltipEl.style.opacity = 1;
+                        tooltipEl.style.pointerEvents = 'all';
+                        tooltipEl.style.left = `${canvasRect.left + window.scrollX + tooltip.caretX}px`;
+                        // Modified top position to be slightly higher (closer to cursor) to bridge the gap
+                        tooltipEl.style.top = `${canvasRect.top + window.scrollY + tooltip.caretY - 10}px`;
+                    }
+                };
+
+
+                const ConfigValidator = {
+                    validate(config) {
+                        if (!config.title) throw new Error("`title` is missing.");
+                        if (!Array.isArray(config.kpis)) throw new Error("`kpis` must be an array.");
+                        if (!Array.isArray(config.layout)) throw new Error("`layout` must be an array.");
+                        config.kpis.forEach((kpi, i) => {
+                            if (!kpi.id || !kpi.dataKey || !kpi.label) throw new Error(`KPI at index ${i} is missing required keys (id, dataKey, label).`);
+                        });
+                        config.layout.forEach((item, i) => {
+                            if (!item.type || !item.width || !item.config) throw new Error(`Layout item at index ${i} is missing required keys (type, width, config).`);
+                            const chartConfig = item.config;
+                            if (chartConfig.drilldownConfig && !Array.isArray(chartConfig.drilldownConfig.columns)) {
+                                throw new Error(`Drilldown config for chart '${chartConfig.id}' is missing a 'columns' array.`);
+                            }
+                            if (typeof chartConfig.transformer !== 'function' && !SharedTransformers[chartConfig.transformer]) {
+                                throw new Error(`Transformer for chart '${chartConfig.id}' must be a function or a key in SharedTransformers.`);
+                            }
+                        });
+                    }
+                };
+
+                return {
+                    init,
+                    refresh: initialDataFetch
+                };
+            })();
+
+            // Initialize the application
+            APP_CORE.init();
+
+            // Initialize Dashboard Filters (Moved outside init for standardization)
+            if (typeof DashboardFilters !== 'undefined') {
+                DashboardFilters.init({
+                    container: '#main-dashboard-content',
+                    movingAverage: {
+                        enabled: true,
+                        dropdownSelector: '#ma-dropdown-container',
+                        buttonTextSelector: '#maButtonText',
+                        weekOptionsContainer: '#maWeekOptions',
+                        period: 13,
+                        maxWeeks: 52
+                    },
+                    timeFilters: {
+                        enabled: true,
+                        containerSelector: '#timeFilterContainer'
+                    },
+                    customFilters: {
+                        enabled: true,
+                        filters: [
+                            { id: 'salesCategory', label: 'Sales Category', dataSource: ['Domestic', 'Export'], type: 'select' },
+                            { id: 'productionUnit', label: 'Production Unit', dataSource: ['Faridabad – DTA', 'Faridabad – EOU', 'C-35 Noida', 'HCBF', 'Thomson Press (ISD)'], type: 'select' }
+                        ]
+                    },
+                    filterPanel: {
+                        enabled: true,
+                        toggleButtonSelector: '#toggle-filter-panel-btn'
+                    },
+                    onFilterChange: (filters) => {
+                        console.log('Filters Changed:', filters);
+                        APP_CORE.refresh(filters);
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,3080 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTIF Dashboard</title>
+
+    <!-- Dependencies: Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Dependencies: DevExtreme CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn3.devexpress.com/jslib/23.2.3/css/dx.light.css" />
+
+    <!-- Dependencies: Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /*   1. SETUP: ROOT VARIABLES & BODY */
+        :root {
+            --app-primary-color: #003366;
+            --app-primary-rgb: 0, 51, 102;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-color-default: #344767;
+            --glow-green: #4CAF50;
+            --glow-red: #f44336;
+            --glow-orange: #ff9800;
+            --glow-yellow: #ffc107;
+            --glow-blue: #003366;
+            --glow-lightblue: #03A9F4;
+            --glow-purple: #9C27B0;
+            --glow-darkgray: #616161;
+            --glow-gray: #9E9E9E;
+            --glow-teal: #009688;
+            --bs-primary: var(--app-primary-color);
+            --bs-primary-rgb: var(--app-primary-rgb);
+            --bs-link-color: var(--app-primary-color);
+            --bs-link-hover-color: #002244;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f9;
+            color: #495057;
+        }
+        /*   2. LAYOUT: MODAL & DASHBOARD CARDS*/
+        .otif-row-mb-3 > * {
+            margin-top: 0.85rem;
+        }
+        #otif-dashboard-container .modal-dialog {
+            max-width: 98%;
+            width: 1350px;
+        }
+        #otif-dashboard-container .modal-content {
+            height: 90vh;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        #otif-dashboard-container .modal-body {
+            background-color: #f4f7f9;
+        }
+        .modal-header {
+            border-bottom: 1px solid #f4f7f9;
+            background-color: #f4f7f9;
+            padding: 0.75rem 1.5rem;
+        }
+        .modal-header .btn-close {
+            margin-right: 10px;
+        }
+        .modal-footer {
+            border-top: 1px solid #e9ecef;
+        }
+        .otif-dashboard-card {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.1s ease;
+        }
+        .otif-dashboard-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        .otif-dashboard-card .card-header {
+            background-color: transparent;
+            border-bottom: 0px solid #e9ecef;
+            font-weight: 600;
+            color: #343a40;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        #otif-dashboard-container .modal-header .d-flex .btn-link {
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        /*   3. COMPONENTS: CHARTS, KPIs & PROGRESS BARS*/
+        .otif-chart-container {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        .otif-chart-container .runningJobsChart {
+            height: 114px;
+            width: 114px;
+        }
+        .otif-chart-body-constrained {
+            height: 15.5rem;
+        }
+        .otif-summary-body {
+            min-height: 355px;
+        }
+        .otif-running-jobs-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .otif-running-jobs-body .otif-chart-container {
+            height: 14rem;
+            width: 14rem;
+            max-width: 15rem;
+            max-height: 15rem;
+        }
+        .otif-kpi-card {
+            text-align: center;
+        }
+        .otif-kpi-card .otif-chart-container {
+            height: 7rem;
+            margin: auto;
+        }
+        .otif-kpi-wrapper {
+            max-width: 240px;
+        }
+        .otif-kpi-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+            display: flex;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .otif-kpi-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+        }
+        .otif-kpi-card--half .otif-kpi-value {
+            font-size: 1.1rem;
+            white-space: normal;
+            line-height: 1.2;
+            padding: 0.5rem 0.1rem;
+            word-break: break-word;
+            min-height: 2.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .otif-kpi-card--compact {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color-default);
+            min-height: 58px; /* Align height with the Delivered/Outstanding cards */
+        }
+        .otif-kpi-card--compact .bi {
+            font-size: 1rem;
+            color: var(--glow-red);
+        }
+        .otif-kpi-compact-label {
+            margin: 0 0.4rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .otif-kpi-compact-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        #qualityIssuesCompactDisplay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .otif-kpi-compact-label {
+            margin: 0 0.4rem;
+        }
+        .otif-progress-container {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .otif-progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.35rem;
+        }
+        .otif-progress-bar-title {
+            font-weight: 500;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+        .otif-progress-bar-value {
+            font-weight: 600;
+            color: #212529;
+            font-size: 0.9rem;
+        }
+        .progress {
+            height: 0.8rem;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        .progress-bar {
+            border-radius: 5px;
+            transition: width 0.6s ease-in-out, background-color 0.6s ease-in-out;
+        }
+        /*   4. COMPONENTS: CONTROLS (BUTTONS, TOGGLES, FILTERS)*/
+        .otif-toggle-group {
+            display: inline-flex;
+            background-color: #f8f9fa;
+            border-radius: 50px;
+            padding: 0px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .otif-toggle-group .btn {
+            border-radius: 50px !important;
+            border: none;
+            font-weight: 500;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.85rem;
+            color: var(--text-color-default);
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .otif-toggle-group .btn.active {
+            background-color: var(--app-primary-color) !important;
+            color: #fff;
+            box-shadow: none;
+        }
+        .otif-toggle-group input[type="radio"] {
+            display: none;
+        }
+        .otif-toggle-group input[type="radio"]:checked + .btn {
+            background-color: var(--app-primary-color) !important;
+            color: #fff;
+            box-shadow: none;
+        }
+        .otif-toggle-group .dropdown-toggle::after {
+            display: none !important;
+        }
+        #otif-dashboard-container .modal-header .btn-link, .modal-header .btn-close, #filter-popup-panel .btn-close {
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s ease-in-out;
+            border: none;
+            padding: 0;
+        }
+        #otif-dashboard-container .modal-header .btn-link:hover, .modal-header .btn-close:hover, #filter-popup-panel .btn-close:hover {
+            background-color: #e9ecef;
+        }
+        #otif-dashboard-container .modal-header .btn-link:active, .modal-header .btn-close:active, #filter-popup-panel .btn-close:active {
+            background-color: #dee2e6;
+        }
+        .modal-header .btn-close:focus, #filter-popup-panel .btn-close:focus {
+            box-shadow: none !important;
+        }
+        .btn-reset {
+            background-color: #e9ecef;
+            color: #495057;
+            border: none;
+            font-weight: 600;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+        }
+        .btn-reset:hover {
+            background-color: #dee2e6;
+        }
+        .btn-apply {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+        }
+        .btn-apply:hover {
+            background-color: #002244;
+        }
+        /*   5. COMPONENTS: FILTER PANEL*/
+        #main-dashboard-content.content-blur {
+            filter: blur(4px);
+            pointer-events: none;
+            transition: filter 0.2s ease-in-out;
+        }
+        #filter-popup-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 340px;
+            height: auto;
+            z-index: 100;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            opacity: 1;
+            transform: scale(1);
+        }
+        #filter-popup-panel.d-none {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+        .filter-panel-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-panel-footer {
+            padding: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .otif-filter-panel-title {
+            font-weight: 600;
+            color: var(--app-primary-color);
+        }
+        .filter-section {
+            margin-bottom: 0.75rem;
+        }
+        .filter-group {
+            position: relative;
+        }
+        .filter-group .form-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+        }
+        .filter-group::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(calc(-50% + 1px));
+            pointer-events: none;
+            color: #99a4b3;
+        }
+        /*   6. COMPONENTS: CALENDAR*/
+        #calendar-container {
+            background-color: #fff;
+            border-radius: 12px;
+            padding-top: 0.5rem;
+            border: 1px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
+            height: 15rem;
+        }
+        #calendar-container.calendar-container-expanded {
+            height: 100%;
+            flex-grow: 1;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .calendar-header .btn-icon {
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calendar-header .btn-icon:hover {
+            background-color: #f0f2f5;
+        }
+        .month-year-selector-btn {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            justify-content: center;
+            min-width: 85px;
+        }
+        .month-year-selector-btn:hover {
+            background-color: #f0f2f5;
+        }
+        .month-year-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #343a40;
+        }
+        .btn-today {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--app-primary-color);
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            margin-left: 0.65rem;
+        }
+        .btn-today:hover {
+            background-color: rgba(var(--app-primary-rgb), 0.1);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0px;
+            text-align: center;
+        }
+        #calendar-grid {
+            height: auto;
+            min-height: 168px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: 28px;
+            align-content: center;
+            gap: 0px;
+            text-align: center;
+        }
+        .calendar-grid.day-names span {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c757d;
+            padding-bottom: 0.25rem;
+        }
+        .calendar-day {
+            font-size: 0.8rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            z-index: 0;
+        }
+        .calendar-day.not-current-month {
+            color: #ced4da;
+            cursor: default;
+            background-color: transparent !important;
+        }
+        .calendar-day.today {
+            font-weight: 700;
+            color: var(--app-primary-color);
+        }
+        .calendar-day.in-range {
+            background-color: rgba(76, 117, 175, 0.15);
+            color: #344767;
+            font-weight: 500;
+        }
+        .calendar-day.selected-start.selected-end {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            font-weight: 700;
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calendar-day.selected-start:not(.selected-end) {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            font-weight: 700;
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
+        }
+        .calendar-day.selected-end:not(.selected-start) {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            font-weight: 700;
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+        .calendar-day::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            background-color: #f0f2f5;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.15s ease-in-out;
+            z-index: -1;
+        }
+        .calendar-day:not(.in-range):not(.selected-start):not(.selected-end):not(.not-current-month):hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        #date-range-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .date-range-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .date-range-item label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 0.1rem;
+        }
+        .date-range-item span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #343a40;
+        }
+        #month-year-scroller {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        #month-year-scroller.d-none {
+            display: none;
+        }
+        .scroller-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .scroller-header span {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .scroller-body {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+            min-height: 0px;
+        }
+        .scroller-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2; /* Sits on top of the scrolling text */
+            pointer-events: none; /* Allows mouse scrolling to pass through */
+            background: linear-gradient( to bottom, #ffffff 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 60%, #ffffff 100% );
+        }
+        .scroller-body::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            right: 5%;
+            height: 40px;
+            transform: translateY(-50%);
+            background-color: rgba(0, 51, 102, 0.07);
+            border-radius: 8px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .scroller-column {
+            flex: 1;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+        .scroller-column::-webkit-scrollbar {
+            display: none;
+        }
+        .scroller-item {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            scroll-snap-align: center;
+            cursor: pointer;
+        }
+        .scroller-item.selected {
+            font-weight: 700;
+            color: var(--app-primary-color);
+        }
+        /*   7.  NEWDROPDOWN  */
+        /*   7.1 COMPONENTS: CUSTOM DROPDOWN (NEWDROPDOWN)*/
+        .newdropdown-popup {
+            position: absolute;
+            z-index: 1100;
+            width: 280px;
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .newdropdown-header, .newdropdown-search-container {
+            padding: 6px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .newdropdown-search-input {
+            width: 100%;
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background: white;
+        }
+        .newdropdown-search-input:focus {
+            outline: none;
+            border-color: var(--app-primary-color);
+            box-shadow: 0 0 0 2px rgba(var(--app-primary-rgb), 0.2);
+        }
+        .newdropdown-list {
+            list-style: none;
+            padding: 4px;
+            margin: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+        .newdropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+        .newdropdown-item.is-hidden {
+            display: none;
+        }
+        .newdropdown-item:hover {
+            background-color: rgba(var(--app-primary-rgb), 0.12);
+        }
+        .newdropdown-only-btn {
+            margin-left: 16px;
+            padding: 1px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.15s ease, background-color 0.15s ease;
+        }
+        .newdropdown-item:hover .newdropdown-only-btn {
+            visibility: visible;
+            opacity: 1;
+        }
+        .newdropdown-only-btn:hover {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            border-color: var(--app-primary-color);
+        }
+        .newdropdown-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .newdropdown-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .newdropdown-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        .newdropdown-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        .newdropdown-list::-webkit-scrollbar-button {
+            display: none !important;
+        }
+        /*   7.2. COMPONENTS: CUSTOM CHECKBOX*/
+        .custom-checkbox-otif {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 0.6rem;
+            user-select: none;
+        }
+        .custom-checkbox-otif input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .custom-checkbox-otif .custom-checkbox-otif-box {
+            width: 1.1em;
+            height: 1.1em;
+            border: 1.5px solid #adb5bd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #fff;
+            transition: all 0.2s ease;
+        }
+        .custom-checkbox-otif .custom-checkbox-otif-box::after {
+            content: '';
+            position: absolute;
+            display: block;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' stroke='%23ffffff' d='M4 8.5l2.5 2.5l5.5-5.5'/%3e%3c/svg%3e");
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            transform: scale(0);
+            transition: transform 0.15s ease-in-out;
+        }
+        .custom-checkbox-otif input:checked + .custom-checkbox-otif-box {
+            background-color: var(--app-primary-color);
+            border-color: var(--app-primary-color);
+        }
+        .custom-checkbox-otif input:checked + .custom-checkbox-otif-box::after {
+            transform: scale(1);
+        }
+        .custom-checkbox-otif:hover input:not(:checked) + .custom-checkbox-otif-box {
+            border-color: var(--app-primary-color);
+        }
+        .custom-checkbox-otif input:focus-visible + .custom-checkbox-otif-box {
+            box-shadow: 0 0 0 2px rgba(var(--app-primary-rgb), 0.25);
+        }
+        .newdropdown-header .custom-checkbox-otif-label {
+            font-weight: 600;
+            color: var(--app-primary-color);
+            text-transform: uppercase;
+        }
+        .newdropdown-item .custom-checkbox-otif-label {
+            font-weight: 500;
+            color: #212529;
+        }
+        /*   8. THIRD-PARTY OVERRIDES: DEVEXTREME (HIGH-FIDELITY REPLICATION) */
+        /*   8.1: Base Editor Styling (Unchanged) */
+        .dx-texteditor.dx-editor-outlined {
+            border-radius: 10px !important;
+            border-color: #dee2e6;
+            background-color: #fff;
+        }
+        .dx-texteditor.dx-state-focused.dx-editor-outlined {
+            border-color: var(--app-primary-color) !important;
+        }
+        .dx-texteditor-input {
+            font-size: 0.8rem !important;
+            padding: 0.3rem 0.6rem !important;
+            height: auto !important;
+            min-height: 0 !important;
+        }
+        .dx-placeholder {
+            font-size: 0.8rem !important;
+            padding-left: 0.6rem !important;
+        }
+        /*   8.2: NEW - Popup Container & Layout */
+        .otif-filter-popup-restyle .dx-popup-content {
+            background-color: #fff !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+            padding: 0 !important;
+            display: flex;
+            flex-direction: column;
+        }
+        /*   8.3: NEW - Header ("Select All") & Search Sections */
+        .otif-filter-popup-restyle .dx-treeview-select-all-item,
+        .otif-filter-popup-restyle .dx-treeview-search {
+            padding: 6px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .otif-filter-popup-restyle .dx-treeview-select-all-item .dx-checkbox-text {
+            font-weight: 600 !important;
+            color: var(--app-primary-color) !important;
+            text-transform: uppercase;
+        }
+        .otif-filter-popup-restyle .dx-treeview-search {
+            padding: 8px 12px; /* A bit more padding for the search box container */
+        }
+        .otif-filter-popup-restyle .dx-treeview-search .dx-texteditor.dx-editor-filled {
+            width: 100%;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+        .otif-filter-popup-restyle .dx-treeview-search .dx-texteditor.dx-state-focused {
+            border-color: var(--app-primary-color);
+            box-shadow: 0 0 0 2px rgba(var(--app-primary-rgb), 0.2);
+        }
+        .dx-icon-search {
+            display: none !important;
+        }
+        /*   8.4: NEW - Item List & Scrollbar */
+        .otif-filter-popup-restyle .dx-scrollable-content {
+            padding: 4px; /* Matches .newdropdown-list padding */
+            max-height: 220px;
+        }
+        .otif-filter-popup-restyle .dx-scrollable-container {
+            max-height: 220px;
+        }
+        .otif-filter-popup-restyle .dx-scrollview-scrollbar.dx-scrollbar-vertical .dx-scrollbar-thumb {
+            background-color: #c1c1c1; /* Matches ::-webkit-scrollbar-thumb */
+            border-radius: 10px;
+            width: 6px;
+        }
+        /*   8.5: NEW - "ONLY" Button Styling (Matches newdropdown) */
+        .otif-tree-item-only-btn {
+            margin-left: 16px;
+            padding: 1px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.15s ease, background-color 0.15s ease;
+        }
+        .otif-tree-item-only-btn:hover {
+            background-color: var(--app-primary-color);
+            color: #fff;
+            border-color: var(--app-primary-color);
+        }
+        .dx-treeview-item-content:hover .otif-tree-item-only-btn {
+            visibility: visible;
+            opacity: 1;
+        }
+        /*   9. UTILITIES & GLOBAL OVERRIDES*/
+        [data-drilldown] {
+            cursor: pointer;
+        }
+        #runningJobsChart {
+            cursor: pointer;
+        }
+        .chartjs-tooltip-title {
+            font-weight: 600;
+        }
+        #chartjs-tooltip {
+            opacity: 0;
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: #333;
+            padding: 8px 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 10000;
+        }
+        .chartjs-tooltip-color-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .chart-legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 5px;
+        }
+        #drillDownModal .modal-content {
+            height: 90vh;
+        }
+        /*   10. RESPONSIVE MEDIA QUERIES*/
+        @media (max-width: 1200px) {
+            #otif-dashboard-container .modal-dialog {
+                max-width: 98%;
+            }
+        }
+        @media (max-width: 576px) {
+            .otif-toggle-group {
+                width: auto;
+                flex-grow: 0;
+                margin-top: 0.5rem;
+            }
+            .otif-dashboard-card .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        .table > :not(caption) > * > * {
+            padding: .5rem .5rem;
+            color: black !important;
+            background-color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- ================== START OF DASHBOARD MODAL ======================= -->
+    <div class="container-fluid p-3">
+        <div id="otif-dashboard-container">
+            <div class="modal-header">
+                <h6 class="modal-title" id="dashboardModalLabel">OTIF</h6>
+
+                <!-- A single container for ALL right-aligned controls -->
+                <div class="d-flex align-items-center ms-auto">
+
+                    <!-- 1. Job/Value Toggle -->
+                    <div class="btn-group otif-toggle-group me-2" id="jobValueToggle" role="group">
+                        <input type="radio" class="btn-check" name="jobValueType" id="jobType" autocomplete="off" checked>
+                        <label class="btn" for="jobType">Job</label>
+                        <!-- "active" class removed -->
+                        <input type="radio" class="btn-check" name="jobValueType" id="valueType" autocomplete="off">
+                        <label class="btn" for="valueType">Value</label>
+                    </div>
+                    <div class="d-flex py-2 mx-2">
+                        <div class="vr text-secondary"></div>
+                    </div>
+                    <!-- 2. Time Filter -->
+                    <div class="btn-group otif-toggle-group me-2" id="timeFilterContainer">
+                        <button type="button" class="btn" data-category="Day">Day</button>
+                        <button type="button" class="btn active" data-category="Week">Week</button>
+                        <button type="button" class="btn" data-category="Month">Month</button>
+                        <button type="button" class="btn" data-category="Quarter">Quarter</button>
+                        <button type="button" class="btn" data-category="Year">Year</button>
+                    </div>
+
+                    <!-- 3. Icons -->
+                    <button class="btn btn-link text-secondary me-1" type="button" id="toggle-filter-panel-btn" title="Filters">
+                        <i class="bi bi-filter fs-5"></i>
+                    </button>
+                    <div class="btn-group me-1">
+                        <button class="btn btn-link text-secondary me-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Reports" id="btnopen">
+                            <i class="bi bi-file-earmark-bar-graph fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" id="DropwornList">
+                            <li><a class="dropdown-item" href="#" data-report-name="MonthlyPerformance">Monthly Performance Report</a></li>
+                            <li><a class="dropdown-item" href="#" data-report-name="DelayAnalysis">Delay Analysis Summary</a></li>
+                            <li><a class="dropdown-item" href="#" data-report-name="SupplierPerformance">Supplier Performance</a></li>
+                            <li><a class="dropdown-item" href="#" data-report-name="WIP_Summary">WIP Summary</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" data-report-name="OTIF_JobWise">OTIF (Job Wise)</a></li>
+                            <li><a class="dropdown-item" href="#" data-report-name="OTIF_ValueWise">OTIF (Value Wise)</a></li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger" id="closeDropdownBtn">Close</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row g-3 otif-row-mb-3">
+                    <div class="col-xl-10">
+                        <div class="row g-3 otif-row-mb-3" id="main-dashboard-content">
+                            <!-- OTIF Summary Section -->
+                            <div class="col-lg-8">
+                                <div class="otif-dashboard-card h-100">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span>On-Time In-Full</span>
+                                            <small class="d-block text-muted fw-normal" id="otif-context-label" style="font-size: 0.7rem;"></small>
+                                            <small class="d-block text-muted fw-normal" id="otif-context-label1" style="font-size: 0.7rem;">Operational (On DOD)</small>
+
+                                        </div>
+                                        <div class="btn-group otif-toggle-group" role="group">
+                                            <input type="radio" class="btn-check" name="otifType" id="actualOtif" autocomplete="off" checked>
+                                            <label class="btn" for="actualOtif">Actual</label>
+                                            <input type="radio" class="btn-check" name="otifType" id="estimatedOtif" autocomplete="off">
+                                            <label class="btn" for="estimatedOtif">Estimated</label>
+                                            <input type="radio" class="btn-check" name="otifType" id="interunitOtif" autocomplete="off">
+                                            <label class="btn" for="interunitOtif">Interunit</label>
+                                        </div>
+                                    </div>
+                                    <div class="card-body text-center otif-summary-card-body">
+                                        <div class="row justify-content-center" style="height: 140px;">
+                                            <div class="col-lg-6 h-100">
+                                                <div class="otif-chart-container" data-drilldown="OTIF Summary">
+                                                    <canvas id="overallOtifGauge"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-center mt-2 mb-3">
+                                            <div class="col-md-6 col-lg-5">
+                                                <div class="otif-progress-container" data-drilldown="On-Time">
+                                                    <div class="otif-progress-bar-label">
+                                                        <span class="otif-progress-bar-title">On-Time</span>
+                                                        <span id="onTimeValue" class="otif-progress-bar-value"></span>
+                                                    </div>
+                                                    <div class="progress">
+                                                        <div id="onTimeProgressBar" class="progress-bar" role="progressbar"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-lg-5">
+                                                <div class="otif-progress-container" data-drilldown="In-Full">
+                                                    <div class="otif-progress-bar-label">
+                                                        <span class="otif-progress-bar-title">In-Full</span>
+                                                        <span id="inFullValue" class="otif-progress-bar-value"></span>
+                                                    </div>
+                                                    <div class="progress">
+                                                        <div id="inFullProgressBar" class="progress-bar" role="progressbar"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Running Jobs Section -->
+                            <div class="col-lg-4">
+                                <div class="otif-dashboard-card h-100">
+                                    <div class="card-header" id="running-jobs-title">Running Jobs Status</div>
+                                    <div class="card-body otif-running-jobs-body">
+                                        <div class="otif-chart-container">
+                                            <canvas id="runningJobsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 1: OTIF Performance by Stage Card -->
+                            <div class="col-lg-3">
+                                <div class="otif-dashboard-card h-100">
+                                    <div class="card-header">OTIF Performance by Stage</div>
+                                    <div class="card-body p-2 d-flex flex-column justify-content-around">
+
+                                        <!-- Progress Bar 1: Operational (DOD) -->
+                                        <div class="otif-progress-container" data-drilldown="Operational Delays (DOD)" title="Includes Procurement, Production, and Dispatch delays.">
+                                            <div class="otif-progress-bar-label">
+                                                <span class="otif-progress-bar-title">Operational (On DOD including sales failure)</span>
+                                                <span id="operationalDodValue" class="otif-progress-bar-value"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="operationalDodProgressBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Progress Bar 2: Operational (FG) -->
+                                        <div class="otif-progress-container mt-3" data-drilldown="Operational Delays (FG)" title="Includes Procurement and Production delays.">
+                                            <div class="otif-progress-bar-label">
+                                                <span class="otif-progress-bar-title">Operational (On FG Creation)</span>
+                                                <span id="operationalFgValue" class="otif-progress-bar-value"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="operationalFgProgressBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Progress Bar 3: Procurement -->
+                                        <div class="otif-progress-container mt-3" data-drilldown="Procurement Delays" title="Includes only Procurement delays.">
+                                            <div class="otif-progress-bar-label">
+                                                <span class="otif-progress-bar-title">OTIF due to Procurement Delay</span>
+                                                <span id="procurementValue" class="otif-progress-bar-value"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="procurementProgressBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Progress Bar 4: Production -->
+                                        <div class="otif-progress-container mt-3" data-drilldown="Production Delays" title="Includes only Production delays.">
+                                            <div class="otif-progress-bar-label">
+                                                <span class="otif-progress-bar-title">OTIF due to Production Delay</span>
+                                                <span id="productionValue" class="otif-progress-bar-value"></span>
+                                            </div>
+                                            <div class="progress">
+                                                <div id="productionProgressBar" class="progress-bar" role="progressbar"></div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 2: OTIF Analysis Chart  -->
+                            <div class="col-lg-9">
+                                <div class="otif-dashboard-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span>OTIF Trend Analysis</span>
+                                        <div class="btn-group otif-toggle-group" role="group">
+                                            <input type="radio" class="btn-check" name="trendViewType" id="trendView" autocomplete="off" checked>
+                                            <label class="btn" for="trendView">Trend</label>
+
+                                            <input type="radio" class="btn-check" name="trendViewType" id="categoryView" autocomplete="off">
+                                            <label class="btn" for="categoryView">Category</label>
+
+                                            <input type="radio" class="btn-check" name="trendViewType" id="regionView" autocomplete="off">
+                                            <label class="btn" for="regionView">Region</label>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="otif-chart-container otif-chart-body-constrained">
+                                            <canvas id="otifTrendChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- === MAIN RIGHT COLUMN (6 KPI CARDS) === -->
+                    <div class="col-xl-2 position-relative">
+
+                        <!-- 1. KPI Container (Always present in the background) -->
+                        <div id="kpi-container">
+                            <div class="row g-3 otif-row-mb-3 otif-kpi-wrapper">
+                                <!-- Supplier OTIF Card  -->
+                                <div class="col-12">
+                                    <div class="otif-dashboard-card otif-kpi-card">
+                                        <div class="otif-chart-container" data-drilldown="Supplier OTIF">
+                                            <canvas id="supplierOtifGauge"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Buffer Used Card  -->
+                                <div class="col-12">
+                                    <div class="otif-dashboard-card otif-kpi-card">
+                                        <div class="otif-chart-container" data-drilldown="Buffer Used">
+                                            <canvas id="avgBufferGauge"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Orders Card -->
+                                <div class="col-12 otif-kpi-card--full">
+                                    <div class="otif-dashboard-card otif-kpi-card d-flex align-items-center justify-content-center p-3" data-drilldown="Total Orders (Value)">
+                                        <div class="text-start">
+                                            <div id="ordersValue" class="otif-kpi-value"></div>
+                                            <div id="ordersLabel" class="otif-kpi-label justfy-content-center">Total Orders (Value)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Delivered Card -->
+                                <div class="col-6 otif-kpi-card--half">
+                                    <div class="otif-dashboard-card d-flex flex-column justify-content-center text-center h-100" data-drilldown="Delivered">
+                                        <div id="deliveredValue" class="otif-kpi-value"></div>
+                                        <div id="deliveredLabel" class="otif-kpi-label">Delivered</div>
+                                    </div>
+                                </div>
+
+                                <!-- Outstanding Card -->
+                                <div class="col-6 otif-kpi-card--half">
+                                    <div class="otif-dashboard-card d-flex flex-column justify-content-center text-center h-100" data-drilldown="Outstanding">
+                                        <div id="outstandingJobsValue" class="otif-kpi-value"></div>
+                                        <div id="outstandingJobsLabel" class="otif-kpi-label">Outstanding</div>
+                                    </div>
+                                </div>
+
+                                <!-- Dispatch Variance Card -->
+                                <div class="col-12 otif-kpi-card--full">
+                                    <div class="otif-dashboard-card otif-kpi-card d-flex align-items-center justify-content-center p-3" data-drilldown="Dispatch Variance">
+                                        <div class="text-start">
+                                            <div id="dispatchVarianceValue" class="otif-kpi-value"></div>
+                                            <!-- MODIFIED: ID added for the label -->
+                                            <div id="dispatchVarianceLabel" class="otif-kpi-label justify-content-center">Dispatch Variance</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Quality Issues Card -->
+                                <div class="col-12">
+                                    <div class="otif-dashboard-card otif-kpi-card--compact" data-drilldown="QC Issues">
+                                        <div id="qualityIssuesCompactDisplay">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Filter POP-UP Panel (Hidden by default, will overlay the KPIs) -->
+                        <div id="filter-popup-panel" class="d-none">
+                            <!-- PANEL HEADER -->
+                            <div class="p-2 border-bottom position-relative text-center">
+                                <h6 class="otif-filter-panel-title mb-0 m-auto">Filters</h6>
+                                <button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-2"
+                                    id="close-filter-panel-btn" aria-label="Close">
+                                </button>
+                            </div>
+
+                            <!-- PANEL BODY (Scrollable) -->
+                            <div class="flex-grow-1" style="overflow-y: auto;">
+                                <div class="p-2">
+                                    <!-- Dropdown Filters Section -->
+                                    <div class="filter-section" id="dropdown-filters-section">
+                                    </div>
+                                    <!-- Date Picker Section -->
+                                    <div class="filter-section">
+                                        <div id="calendar-container">
+
+                                            <!-- 1. Main Calendar View -->
+                                            <div id="calendar-view">
+                                                <!-- Header: Today button, Month/Year, Nav -->
+                                                <div class="calendar-header">
+                                                    <button type="button" class="btn btn-today" id="today-btn">Today</button>
+                                                    <div class="d-flex align-items-center">
+                                                        <button id="prev-month-btn" class="btn btn-icon" type="button"><i class="bi bi-chevron-left"></i></button>
+                                                        <div id="month-year-selector" class="month-year-selector-btn">
+                                                            <span id="month-year-display" class="month-year-text"></span>
+                                                        </div>
+                                                        <button id="next-month-btn" class="btn btn-icon" type="button"><i class="bi bi-chevron-right"></i></button>
+                                                    </div>
+                                                </div>
+                                                <!-- Day Names -->
+                                                <div class="calendar-grid day-names">
+                                                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                                                </div>
+                                                <!-- Calendar Days -->
+                                                <div id="calendar-grid" class="calendar-grid"></div>
+                                            </div>
+
+                                            <!-- 2. Month/Year Scroller (Hidden by default) -->
+                                            <div id="month-year-scroller" class="d-none">
+                                                <div class="scroller-header">
+                                                    <span>Select Date</span>
+                                                    <button class="btn btn-apply btn-sm" id="scroller-done-btn">Done</button>
+                                                </div>
+                                                <div class="scroller-body">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="date-range-display" class="date-range-box">
+                                            <div class="date-range-item">
+                                                <label>From</label><span id="selected-from-date">--</span>
+                                            </div>
+                                            <div class="date-range-item">
+                                                <label>To</label><span id="selected-to-date">--</span>
+                                            </div>
+                                        </div>
+                                        <!-- PANEL FOOTER -->
+                                        <div class="p-2 d-flex gap-2" id="filter-panel-footer">
+                                            <button type="button" class="btn btn-reset w-100" id="reset-filters-btn-new">Reset</button>
+                                            <button type="button" class="btn btn-apply w-100" id="apply-filters-btn-new">Apply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ================== END OF DASHBOARD MODAL ======================= -->
+
+    <!-- Drill-Down Modal -->
+    <div class="modal fade" id="drillDownModal" tabindex="-1" aria-labelledby="drillDownModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title ps-4" id="drillDownModalLabel">Details: <span id="drilldown-category-title"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                            </tr>
+                        </thead>
+                        <tbody id="drillDownTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependencies: jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Dependencies: Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Dependencies: Chart.js and Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <!-- Dependencies: DevExtreme JS -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.3/js/dx.all.js"></script>
+
+    <!-- Application Logic -->
+    <script>
+        const DrillDownConfig = {
+            job: {
+                'OTIF': [
+                    'SNo', 'Job Id', 'Job Name', 'Customer Name', 'LOC', 'Dealing User', 'Order Qty', 
+                    'Dispatched Qty', 'Commited Date', 'Completed Date', 'Delay', 'Color', 'All Schedules Met', 
+                    'Sales Order No.', 'Sales Rep Name', 'Person Responsible for Delay', 'Reason for Delay', 
+                    'Failure Type', 'Paper Value', 'Sale Price', 'N P V (Lacs)', 'Recovery Plan', 
+                    'Remarks', "Customer's Email ID"
+                ],
+                'RunningJobs': [
+                    'S.No', 'Loc', 'Job Details', 'SO No', 'Dealing Person', 'Sales Head', 'Sales Rep', 
+                    'Action By', 'Current Responsible Person', 'Committed Date', 'Order Qty', 'Packed Qty', 
+                    'Shortage Accepted', 'Dispatched Qty', 'WIP/FG', 'Delay', 'Failure Type', 'Delay Cause', 
+                    'Person Responsible for Delay', 'Recovery Plan', 'Sales Remarks'
+                ],
+                'SupplierOTIF': [
+                    'Item Name', 'Item Code', 'Responsible Person', 'Supplier Name', 'Order qty', 
+                    'Expected Date', 'Actual date', 'Received Qty', 'Pending Qty'
+                ],
+                'Buffer Used': [
+                    'Job ID / SO No.',
+                    'Job Name',
+                    'Customer Name',
+                    'Product Category / Job Type',
+                    'Committed Date',
+                    'Planned Production End Date',
+                    'Actual Production End Date',
+                    'Buffer Allocated (Days)',
+                    'Buffer Used (Days)',
+                    'Buffer Used %',
+                    'Remaining Buffer (Days)',
+                    'On-Time Status',
+                    'Primary Reason for Buffer Consumption'
+                ],
+                'Operational Delays (DOD)': [ 'SNo', 'Job Id', 'Reason for Delay', 'Failure Type', 'Delay'],
+                'Operational Delays (FG)': [ 'SNo', 'Job Id', 'Reason for Delay', 'Failure Type', 'Delay'],
+                'Procurement Delays': [ 'SNo', 'Job Id', 'Reason for Delay', 'Failure Type', 'Delay'],
+                'Production Delays': ['SNo', 'Job Id', 'Reason for Delay', 'Failure Type','Delay'],
+                'UnitJobDetails': ['SNo', 'Job Id', 'Job Name', 'Customer Name', 'Order Qty', 'Dispatched Qty', 'Committed Date', 'Delay', 'Failure Type']
+            },
+            value: {
+                'OTIF': ['SNo', 'Job Id', 'Sale Price', 'Customer Name', /* ...other value-centric columns */],
+                'RunningJobs': ['SNo', 'Job Id', 'Job Value', 'Delay Cause', /* ...other value-centric columns */],
+                'SupplierOTIF': ['Item Name', 'PO Value', 'Supplier Name', 'Pending Value', /* ...other value-centric columns */]
+            }
+        };
+        const ReportConfig = {
+            'MonthlyPerformance': ['Month', 'Total Jobs', 'Total Value', 'On-Time %', 'In-Full %', 'Overall OTIF %'],
+            'DelayAnalysis': ['Delay Reason', 'Instances', 'Average Delay (Days)', 'Impacted Value'],
+            'SupplierPerformance': ['Supplier Name', 'Total POs', 'On-Time Deliveries', 'OTIF %', 'Avg. Lead Time'],
+            'WIP_Summary': ['Product Category', 'Jobs in WIP', 'Value in WIP', 'Avg. Age (Days)'],
+            'OTIF_JobWise': ['Unit', 'Overall(on Dispatch Date)', 'Operation(on Dispatch Date)', 'Operation(on FG Date)'],
+            'OTIF_ValueWise': ['Unit', 'Overall(on Dispatch Date)', 'Operation(on Dispatch Date)', 'Operation(on FG Date)'],
+        };
+        const AppConfig = {
+            locale: 'en-IN',
+            currency: 'INR',
+            theme: {
+                hues: {
+                    primary: 210,
+                    stagePerformance: 174,
+                },
+                statusColors: {
+                    onTrack: '#4CAF50',
+                    atRisk: '#ffc107',
+                    delayed: '#FF9800',
+                    critical: '#f44336',
+                    overrun: '#343a40'
+                },
+                saturation: '68%',
+                lightness: {
+                    min: 80,
+                    max: 28
+                },
+                valueRange: {
+                    min: 20,
+                    max: 100
+                }
+            }
+        };
+        const RUNNING_JOBS_CONFIG = {
+            CATEGORIES: {
+                GREEN: { key: 'GREEN', label: 'On Track', color: AppConfig.theme.statusColors.onTrack, upperBoundary: 33.33 },
+                YELLOW: { key: 'YELLOW', label: 'At Risk', color: AppConfig.theme.statusColors.atRisk, upperBoundary: 66.66 },
+                ORANGE: { key: 'ORANGE', label: 'Delayed', color: AppConfig.theme.statusColors.delayed, upperBoundary: 88.88 },
+                RED: { key: 'RED', label: 'Critical', color: AppConfig.theme.statusColors.critical, upperBoundary: 100.0 },
+                BLACK: { key: 'BLACK', label: 'Overrun', color: AppConfig.theme.statusColors.overrun, upperBoundary: Infinity }
+            },
+            getCategory: function (bufferConsumed) {
+                if (bufferConsumed <= this.CATEGORIES.GREEN.upperBoundary) return this.CATEGORIES.GREEN;
+                if (bufferConsumed <= this.CATEGORIES.YELLOW.upperBoundary) return this.CATEGORIES.YELLOW;
+                if (bufferConsumed <= this.CATEGORIES.ORANGE.upperBoundary) return this.CATEGORIES.ORANGE;
+                if (bufferConsumed <= this.CATEGORIES.RED.upperBoundary) return this.CATEGORIES.RED;
+                return this.CATEGORIES.BLACK;
+            }
+        };
+        const filterConfig = [
+            { id: 'filterRegion',        label: 'Region',           placeholder: 'All Regions',    dataSourceKey: 'regions',           width: 6 },
+            { id: 'filterProduct',       label: 'Product Category', placeholder: 'All Categories', dataSourceKey: 'productCategories', width: 6 },
+            { id: 'filterClient',        label: 'Client Category',  placeholder: 'All Categories', dataSourceKey: 'clientCategories',  width: 6 },
+            { id: 'filterDelayReason',   label: 'Delay Due To',     placeholder: 'All Reasons',    dataSourceKey: 'delayReasons',      width: 6 },
+        ];
+        function renderFiltersFromConfig() {
+            const container = document.getElementById('dropdown-filters-section');
+            if (!container) return;
+
+            let html = '<div class="row g-2">';
+            filterConfig.forEach(config => {
+                html += `
+                    <div class="col-${config.width}">
+                        <div class="filter-group">
+                            <label class="form-label">${config.label}</label>
+                            <div class="otif-tree-filter" id="${config.id}" data-placeholder="${config.placeholder}" data-source-key="${config.dataSourceKey}"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        const calendarState = {
+            startDate: null,
+            endDate: null,
+            hoveredDate: null,
+            currentYear: new Date().getFullYear(),
+            currentMonth: new Date().getMonth()
+        };
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        let activeFilters = {
+                timeSelection:  ['This Week'] 
+            };
+        const masterData = {
+            regions: [], 
+            productCategories: ['Diary', 'Calendar', 'Books', 'Mono Carton', 'Rigid Box'],
+            clientCategories: ['New', 'Old'],
+            delayReasons: ['Sales', 'Procurement', 'Production', 'Dispatch'],
+            units: ['FBD-WEB', 'FBD-SF', 'EOU', 'C35', 'HCBF'],
+            weeks: Array.from({ length: 52 }, (_, i) => `Week ${i + 1}`), 
+        };
+        function initializeDevExtremeFilters() {
+            const specialDataSources = {
+                regions: [
+                    { id: "D", text: "Domestic", expanded: true, items: [{ id: "D_NCR", text: "NCR" }, { id: "D_E", text: "East" },{ id: "D_W", text: "West" },{ id: "D_N", text: "North" },{ id: "D_S", text: "South" }] },
+                    { id: "E", text: "Export", items: [{ id: "E_US", text: "US" },{ id: "E_EU", text: "Europe" },{ id: "E_AF", text: "Africa" },{ id: "E_ME", text: "ME" }] },
+                    { id: "DE", text: "Deemed Export" }
+                ]
+            };
+
+            $('.otif-tree-filter').each(function() {
+                const $filter = $(this);
+                const elementId = '#' + $filter.attr('id');
+                const placeholder = $filter.data('placeholder') || 'Select';
+                const dataSourceKey = $filter.data('source-key');
+                const dataSource = specialDataSources[dataSourceKey] || masterData[dataSourceKey];
+                if (dataSource) {
+                    createTreeViewDropDown(elementId, dataSource, placeholder);
+                } else {
+                    console.error(`Data source key "${dataSourceKey}" not found for filter "${elementId}".`);
+                }
+            });
+        }
+        function createTreeViewDropDown(elementId, dataSource, placeholder) {
+            const $element = $(elementId);
+            if (!$element.length) return;
+
+            const isHierarchical = Array.isArray(dataSource) && dataSource.some(item => item && typeof item === 'object' && item.items);
+            const treeData = isHierarchical ? dataSource : dataSource.map(item => ({ id: item, text: item }));
+
+            treeData.unshift({ id: '__select_all__', text: 'Select All', isSelectAll: true });
+
+            const selectAllLabel = $element.closest('.filter-group').find('.form-label').text() || placeholder;
+
+            $element.dxDropDownBox({
+                value: [],
+                valueExpr: 'id',
+                displayExpr: 'text',
+                dataSource: treeData,
+                placeholder: placeholder,
+                showClearButton: true,
+                showDropDownButton: true,
+
+                dropDownOptions: {
+                    elementAttr: { class: 'otif-filter-popup-restyle' },
+                    container: "#otif-dashboard-container",
+                    width: function () {
+                        const parentWidth = $element.outerWidth();
+                        return parentWidth || 800; // fallback width
+                    }
+                },
+
+                contentTemplate: function (e) {
+                    const dropDownBox = e.component;
+                    const $treeViewContainer = $('<div>');
+
+                    const treeView = $treeViewContainer.dxTreeView({
+                        dataSource: dropDownBox.getDataSource(),
+                        keyExpr: 'id',
+                        dataStructure: 'tree',
+                        selectByClick: false,
+                        selectNodesRecursive: true,
+                        searchEnabled: true,
+                        searchMode: 'contains',
+                        searchExpr: 'text',
+                        searchEditorOptions: { placeholder: 'Search...' },
+                        showCheckBoxesMode: 'none',
+                        hoverStateEnabled: false,
+                        focusStateEnabled: false,
+
+                        itemTemplate: function (itemData, _, itemElement) {
+                            const isLeafNode = !itemData.items || itemData.items.length === 0;
+                            const isSelectAll = itemData.isSelectAll;
+
+                            const itemHtml = `
+                                <div class="newdropdown-item d-flex justify-content-between align-items-center w-100">
+                                    <label class="custom-checkbox-otif-otif">
+                                        <input type="checkbox" value="${itemData.id}">
+                                        <span class="custom-checkbox-otif-box"></span>
+                                        <span class="custom-checkbox-otif-label">${itemData.text}</span>
+                                    </label>
+                                    ${(!isSelectAll && isLeafNode) ? '<span class="otif-tree-item-only-btn">ONLY</span>' : ''}
+                                </div>
+                            `;
+                            itemElement.append(itemHtml);
+
+                            // Handle ONLY button
+                            if (!isSelectAll && isLeafNode) {
+                                itemElement.find('.otif-tree-item-only-btn').on('click', function (event) {
+                                    event.stopPropagation();
+                                    treeView.unselectAll();
+                                    treeView.selectItem(itemData.id);
+                                    dropDownBox.option('value', [itemData.id]);
+                                    dropDownBox.close();
+                                });
+                            }
+
+                            // Handle checkbox click
+                            itemElement.find('input[type="checkbox"]').on('click', function (event) {
+                                event.stopPropagation();
+                                const checked = $(this).prop('checked');
+
+                                if (isSelectAll) {
+                                    if (checked) {
+                                        treeView.selectAll();
+                                    } else {
+                                        treeView.unselectAll();
+                                    }
+                                } else {
+                                    if (checked) {
+                                        treeView.selectItem(itemData.id);
+                                    } else {
+                                        treeView.unselectItem(itemData.id);
+                                    }
+                                }
+                            });
+                        },
+
+                        onItemSelectionChanged: function () {
+                            const selectedKeys = treeView.getSelectedNodeKeys().filter(id => id !== '__select_all__');
+                            dropDownBox.option("value", selectedKeys);
+
+                            // Sync checkboxes
+                            $treeViewContainer.find('input[type="checkbox"]').each(function () {
+                                const id = $(this).val();
+                                if (id === '__select_all__') {
+                                    $(this).prop('checked', selectedKeys.length === treeView.getNodes().length - 1);
+                                } else {
+                                    $(this).prop('checked', selectedKeys.includes(id));
+                                }
+                            });
+                        }
+
+                    }).dxTreeView('instance');
+
+                    dropDownBox.on('opened', () => {
+                        const value = dropDownBox.option('value') || [];
+                        treeView.unselectAll();
+                        value.forEach(key => {
+                            try { treeView.selectItem(key); } catch (err) { }
+                        });
+                    });
+
+                    return $treeViewContainer;
+                }
+            });
+        }
+        function renderCalendar() {
+            const { currentYear, currentMonth, startDate, endDate, hoveredDate } = calendarState;
+
+            const grid = document.getElementById('calendar-grid');
+            const monthYearDisplay = document.getElementById('month-year-display');
+            if (!grid || !monthYearDisplay) return;
+
+            grid.innerHTML = '';
+            monthYearDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.insertAdjacentHTML('beforeend', '<div class="calendar-day not-current-month"></div>');
+            }
+
+            const startDateTime = startDate ? startDate.getTime() : null;
+            // --- FIX: Determine the temporary end date for rendering ---
+            // Use the permanent endDate if it exists, otherwise use the temporary hoveredDate.
+            let effectiveEndDate = endDate;
+            if (startDate && !endDate && hoveredDate) {
+                effectiveEndDate = hoveredDate;
+            }
+            const effectiveEndDateTime = effectiveEndDate ? effectiveEndDate.getTime() : null;
+
+            const today = new Date();
+            const todayTime = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())).getTime();
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = document.createElement('div');
+                const currentDate = new Date(Date.UTC(currentYear, currentMonth, i));
+                const currentTime = currentDate.getTime();
+
+                day.className = 'calendar-day';
+                day.textContent = i;
+                day.dataset.date = currentDate.toISOString().split('T')[0];
+
+                if (currentTime === todayTime) {
+                    day.classList.add('today');
+                }
+                
+                // --- FIX: Render based on the effective start and end dates ---
+                if (startDateTime && effectiveEndDateTime) {
+                    const rangeStart = Math.min(startDateTime, effectiveEndDateTime);
+                    const rangeEnd = Math.max(startDateTime, effectiveEndDateTime);
+
+                    if (currentTime > rangeStart && currentTime < rangeEnd) {
+                        day.classList.add('in-range');
+                    }
+                    if (currentTime === startDateTime) {
+                        day.classList.add(startDateTime === effectiveEndDateTime ? 'selected-end' : 'selected-start');
+                    }
+                    if (currentTime === effectiveEndDateTime) {
+                        day.classList.add('selected-end');
+                    }
+                } else if (startDateTime && currentTime === startDateTime) {
+                    day.classList.add('selected-start', 'selected-end');
+                }
+                
+                day.addEventListener('click', handleDayClick);
+                grid.appendChild(day);
+            }
+            updateDateRangeDisplay();
+        }
+        function handleDayHover(event) {
+            const dayElement = event.target.closest('.calendar-day');
+            if (calendarState.startDate && !calendarState.endDate && dayElement && dayElement.dataset.date) {
+                const [year, month, day] = dayElement.dataset.date.split('-').map(Number);
+                const hovered = new Date(Date.UTC(year, month - 1, day));
+                if (calendarState.hoveredDate && calendarState.hoveredDate.getTime() === hovered.getTime()) {
+                    return;
+                }
+                calendarState.hoveredDate = hovered;
+                renderCalendar(); 
+            }
+        }    
+        function handleGridMouseLeave() {
+            if (calendarState.hoveredDate) {
+                calendarState.hoveredDate = null;
+                renderCalendar(); 
+            }
+        }
+        function handleDayClick(event) {
+            const selectedDateStr = event.target.dataset.date;
+            if (!selectedDateStr) return;
+
+            const [year, month, day] = selectedDateStr.split('-').map(Number);
+            const clickedDate = new Date(Date.UTC(year, month - 1, day));
+
+            const { startDate, endDate } = calendarState;
+
+            // A click always clears any hover-preview state. The selection is now permanent.
+            calendarState.hoveredDate = null;
+
+            if (!startDate || (startDate && endDate)) {
+                calendarState.startDate = clickedDate;
+                calendarState.endDate = null;
+            } else {
+                if (clickedDate < startDate) {
+                    calendarState.endDate = startDate;
+                    calendarState.startDate = clickedDate;
+                } else {
+                    calendarState.endDate = clickedDate;
+                }
+            }
+            
+            activeFilters.timeSelection = activeFilters.timeSelectionCategory = null;
+            document.querySelectorAll('#timeFilterContainer .btn').forEach(b => b.classList.remove('active'));
+            
+            renderCalendar();
+        }
+        function updateDateRangeDisplay() {
+            const fromDisplay = document.getElementById('selected-from-date');
+            const toDisplay = document.getElementById('selected-to-date');
+
+            const formatDate = (dateObject) => {
+                if (!dateObject) return '--';
+                
+                // Use getUTC methods to read the pure date, ignoring any time/timezone.
+                const day = String(dateObject.getUTCDate()).padStart(2, '0');
+                const month = monthNames[dateObject.getUTCMonth()];
+                const year = dateObject.getUTCFullYear();
+                return `${day} ${month} ${year}`;
+            };
+            
+            fromDisplay.textContent = formatDate(calendarState.startDate);
+            toDisplay.textContent = formatDate(calendarState.endDate || calendarState.startDate);
+        }
+        function generateScroller() {
+            const scrollerBody = document.querySelector('#month-year-scroller .scroller-body');
+            if (!scrollerBody) return;
+
+            scrollerBody.innerHTML = ''; // Clear previous content
+
+            const monthColumn = document.createElement('div');
+            monthColumn.className = 'scroller-column';
+            monthColumn.id = 'scroller-month-col';
+            
+            const yearColumn = document.createElement('div');
+            yearColumn.className = 'scroller-column';
+            yearColumn.id = 'scroller-year-col';
+
+            // Helper to create empty buffer items for scrolling
+            const createBufferItem = () => {
+                const buffer = document.createElement('div');
+                buffer.className = 'scroller-item';
+                return buffer;
+            };
+
+            // --- Populate Month Column with Buffers ---
+            monthColumn.appendChild(createBufferItem()); // Top buffer
+            monthColumn.appendChild(createBufferItem()); // Top buffer
+
+            monthNames.forEach((name, index) => {
+                const item = document.createElement('div');
+                item.className = 'scroller-item';
+                item.textContent = name;
+                item.dataset.month = index;
+                monthColumn.appendChild(item);
+            });
+
+            monthColumn.appendChild(createBufferItem()); // Bottom buffer
+            monthColumn.appendChild(createBufferItem()); // Bottom buffer
+            
+            // --- Populate Year Column with Buffers ---
+            yearColumn.appendChild(createBufferItem()); // Top buffer
+            yearColumn.appendChild(createBufferItem()); // Top buffer
+
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear - 50; i <= currentYear + 20; i++) {
+                const item = document.createElement('div');
+                item.className = 'scroller-item';
+                item.textContent = i;
+                item.dataset.year = i;
+                yearColumn.appendChild(item);
+            }
+
+            yearColumn.appendChild(createBufferItem()); // Bottom buffer
+            yearColumn.appendChild(createBufferItem()); // Bottom buffer
+
+
+            scrollerBody.append(monthColumn, yearColumn);
+            const initialMonthItem = monthColumn.querySelector(`[data-month="${calendarState.currentMonth}"]`);
+            if (initialMonthItem) initialMonthItem.scrollIntoView({ block: 'center' });
+            
+            const initialYearItem = yearColumn.querySelector(`[data-year="${calendarState.currentYear}"]`);
+            if (initialYearItem) initialYearItem.scrollIntoView({ block: 'center' });
+        }
+        function initializeCalendarControls() {
+            const grid = document.getElementById('calendar-grid');
+            if (grid) {
+                grid.addEventListener('mouseover', handleDayHover);
+                grid.addEventListener('mouseleave', handleGridMouseLeave);
+            }
+
+            document.getElementById('prev-month-btn')?.addEventListener('click', () => {
+                calendarState.currentMonth--;
+                if (calendarState.currentMonth < 0) {
+                    calendarState.currentMonth = 11;
+                    calendarState.currentYear--;
+                }
+                renderCalendar();
+            });
+
+            document.getElementById('next-month-btn')?.addEventListener('click', () => {
+                calendarState.currentMonth++;
+                if (calendarState.currentMonth > 11) {
+                    calendarState.currentMonth = 0;
+                    calendarState.currentYear++;
+                }
+                renderCalendar();
+            });
+            
+            // SCALABLE RESET LOGIC
+            document.getElementById('reset-filters-btn-new')?.addEventListener('click', () => {
+                // Reset DevExtreme filters
+                filterConfig.forEach(config => {
+                    const instance = $(`#${config.id}`).dxDropDownBox('instance');
+                    if (instance) instance.reset();
+                });
+
+                // Reset Calendar
+                calendarState.startDate = null;
+                calendarState.endDate = null;
+                calendarState.hoveredDate = null;
+                renderCalendar();
+                
+                activeFilters.timeSelection = activeFilters.timeSelectionCategory = null;
+                document.querySelectorAll('#timeFilterContainer .btn.active').forEach(b => b.classList.remove('active'));
+                applyDashboardFilters();
+            });
+
+
+            async function fetchAndRenderDashboard(filters) {
+                dashboardData = generateDynamicData(filters); 
+                
+                console.log(`Rendering dashboard with filters:`, filters);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                renderDashboard(dashboardData);
+                isDashboardRendered = true; 
+            }
+
+        }
+        const numberFormatters = new Map();
+        function getCachedFormatter(locale, currencyCode, options) {
+            const key = `${locale}-${currencyCode}-${options.minimumFractionDigits}-${options.notation || 'standard'}`;
+            if (!numberFormatters.has(key)) {
+                const formatter = new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: currencyCode,
+                    minimumFractionDigits: options.minimumFractionDigits,
+                    maximumFractionDigits: options.maximumFractionDigits,
+                    notation: options.notation
+                });
+                numberFormatters.set(key, formatter);
+            }
+            return numberFormatters.get(key);
+        }
+        function formatCurrency(value, currencyCode, options = {}) {
+            if (typeof value !== 'number' || isNaN(value)) return 'N/A';
+
+            const config = {
+                locale: null,
+                compact: false,
+                decimals: 2,
+                ...options
+            };
+
+            const effectiveLocale = config.locale || (currencyCode === 'INR' ? 'en-IN' : 'en-US');
+
+            if (config.compact) {
+                const currencySymbol = getCachedFormatter(effectiveLocale, currencyCode, { minimumFractionDigits: 0 }).format(0).replace(/[0-9.,\s]/g, '');
+                let compactValue;
+                
+                if (effectiveLocale === 'en-IN') {
+                    if (value >= 10000000) { // Crore
+                        compactValue = `${(value / 10000000).toFixed(config.decimals)} Cr`;
+                    } else if (value >= 100000) { // Lakh
+                        compactValue = `${(value / 100000).toFixed(config.decimals)} L`;
+                    }
+                } else { // International System (Default)
+                    if (value >= 1000000000) { // Billion
+                        compactValue = `${(value / 1000000000).toFixed(config.decimals)}B`;
+                    } else if (value >= 1000000) { // Million
+                        compactValue = `${(value / 1000000).toFixed(config.decimals)}M`;
+                    } else if (value >= 1000) { // Thousand
+                        compactValue = `${(value / 1000).toFixed(config.decimals)}K`;
+                    }
+                }
+                
+                if (compactValue) {
+                    return `${currencySymbol}${compactValue}`;
+                }
+            }
+            
+            // Fallback to full formatting if not compact or below threshold
+            const fullFormatter = getCachedFormatter(effectiveLocale, currencyCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            return fullFormatter.format(value);
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('jobValueToggle')?.addEventListener('change', applyDashboardFilters);
+            renderFiltersFromConfig(); 
+            initializeDevExtremeFilters();
+            initializeCalendarControls(); 
+            const drillDownModalEl = document.getElementById('drillDownModal');
+            if (drillDownModalEl) {
+            drillDownModalEl.addEventListener('hidden.bs.modal', function () {document.querySelector('#otif-dashboard-container')?.focus(); });        }
+            document.addEventListener('click', function(event) {
+            const reportItem = event.target.closest('[data-report-name]');
+            if (reportItem) {
+                event.preventDefault();
+                const reportName = reportItem.dataset.reportName;
+                if (reportName) {
+                    showDetailModal(reportName, 'report');
+                }
+            }
+        });
+
+            // --- DYNAMIC DATA GENERATION --- 
+        function generateDynamicData(filters = {}) {
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const randomFloat = (min, max) => parseFloat((Math.random() * (max - min) + min).toFixed(1));
+        const generateOtifUnitReport = () => {
+                const units = ['FBD-WEB', 'FBD-SF', 'Interunit(on target date)', 'FBD-Total(Merge IU)', 'FBD-Total(WO IU)', 'EOU', 'C35', 'HCBF', 'Total'];
+                return units.map(unit => ({
+                    'Unit': unit,
+                    'Overall(on Dispatch Date)': `${randomFloat(20, 99).toFixed(2)}%`,
+                    'Operation(on Dispatch Date)': `${randomFloat(30, 100).toFixed(2)}%`,
+                    'Operation(on FG Date)': `${randomFloat(40, 100).toFixed(2)}%`
+                }));
+            };
+        const formatK = (num) => (num / 1000).toFixed(1) + 'K';
+        const formatM = (num) => '$' + (num / 1000000).toFixed(2) + 'M'; 
+        
+        const qualityComplaintsCount = randomInt(25, 75);
+        const qualityComplaintsValue = qualityComplaintsCount * randomInt(15000, 40000);
+
+        const hasActiveFilter = Object.values(filters).some(val => Array.isArray(val) && val.length > 0);
+        const overallMin = hasActiveFilter ? 75 : 60;
+        const overallMax = hasActiveFilter ? 90 : 98;
+        
+        const trendLabels = ['Nov/24', 'Dec/24', 'Jan/25', 'Feb/25', 'Mar/25', 'Apr/25', 'May/25', 'Jun/25', 'Jul/25'];
+        const rawRunningJobs = Array.from({ length: randomInt(9000, 12000) }, (_, i) => ({
+            id: `JOB-${1000 + i}`,
+            value: randomInt(500, 50000),
+            bufferConsumed: randomFloat(1, 115)
+        }));
+        const avgBufferConsumption = rawRunningJobs.length > 0 ? rawRunningJobs.reduce((sum, job) => sum + job.bufferConsumed, 0) / rawRunningJobs.length : 0;
+        const buildDataForMode = (mode) => {
+            let kpis, otifSummary, otifTrend;
+
+            if (mode === 'value') {
+                const totalOrders = randomInt(90000000, 110000000);
+                const deliveredOrders = totalOrders - randomInt(800000, 1500000);
+                    kpis = {
+                        orders: { value: formatCurrency(totalOrders, 'INR', { compact: true, decimals: 2 }), label: 'Total Value' },
+                        delivered: { value: formatCurrency(deliveredOrders, 'INR', { compact: true, decimals: 2 }), label: 'Delivered' },
+                        outstanding: { value: formatCurrency(totalOrders - deliveredOrders, 'INR', { compact: true, decimals: 2 }), label: 'Outstanding' },
+                        dispatchVariance: { value: randomFloat(0.5, 2.5).toFixed(1) + '%', label: 'Dispatch Value Variance' },
+                        qualityIssues: { 
+                            value: formatCurrency(qualityComplaintsValue, 'INR', { compact: true, decimals: 2 }), 
+                            label: 'Quality Issues Value',
+                            jobCount: qualityComplaintsCount // Always include job count
+                        },
+                    };       
+                otifSummary = { overall: randomFloat(overallMin - 5, overallMax - 7), onTime: randomFloat(70, 92), inFull: randomFloat(75, 94) };
+                otifTrend = {
+                    actual: Array.from({ length: trendLabels.length - 1 }, () => randomInt(overallMin - 8, overallMax - 10)),
+                    estimated: Array.from({ length: trendLabels.length }, () => randomInt(overallMin - 3, overallMax - 5))
+                };
+                otifTrend.actual.push(null);
+            } 
+            else { // mode === 'job'
+                const totalOrders = randomInt(90000, 110000);
+                const deliveredOrders = totalOrders - randomInt(800, 1500);
+                kpis = {
+                    orders: { value: formatK(totalOrders), label: 'Total Jobs' },
+                    delivered: { value: formatK(deliveredOrders), label: 'Delivered' },
+                    outstanding: { value: (totalOrders - deliveredOrders).toLocaleString(), label: 'Outstanding' },
+                    dispatchVariance: { value: randomFloat(2, 8).toFixed(1) + '%', label: 'Dispatch Variance' },
+                    qualityIssues: { 
+                        value: qualityComplaintsCount.toLocaleString(), 
+                        label: 'Quality Issues',
+                        jobCount: qualityComplaintsCount // Always include job count
+                    }
+                };
+                otifSummary = { overall: randomFloat(overallMin, overallMax), onTime: randomFloat(75, 98), inFull: randomFloat(80, 98) };
+                otifTrend = {
+                    actual: Array.from({ length: trendLabels.length - 1 }, () => randomInt(overallMin, overallMax - 5)),
+                    estimated: Array.from({ length: trendLabels.length }, () => randomInt(overallMin + 5, overallMax + 2))
+                };
+                otifTrend.actual.push(null);
+            }
+            return { kpis, otifSummary, otifTrend };
+        };
+        
+            const createMockRow = (columns) => {
+                const row = {};
+                const randomDate = () => new Date(Date.now() - randomInt(1, 30) * 86400000).toLocaleDateString(AppConfig.locale);
+                columns.forEach(col => {
+                    const key = col.toLowerCase().replace(/[^a-z0-9]/gi, ''); // Create a simple key from column name
+                    switch (key) {
+                        case 'sno': row[col] = 1; break; // Placeholder S.No
+                        case 'jobid': case 'sono': row[col] = `SO-${randomInt(10000, 99999)}`; break;
+                        case 'jobname': case 'jobdetails': row[col] = `Job ${randomInt(100, 999)}`; break;
+                        case 'customername': row[col] = `Customer ${String.fromCharCode(65 + randomInt(0, 25))}`; break;
+                        case 'dealinguser': case 'salesrepname': case 'personresponsiblefordelay': case 'salesrep': row[col] = 'User Name'; break;
+                        case 'orderqty': row[col] = randomInt(1000, 5000); break;
+                        case 'dispatchedqty': row[col] = randomInt(900, 4900); break;
+                        case 'commiteddate': case 'expecteddate': row[col] = randomDate(); break;
+                        case 'completeddate': case 'actualdate': row[col] = randomDate(); break;
+                        case 'delay': row[col] = `${randomInt(0, 5)} days`; break;
+                        case 'failuretype': row[col] = ['On-Time', 'In-Full', 'Both'][randomInt(0,2)]; break;
+                        case 'saleprice': row[col] = formatCurrency(randomInt(50000, 200000), AppConfig.currency); break;
+                        case 'recoveryplan': row[col] = 'Follow up with production'; break;
+                        default: row[col] = '---'; break;
+                    }
+                });
+                return row;
+            };
+            return {
+                job: buildDataForMode('job'),
+                value: buildDataForMode('value'),
+                shared: {
+                    runningJobs: { rawData: rawRunningJobs },
+                    kpis: {
+                        avgBufferConsumption: avgBufferConsumption,
+                        supplierOtif: randomInt(40, 75)
+                    },
+                    otifTrend: {
+                        target: 95,
+                        labels: trendLabels,
+                        byCategory: {
+                            labels: ['Books', 'Diary', 'Mono Carton', 'Rigid Box', 'Calendar'],
+                            actual: Array.from({ length: 5 }, () => randomInt(65, 95)),
+                            estimated: Array.from({ length: 5 }, () => randomInt(70, 98))
+                        },
+                        byRegion: {
+                            labels: ['North', 'South', 'East', 'West', 'Export'],
+                            actual: Array.from({ length: 5 }, () => randomInt(60, 92)),
+                            estimated: Array.from({ length: 5 }, () => randomInt(65, 95))
+                        }
+                    },
+                    drillDownData: {
+                            'OTIF': Array.from({ length: 25 }, () => createMockRow(DrillDownConfig.job.OTIF)),
+                            'RunningJobs': Array.from({ length: 50 }, () => createMockRow(DrillDownConfig.job.RunningJobs)),
+                        'SupplierOTIF': Array.from({ length: 15 }, () => createMockRow(DrillDownConfig.job.SupplierOTIF)),
+                        'Buffer Used': Array.from({ length: 40 }, () => {
+                            // Dates ke liye logic
+                            const committedDate = new Date(Date.now() - randomInt(30, 90) * 86400000);
+                            const plannedEndDate = new Date(committedDate.getTime() + randomInt(5, 15) * 86400000);
+                            // Actual date planned date se -3 din pehle ya +7 din baad tak ho sakti hai
+                            const actualEndDate = new Date(plannedEndDate.getTime() + (randomInt(-3, 7)) * 86400000);
+
+                            // Buffer calculation ke liye logic
+                            const bufferAllocated = randomInt(3, 7);
+                            const delayInMs = actualEndDate.getTime() - plannedEndDate.getTime();
+                            const bufferUsed = Math.max(0, Math.round(delayInMs / 86400000)); // Din mein convert karein, minimum 0
+                            const remainingBuffer = bufferAllocated - bufferUsed;
+                            const bufferUsedPercent = bufferAllocated > 0 ? ((bufferUsed / bufferAllocated) * 100).toFixed(1) : '0.0';
+
+                            // Status ke liye logic
+                            let onTimeStatus = '';
+                            if (remainingBuffer < 0) {
+                                onTimeStatus = 'Delayed';
+                            } else if (bufferUsed > 0) {
+                                onTimeStatus = 'On-Time (Buffer Used)';
+                            } else {
+                                onTimeStatus = 'On-Time';
+                            }
+
+                            // Reason ke liye logic
+                            const reasons = ['Procurement Delay', 'Machine Breakdown', 'QC Rework', 'Manpower Shortage', 'Planning Error'];
+                            const primaryReason = bufferUsed > 0 ? reasons[randomInt(0, reasons.length - 1)] : 'N/A';
+
+                            // Date ko format karne ke liye helper function
+                            const formatDate = (date) => date.toLocaleDateString(AppConfig.locale, { day: '2-digit', month: 'short', year: 'numeric' });
+
+                            // Final object return karein
+                            return {
+                                'Job ID / SO No.': `JOB-${randomInt(5000, 9999)} / SO-${randomInt(10000, 99999)}`,
+                                'Job Name': `Job ${randomInt(100, 999)}`,
+                                'Customer Name': `Customer ${String.fromCharCode(65 + randomInt(0, 25))}`,
+                                'Product Category / Job Type': masterData.productCategories[randomInt(0, masterData.productCategories.length - 1)],
+                                'Committed Date': formatDate(committedDate),
+                                'Planned Production End Date': formatDate(plannedEndDate),
+                                'Actual Production End Date': formatDate(actualEndDate),
+                                'Buffer Allocated (Days)': bufferAllocated,
+                                'Buffer Used (Days)': bufferUsed,
+                                'Buffer Used %': `${bufferUsedPercent}%`,
+                                'Remaining Buffer (Days)': remainingBuffer,
+                                'On-Time Status': onTimeStatus,
+                                'Primary Reason for Buffer Consumption': primaryReason
+                            };
+                        })
+                    },
+                    delayAnalysis: {
+                        operational_dod: randomInt(50, 70),
+                        operational_fg: randomInt(75, 90),
+                        procurement: randomInt(85, 98),
+                        production: randomInt(70, 88)
+                    },
+                    reportData: {
+                        'MonthlyPerformance': Array.from({length: 6}, () => ({ 'Month': 'Jul-25', 'Total Jobs': randomInt(8000, 9000), 'On-Time %': '85%', 'Overall OTIF %': '81%' })),
+                        'DelayAnalysis': Array.from({length: 4}, () => ({ 'Delay Reason': 'Procurement', 'Instances': randomInt(50,100), 'Impacted Value': formatCurrency(randomInt(500000, 1000000), 'INR') })),
+                        'SupplierPerformance': Array.from({length: 10}, () => ({ 'Supplier Name': `Supplier ${String.fromCharCode(65 + randomInt(0, 25))}`, 'Total POs': randomInt(20,50), 'OTIF %': `${randomInt(70,95)}%` })),
+                        'WIP_Summary': Array.from({length: 5}, () => ({ 'Product Category': 'Books', 'Jobs in WIP': randomInt(100,200), 'Avg. Age (Days)': randomInt(5,15) })),
+                        'OTIF_JobWise': generateOtifUnitReport(),
+                        'OTIF_ValueWise': generateOtifUnitReport()
+                    },
+                }    
+            };
+        } 
+        function getColorByIntensity(value, hue) {
+            const theme = AppConfig.theme;
+            const valRange = theme.valueRange;
+            const lightRange = theme.lightness;
+
+            // Use the provided hue, or fall back to the primary hue from the new config
+            const targetHue = hue || theme.hues.primary;
+            
+            const clampedValue = Math.max(valRange.min, Math.min(value, valRange.max));
+            const percentage = (clampedValue - valRange.min) / (valRange.max - valRange.min);
+            const lightness = lightRange.min - (lightRange.min - lightRange.max) * percentage;
+
+            return `hsl(${targetHue}, ${theme.saturation}, ${lightness}%)`;
+        }
+            // --- CHART PLUGINS AND HELPERS --- (No changes here)
+            const centerTextPlugin = {
+                id: 'centerText',
+                afterDraw: (chart) => {
+                    const centerTextOptions = chart.config.options.plugins.centerText;
+                    if (centerTextOptions?.display) {
+                        const ctx = chart.ctx;
+                        const { top, left, width, height } = chart.chartArea;
+                        const centerX = left + width / 2;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        const valueText = centerTextOptions.text;
+                        const valueColor = centerTextOptions.color || '#212529';
+                        const valueFont = `700 ${centerTextOptions.fontSize || '24px'} Poppins`;
+                        
+                        ctx.font = valueFont;
+                        ctx.fillStyle = valueColor;
+                        const labelText = centerTextOptions.label;
+                        const labelColor = '#6c757d'; 
+                        const labelFont = centerTextOptions.labelFont || `500 1rem Poppins`;
+
+                        if (chart.config.type === 'doughnut' && chart.config.data.datasets[0].circumference === 180) {
+                            const valueY = top + height * 0.65; 
+                            const labelY = valueY + 24;      
+                            ctx.fillText(valueText, centerX, valueY);
+                            if (labelText) {
+                                ctx.font = labelFont;
+                                ctx.fillStyle = labelColor;
+                                ctx.fillText(labelText, centerX, labelY);
+                            }
+                        } else {
+                            const valueY = top + height / 2 - 10; 
+                            const labelY = valueY + 22;      
+                            ctx.fillText(valueText, centerX, valueY);
+                            if (labelText) {
+                                ctx.font = labelFont;
+                                ctx.fillStyle = labelColor;
+                                ctx.fillText(labelText, centerX, labelY);
+                            }
+                        }
+                        ctx.restore();
+                    }
+                }
+            };
+            const getOrCreateTooltip = (chart) => {
+                let tooltipEl = document.getElementById('chartjs-tooltip');
+                if (!tooltipEl) {
+                    tooltipEl = document.createElement('div');
+                    tooltipEl.id = 'chartjs-tooltip';
+                    document.body.appendChild(tooltipEl);
+                }
+                return tooltipEl;
+            };
+            const externalTooltipHandler = (context) => {
+                const { chart, tooltip } = context;
+                const tooltipEl = getOrCreateTooltip(chart);
+
+                if (tooltip.opacity === 0) {
+                    tooltipEl.style.opacity = 0;
+                    return;
+                }
+
+                if (tooltip.body) {
+                    const dataPointIndex = tooltip.dataPoints[0].dataIndex;
+                    const trendDetails = dashboardData.otifTrend.details[dataPointIndex];
+                    const value = tooltip.dataPoints[0].formattedValue;
+
+                    const innerHtml = `
+                    <div class="chartjs-tooltip-title">OTIF: ${value}%</div>
+                    <div>Deliveries: ${trendDetails.deliveries.toLocaleString()}</div>
+                    <div>Interruptions: ${trendDetails.interruptions}</div>
+                `;
+                    tooltipEl.innerHTML = innerHtml;
+                }
+
+                const { offsetLeft: positionX, offsetTop: positionY } = chart.canvas;
+                tooltipEl.style.opacity = 1;
+                tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+                tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+            };
+
+            // --- DASHBOARD STATE AND INITIALIZATION ---
+            let dashboardData = {};
+            let otifTrendChart, runningJobsChart, overallOtifGauge, supplierOtifGaugeChart, avgBufferGaugeChart;
+            let isDashboardRendered = false;
+            const drillDownModal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+            Chart.register(centerTextPlugin, ChartDataLabels);
+            let currentOpenDropdown = null;
+
+        function getDynamicTimeFilterData() {
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const getWeekNumber = (d) => {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            };
+            const currentWeek = `Week ${getWeekNumber(today)}`;
+            return {
+                Day: { title: 'SELECT DAY', items: ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days'] },
+                Week: { title: 'SELECT WEEK', items: ['This Week', 'Last Week', 'Last 4 Weeks', ...masterData.weeks.filter(w => w !== currentWeek)] },
+                Month: { title: 'SELECT MONTH', items: ['This Month', 'Last Month', ...monthNames] },
+                Quarter: { title: 'SELECT QUARTER', items: ['This Quarter', 'Last Quarter', 'Q1', 'Q2', 'Q3', 'Q4'] },
+                Year: { title: 'SELECT YEAR', items: ['This Year', 'Last Year', ...Array.from({ length: 8 }, (_, i) => `${currentYear - 2 - i}`)] }
+            };
+        }
+        function closeCustomDropdown() {
+            if (currentOpenDropdown) {
+                currentOpenDropdown.element.remove();
+                document.removeEventListener('click', handleDocumentClickForClose);
+                if (currentOpenDropdown.trigger) {
+                    currentOpenDropdown.trigger.classList.remove('active');
+                }
+                currentOpenDropdown = null;
+            }
+        }
+        function applyAndCloseDropdown(selection) {
+            activeFilters.timeSelection = selection;
+            activeFilters.timeSelectionCategory = selection.length > 0 ? currentOpenDropdown.trigger.dataset.category : null;
+            calendarState.startDate = null;
+            calendarState.endDate = null;
+            if (document.getElementById('calendar-grid')) {
+                renderCalendar();
+            }
+            applyDashboardFilters();
+            closeCustomDropdown();
+        }
+        function handleDocumentClickForClose(event) {
+            if (currentOpenDropdown && !currentOpenDropdown.element.contains(event.target) && !currentOpenDropdown.trigger.contains(event.target)) {
+                const allItemCheckboxes = Array.from(currentOpenDropdown.element.querySelectorAll('.newdropdown-item .form-check-input'));
+                const selectedValues = allItemCheckboxes
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+                applyAndCloseDropdown(selectedValues);
+            }
+        }
+        function createCustomDropdown(triggerBtn) {
+            const category = triggerBtn.dataset.category;
+            const timeFilterData = getDynamicTimeFilterData();
+            const config = timeFilterData[category];
+            if (!config) return;
+
+            closeCustomDropdown(); // Close any existing dropdown first
+
+            document.querySelectorAll('#timeFilterContainer .btn').forEach(b => b.classList.remove('active'));
+            triggerBtn.classList.add('active');
+
+            const dropdownEl = document.createElement('div');
+            dropdownEl.className = 'newdropdown-popup';
+            dropdownEl.innerHTML = `
+                <div class="newdropdown-header">
+                    <label class="custom-checkbox-otif">
+                        <input type="checkbox" id="newdropdown-select-all">
+                        <span class="custom-checkbox-otif-box"></span>
+                        <span class="custom-checkbox-otif-label">${config.title}</span>
+                    </label>
+                </div>
+                <div class="newdropdown-search-container">
+                    <input type="text" class="newdropdown-search-input" placeholder="Type to search...">
+                </div>
+                <ul class="newdropdown-list">
+                    ${config.items.map(item => `
+                        <li class="newdropdown-item" data-value="${item}">
+                            <label class="custom-checkbox-otif">
+                                <input type="checkbox" value="${item}">
+                                <span class="custom-checkbox-otif-box"></span>
+                                <span class="custom-checkbox-otif-label">${item}</span>
+                            </label>
+                            <span class="newdropdown-only-btn">ONLY</span>
+                        </li>
+                    `).join('')}
+                </ul>`;
+            
+            const modalBody = document.querySelector('#otif-dashboard-container .modal-body');
+            modalBody.appendChild(dropdownEl);
+
+            const rect = triggerBtn.getBoundingClientRect();
+            const modalRect = modalBody.getBoundingClientRect();
+
+            dropdownEl.style.top = `${rect.bottom - modalRect.top + modalBody.scrollTop + 5}px`;
+            dropdownEl.style.right = `${modalRect.right - rect.right}px`;
+            dropdownEl.style.left = 'auto';
+
+            currentOpenDropdown = {
+                element: dropdownEl,
+                trigger: triggerBtn,
+                items: Array.from(dropdownEl.querySelectorAll('.newdropdown-item'))
+            };
+            
+            setTimeout(() => document.addEventListener('click', handleDocumentClickForClose), 0);
+
+            // Attach all event listeners for the new dropdown
+            const selectAllCheckbox = dropdownEl.querySelector('#newdropdown-select-all');
+            const searchInput = dropdownEl.querySelector('.newdropdown-search-input');
+            
+            searchInput.addEventListener('keyup', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                currentOpenDropdown.items.forEach(item => {
+                    const itemText = item.dataset.value.toLowerCase();
+                    item.classList.toggle('is-hidden', !itemText.includes(searchTerm));
+                });
+            });
+
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                currentOpenDropdown.items.forEach(item => {
+                    if (!item.classList.contains('is-hidden')) {
+                        const checkbox = item.querySelector('input[type="checkbox"]'); // More robust selector
+                        checkbox.checked = isChecked;
+                    }
+                });
+            });
+
+            currentOpenDropdown.items.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const onlyBtn = item.querySelector('.newdropdown-only-btn');
+                
+                // Clicks on the list item itself should also toggle the checkbox
+                item.addEventListener('click', (e) => {
+                    // Ensure clicks on the ONLY button don't also toggle the checkbox
+                    if (e.target !== onlyBtn) {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                });
+
+                onlyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    applyAndCloseDropdown([checkbox.value]);
+                });
+            });
+        }
+        function initializeTimeFilter() {
+            const container = document.getElementById('timeFilterContainer');
+            if (!container) return;
+            container.querySelectorAll('.btn.active').forEach(b => b.classList.remove('active'));
+
+            const defaultSelection = activeFilters.timeSelection;
+            if (defaultSelection && defaultSelection.length > 0) {
+                const weekButton = container.querySelector('.btn[data-category="Week"]');
+                if(weekButton) weekButton.classList.add('active');
+            }
+            
+            if(container.dataset.listenerAttached) return;
+
+            container.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const clickedButton = event.target.closest('.btn');
+                if (!clickedButton) return;
+                
+                if (currentOpenDropdown && currentOpenDropdown.trigger === clickedButton) {
+                    closeCustomDropdown();
+                } else {
+                    createCustomDropdown(clickedButton);
+                }
+            });
+            container.dataset.listenerAttached = 'true';
+        }
+        async function fetchAndRenderDashboard() {
+            dashboardData = generateDynamicData({
+                startDate: calendarState.startDate,
+                endDate: calendarState.endDate
+            }); 
+            
+            // This part remains the same
+            console.log(`Rendering dashboard with dates:`, { start: calendarState.startDate, end: calendarState.endDate });
+            await new Promise(resolve => setTimeout(resolve, 100)); // Simulate short delay
+            renderDashboard(dashboardData);
+            isDashboardRendered = true; 
+        }
+        function applyDashboardFilters() {
+            const currentFilters = {
+                timeSelection: activeFilters.timeSelection,
+                startDate: calendarState.startDate,
+                endDate: calendarState.endDate,
+                jobValueType: document.querySelector('input[name="jobValueType"]:checked')?.id
+            };
+
+            filterConfig.forEach(config => {
+                const instance = $(`#${config.id}`).dxDropDownBox('instance');
+                if (instance) {
+                    currentFilters[config.dataSourceKey] = instance.option('value');
+                }
+            });
+            
+            const unitsInstance = $('#headerUnitsFilter').dxDropDownBox('instance');
+            if (unitsInstance) {
+                currentFilters.units = unitsInstance.option('value');
+            }
+
+            const delayInstance = $('#headerDelayFilter').dxDropDownBox('instance');
+            if (delayInstance) {
+                currentFilters.delayReasons = delayInstance.option('value');
+            }
+            isDashboardRendered = false;
+            fetchAndRenderDashboard(currentFilters);
+            updateDashboardTitle();
+            hideFilterPopup();
+        }
+        function updateDashboardTitle() {
+            const titleElement = document.getElementById('dashboardModalLabel');
+            if (!titleElement) return;
+
+            let timeSubtitle = "";
+
+            // Priority 1: Check for an active custom date range from the calendar
+            if (calendarState.startDate) {
+                const formatDate = (dateObject) => {
+                    if (!dateObject) return '';
+                    const day = String(dateObject.getUTCDate()).padStart(2, '0');
+                    const month = monthNames[dateObject.getUTCMonth()]; // monthNames is globally available
+                    const year = dateObject.getUTCFullYear();
+                    return `${day} ${month} ${year}`;
+                };
+
+                const fromStr = formatDate(calendarState.startDate);
+                const toStr = formatDate(calendarState.endDate || calendarState.startDate);
+
+                timeSubtitle = (fromStr === toStr) ? fromStr : `${fromStr} - ${toStr}`;
+            }
+            // Priority 2: Check for a selection from the time filter toggles
+            else if (activeFilters.timeSelection && activeFilters.timeSelection.length > 0) {
+                timeSubtitle = activeFilters.timeSelection.join(', ');
+            }
+
+            // Construct the final title string
+            titleElement.textContent = timeSubtitle ? `OTIF: ${timeSubtitle}` : 'OTIF';
+        }
+        function showDetailModal(key, type = 'drilldown') {
+            const modalTitle = document.getElementById('drilldown-category-title');
+            const tableHead = document.querySelector('#drillDownModal thead tr');
+            const tableBody = document.getElementById('drillDownTableBody');
+            if (!modalTitle || !tableHead || !tableBody) return;
+
+            const viewMode = document.querySelector('input[name="jobValueType"]:checked')?.id === 'valueType' ? 'value' : 'job';
+            const isReport = type === 'report';
+            const config = isReport ? ReportConfig[key] : (DrillDownConfig[viewMode] ? DrillDownConfig[viewMode][key] : null);
+            const dataRows = isReport ? dashboardData.shared.reportData[key] : (dashboardData.shared.drillDownData ? dashboardData.shared.drillDownData[key] : null);
+
+            const reportTitleText = document.querySelector(`[data-report-name="${key}"]`)?.textContent || key;
+            modalTitle.textContent = isReport ? reportTitleText : `${key}`;
+
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+
+            if (!config || !dataRows) {
+                tableHead.innerHTML = '<th>Error</th>';
+                tableBody.innerHTML = '<tr><td>Configuration or data not found for this view.</td></tr>';
+                drillDownModal.show();
+                return;
+            }
+            config.forEach(colName => {
+                tableHead.insertAdjacentHTML('beforeend', `<th>${colName}</th>`);
+            });
+
+            if (dataRows.length > 0) {
+                const isUnitReport = (key === 'OTIF_JobWise' || key === 'OTIF_ValueWise');
+                dataRows.forEach((rowObject, index) => {
+                    let rowHtml = '<tr>';
+                    config.forEach(colName => {
+                        const cellValue = (colName.toLowerCase().includes('sno')) ? index + 1 : (rowObject[colName] || 'N/A');
+                        
+                        // MODIFIED: Check if this is a unit report and the cell contains a percentage
+                        if (isUnitReport && typeof cellValue === 'string' && cellValue.includes('%')) {
+                            const unitName = rowObject['Unit'];
+                            // Wrap the percentage in a clickable anchor tag with data attributes
+                            rowHtml += `<td><a href="#" class="report-drilldown-link" 
+                                                data-drilldown-report="${key}" 
+                                                data-drilldown-unit="${unitName}" 
+                                                data-drilldown-category="${colName}">
+                                                ${cellValue}
+                                           </a></td>`;
+                        } else {
+                            rowHtml += `<td>${cellValue}</td>`;
+                        }
+                    });
+                    rowHtml += '</tr>';
+                    tableBody.insertAdjacentHTML('beforeend', rowHtml);
+                });
+
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="${config.length}" class="text-center">No detailed data available for this category.</td></tr>`;
+            }
+
+            drillDownModal.show();
+        }
+        function createGauge(ctx, value, hue) {
+            if (Chart.getChart(ctx)) {
+                Chart.getChart(ctx).destroy();
+            }
+            // Get a single solid color based on the value
+            const solidColor = getColorByIntensity(value, hue);
+
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [value, 100 - value],
+                        backgroundColor: [solidColor, '#e9ecef'], // Use the solid color here
+                        // REMOVED applyGradient and hue properties
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: -90,
+                        cutout: '80%',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: { display: false },
+                        centerText: {
+                            display: true,
+                            text: `${value.toFixed(1)}%`,
+                            label: 'Overall OTIF',
+                            color: solidColor, // Also use the solid color for the text
+                            fontSize: '32px'
+                        }
+                    }
+                }
+            });
+        };  
+        function createMiniSemiGauge(ctx, value, label, hue) {
+            // Get a single solid color based on the value
+            const solidColor = getColorByIntensity(value, hue);
+            const displayValue = Math.min(value, 100);
+
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [displayValue, 100 - displayValue],
+                        backgroundColor: [solidColor, '#e9ecef'], // Use the solid color here
+                        // REMOVED applyGradient and hue properties
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: -90,
+                        cutout: '75%',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: { display: false },
+                        centerText: {
+                            display: true,
+                            text: `${value.toFixed(0)}%`,
+                            label: label,
+                            color: solidColor, // Also use the solid color for the text
+                            fontSize: '1.375rem',
+                            labelFont: '500 0.8rem Poppins'
+                        }
+                    }
+                }
+            });
+        };
+        function renderDashboard(data) {
+            [otifTrendChart, runningJobsChart, overallOtifGauge, supplierOtifGaugeChart, avgBufferGaugeChart].forEach(chart => {
+                if (chart) chart.destroy();
+            });
+
+            const viewMode = document.querySelector('input[name="jobValueType"]:checked')?.id === 'valueType' ? 'value' : 'job';
+            const dataForView = data[viewMode];
+            const sharedData = data.shared;
+            
+            document.getElementById('ordersValue').innerText = dataForView.kpis.orders.value;
+            document.getElementById('ordersLabel').innerText = dataForView.kpis.orders.label;
+
+            document.getElementById('deliveredValue').innerText = dataForView.kpis.delivered.value;
+            document.getElementById('deliveredLabel').innerText = dataForView.kpis.delivered.label;
+            
+            document.getElementById('outstandingJobsValue').innerText = dataForView.kpis.outstanding.value;
+            document.getElementById('outstandingJobsLabel').innerText = dataForView.kpis.outstanding.label;
+
+            document.getElementById('dispatchVarianceValue').innerText = dataForView.kpis.dispatchVariance.value;
+            document.getElementById('dispatchVarianceLabel').innerText = dataForView.kpis.dispatchVariance.label;
+
+            const qcData = dataForView.kpis.qualityIssues;
+            const qcCompactEl = document.getElementById('qualityIssuesCompactDisplay');
+
+            if (qcData && qcCompactEl) {
+                const iconHtml = `<i class="bi bi-shield-exclamation"></i>`;
+                const labelHtml = `<span class="otif-kpi-compact-label">QC Issues:</span>`; 
+                const value = (viewMode === 'value') 
+                    ? qcData.value 
+                    : qcData.jobCount.toLocaleString();
+                
+                const valueHtml = `<span class="otif-kpi-compact-value">${value}</span>`;
+                qcCompactEl.innerHTML = `${iconHtml} ${labelHtml} ${valueHtml}`;
+            }
+
+            document.getElementById('running-jobs-title').innerText = viewMode === 'job' ? 'Running Jobs Status' : 'Running Value Status';
+
+            // MODIFIED: Each chart now calls its own specific hue from AppConfig.
+            supplierOtifGaugeChart = createMiniSemiGauge(document.getElementById('supplierOtifGauge').getContext('2d'), sharedData.kpis.supplierOtif, 'Supplier OTIF', AppConfig.theme.hues.supplierOtif);
+            avgBufferGaugeChart = createMiniSemiGauge(document.getElementById('avgBufferGauge').getContext('2d'), sharedData.kpis.avgBufferConsumption, 'Buffer Used', AppConfig.theme.hues.bufferUsed);      
+
+            const { onTime, inFull, overall } = dataForView.otifSummary;
+            document.getElementById('otif-context-label').textContent = viewMode === 'job' ? 'Based on Job Count' : 'Based on Job Value';
+
+            const updatePerformanceBar = (prefix, value, hue) => {
+                const valueEl = document.getElementById(`${prefix}Value`);
+                const barEl = document.getElementById(`${prefix}ProgressBar`);
+                if (valueEl && barEl) {
+                    valueEl.innerText = `${value.toFixed(1)}%`;
+                    barEl.style.width = `${value}%`;
+                    // Pass the hue down to the color function
+                    const endColor = getColorByIntensity(value, hue); 
+                    const startColor = getColorByIntensity(AppConfig.theme.valueRange.min, hue);
+                    barEl.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+                }
+            };
+
+            updatePerformanceBar('onTime', onTime);
+            updatePerformanceBar('inFull', inFull);
+
+            const delayData = sharedData.delayAnalysis;
+            
+            // CORRECTED: These four calls MUST reference AppConfig directly.
+            updatePerformanceBar('operationalDod', delayData.operational_dod, AppConfig.theme.hues.stagePerformance);
+            updatePerformanceBar('operationalFg', delayData.operational_fg, AppConfig.theme.hues.stagePerformance);
+            updatePerformanceBar('procurement', delayData.procurement, AppConfig.theme.hues.stagePerformance);
+            updatePerformanceBar('production', delayData.production, AppConfig.theme.hues.stagePerformance);
+
+            overallOtifGauge = createGauge(document.getElementById('overallOtifGauge').getContext('2d'), overall, AppConfig.theme.hues.primary);    
+            const activeTrendViewId = document.querySelector('input[name="trendViewType"]:checked')?.id || 'trendView';
+            let viewType = 'time';
+            if (activeTrendViewId === 'categoryView') {
+                viewType = 'category';
+            } else if (activeTrendViewId === 'regionView') {
+                viewType = 'region';
+            }
+            renderOtifTrendChart(viewType, dataForView.otifTrend, sharedData.otifTrend);  
+
+
+            const { rawData: rawRunningJobs } = sharedData.runningJobs;
+
+            const processedJobs = Object.values(RUNNING_JOBS_CONFIG.CATEGORIES).reduce((acc, cat) => {
+                acc[cat.key] = { value: 0, count: 0, config: cat }; return acc;
+            }, {});
+
+            rawRunningJobs.forEach(job => {
+                const category = RUNNING_JOBS_CONFIG.getCategory(job.bufferConsumed);
+                processedJobs[category.key].count++;
+                processedJobs[category.key].value += job.value;
+            });
+
+            const chartData = { labels: [], series: [], colors: [] };
+            const totalValue = Object.values(processedJobs).reduce((sum, cat) => sum + cat.value, 0);
+            const totalCount = Object.values(processedJobs).reduce((sum, cat) => sum + cat.count, 0);
+
+            const totalDisplay = viewMode === 'value'
+            ? formatCurrency(totalValue, 'INR', { compact: true, decimals: 2 })
+            : totalCount.toLocaleString();
+
+            Object.values(processedJobs).forEach(category => {
+                const dataValue = (viewMode === 'value') ? category.value : category.count;
+                if (dataValue > 0) {
+                    chartData.labels.push(category.config.label);
+                    chartData.series.push(dataValue);
+                    chartData.colors.push(category.config.color);
+                }
+            });
+
+            const runningJobsCtx = document.getElementById('runningJobsChart').getContext('2d');
+            runningJobsChart = new Chart(runningJobsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{ data: chartData.series, backgroundColor: chartData.colors, borderWidth: 0, cutout: '60%' }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                            tooltip: { 
+                                enabled: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.parsed;
+                                        return viewMode === 'value' 
+                                            ? ` ${context.label}: ${formatCurrency(value, 'INR', { compact: true, decimals: 2 })}` 
+                                            : ` ${context.label}: ${value.toLocaleString()} Jobs`;
+                                    }
+                                }
+                            },
+                        datalabels: {
+                            formatter: (value, ctx) => {
+                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? (value / total) * 100 : 0;
+                                return percentage > 5 ? `${percentage.toFixed(0)}%` : '';
+                            },
+                            color: '#fff', font: { weight: 'bold', size: 14 }
+                        },
+                        centerText: {
+                            display: true, text: totalDisplay, label: viewMode === 'job' ? 'Total Jobs' : 'Total Jobs Value',
+                            fontSize: '1.375rem', labelFont: '500 0.8rem Poppins'
+                        }
+                    },
+
+                        onClick: (event, elements) => {
+                            showDetailModal('RunningJobs');
+                        },
+                        onHover: (event, elements, chart) => {
+                            const centerText = chart.config.options.plugins.centerText;
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const value = chart.data.datasets[0].data[index];
+                                centerText.text = (viewMode === 'value') ? formatCurrency(value, 'INR', { compact: true, decimals: 2 }) : value.toLocaleString();
+                                centerText.label = chart.data.labels[index];
+                            } else {
+                                centerText.text = totalDisplay;
+                                centerText.label = viewMode === 'job' ? 'Total Jobs' : 'Total Jobs Value';
+                            }
+                            chart.update('none');
+                        },
+                    }
+                });
+        }
+        function renderOtifTrendChart(viewType = 'time', trendDataForView, sharedTrendData) {
+            const trendCanvas = document.getElementById('otifTrendChart');
+            if (!trendCanvas) return;
+            
+            if (otifTrendChart) {
+                otifTrendChart.destroy();
+            }
+
+            // --- MODIFIED: Logic now correctly distinguishes between view-specific data and shared data ---
+            let dataView;
+            let labels;
+
+            if (viewType === 'category') {
+                dataView = sharedTrendData.byCategory;
+                labels = sharedTrendData.byCategory.labels;
+            } else if (viewType === 'region') {
+                dataView = sharedTrendData.byRegion;
+                labels = sharedTrendData.byRegion.labels;
+            } else { // 'time' view is the one that depends on the job/value mode
+                dataView = trendDataForView;
+                labels = sharedTrendData.labels;
+            }
+
+            const target = sharedTrendData.target;
+
+            otifTrendChart = new Chart(trendCanvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        type: 'line',
+                        label: ' Estimated OTIF ',
+                        data: dataView.estimated,
+                        borderColor: '#f44336b4',
+                        backgroundColor: 'transparent',
+                        pointBackgroundColor: '#f44336',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.4
+                        
+                    },{
+                        label: ' Actual OTIF',
+                        data: dataView.actual,
+                        backgroundColor: '#003366',
+                        borderWidth: 1,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 40, max: 100, ticks: { callback: function(value) { return value + '%'; } }, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        datalabels: { display: false },
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: (tooltipItems) => tooltipItems[0].label,
+                                label: (context) => ` ${context.dataset.label}: ${context.formattedValue}%`
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                targetLine: {
+                                    type: 'line', yMin: target, yMax: target, borderColor: '#009688', borderWidth: 2, borderDash: [6, 6],
+                                    label: { content: `Target: ${target}%`, display: true, position: 'end', backgroundColor: '#009688', color: '#fff', font: { family: 'Poppins' } }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+            
+        // --- EVENT LISTENERS --- (No changes to internal logic)
+        document.querySelectorAll('input[name="otifType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                let newSummaryData;
+                const randomFloat = (min, max) => parseFloat((Math.random() * (max - min) + min).toFixed(1));
+
+                switch (this.id) {
+                    case 'estimatedOtif':
+                        newSummaryData = { overall: randomFloat(70, 95), onTime: randomFloat(80, 98), inFull: randomFloat(75, 95) };
+                        break;
+                    case 'interunitOtif':
+                        newSummaryData = { overall: randomFloat(85, 99), onTime: randomFloat(90, 99), inFull: randomFloat(90, 98) };
+                        break;
+                    case 'actualOtif':
+                    default:
+                        // FIX: Retrieve data from the authoritative dashboardData object, not random generation.
+                        if (dashboardData && Object.keys(dashboardData).length > 0) {
+                            const viewMode = document.querySelector('input[name="jobValueType"]:checked')?.id === 'valueType' ? 'value' : 'job';
+                            newSummaryData = dashboardData[viewMode].otifSummary;
+                        } else {
+                            // Fallback if data isn't ready, though this is unlikely.
+                            newSummaryData = { overall: 0, onTime: 0, inFull: 0 };
+                        }
+                        break;
+                }
+                
+                // This logic remains the same, but now operates on the correct data source.
+                const { onTime, inFull, overall } = newSummaryData;
+
+                const updatePerformanceBar = (prefix, value) => {
+                    const valueEl = document.getElementById(`${prefix}Value`);
+                    const barEl = document.getElementById(`${prefix}ProgressBar`);
+                    if (valueEl && barEl) {
+                        valueEl.innerText = `${value.toFixed(1)}%`;
+                        barEl.style.width = `${value}%`;
+                        const endColor = getColorByIntensity(value); 
+                        const startColor = getColorByIntensity(AppConfig.theme.valueRange.min);
+                        barEl.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+                    }
+                };
+
+                updatePerformanceBar('onTime', onTime);
+                updatePerformanceBar('inFull', inFull);
+
+                if (overallOtifGauge) overallOtifGauge.destroy();
+                overallOtifGauge = createGauge(document.getElementById('overallOtifGauge').getContext('2d'), overall);
+            });
+        });
+        document.querySelectorAll('[data-drilldown]').forEach(element => {
+            element.addEventListener('click', function () {
+                const drilldownKey = this.dataset.drilldown;
+                // Humein koi if/else ki zaroorat nahi hai.
+                // Jo key HTML mein (data-drilldown="Buffer Used") di hai,
+                // hum seedhe usi key ko use karke data dhundenge.
+                showDetailModal(drilldownKey);
+            });
+        });
+        document.querySelectorAll('input[name="trendViewType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (!dashboardData || Object.keys(dashboardData).length === 0) {
+                    return;
+                }
+                let viewType = 'time';
+                if (this.id === 'categoryView') {
+                    viewType = 'category';
+                } else if (this.id === 'regionView') {
+                    viewType = 'region';
+                }
+                const currentViewMode = document.querySelector('input[name="jobValueType"]:checked')?.id === 'valueType' ? 'value' : 'job';
+                renderOtifTrendChart(
+                    viewType,
+                    dashboardData[currentViewMode].otifTrend,
+                    dashboardData.shared.otifTrend
+                );
+            });
+        });
+        // ===================================================================
+        //   EVENT LISTENERS (REVISED & CORRECTED)
+        // ===================================================================
+        // --- Key Element References ---
+        const dashboardModalEl = document.getElementById('dashboardModal');
+        const mainContent = document.getElementById('main-dashboard-content');
+        const filterPopupPanel = document.getElementById('filter-popup-panel');
+        // --- Filter Panel Buttons ---
+        const toggleBtn = document.getElementById('toggle-filter-panel-btn');
+        const closeBtn = document.getElementById('close-filter-panel-btn');
+        const applyBtn = document.getElementById('apply-filters-btn-new');
+        if (applyBtn) applyBtn.addEventListener('click', applyDashboardFilters);
+        
+        // --- Calendar Elements ---
+        const calendarView = document.getElementById('calendar-view');
+        const scrollerView = document.getElementById('month-year-scroller');
+        // CHANGE: Get the new wrapper element that the user will click
+        const monthYearSelector = document.getElementById('month-year-selector'); 
+        const scrollerDoneBtn = document.getElementById('scroller-done-btn');
+        const todayBtn = document.getElementById('today-btn');
+        
+        let isFilterInitialized = false;
+        // --- Popup Control Functions ---
+        const showFilterPopup = () => {
+            if (!filterPopupPanel || !mainContent) return;
+            mainContent.classList.add('content-blur');
+            filterPopupPanel.classList.remove('d-none'); 
+
+            if (!isFilterInitialized) {
+                renderCalendar();
+                isFilterInitialized = true;
+            }
+        };
+        const hideFilterPopup = () => {
+            if (!filterPopupPanel || !mainContent) return;
+            mainContent.classList.remove('content-blur');
+            filterPopupPanel.classList.add('d-none');
+            hideScrollerView(); // Ensure scroller is hidden when panel closes
+        };
+        
+        // --- Calendar View Functions ---
+        const showScrollerView = () => {
+            calendarView.classList.add('d-none');
+            scrollerView.classList.remove('d-none');
+            document.getElementById('date-range-display')?.style.setProperty('visibility', 'hidden');
+            document.getElementById('filter-panel-footer')?.style.setProperty('visibility', 'hidden');
+
+            generateScroller();
+        };
+                
+        const hideScrollerView = () => {
+            calendarView.classList.remove('d-none');
+            scrollerView.classList.add('d-none');
+            document.getElementById('date-range-display')?.style.setProperty('visibility', 'visible');
+            document.getElementById('filter-panel-footer')?.style.setProperty('visibility', 'visible');
+        };
+        
+        // --- Main Event Listener Setup ---
+        initializeTimeFilter();
+        fetchAndRenderDashboard(activeFilters);
+        updateDashboardTitle();
+
+        if (toggleBtn) toggleBtn.addEventListener('click', showFilterPopup);
+        if (closeBtn) closeBtn.addEventListener('click', hideFilterPopup);
+        if (applyBtn) applyBtn.addEventListener('click', applyDashboardFilters);        
+        if (monthYearSelector) monthYearSelector.addEventListener('click', showScrollerView);
+
+        if (scrollerDoneBtn) {
+            scrollerDoneBtn.addEventListener('click', () => {
+                const getMiddleItem = (column) => {
+                    const columnRect = column.getBoundingClientRect();
+                    const columnCenter = columnRect.top + (columnRect.height / 2);
+                    let closestItem = null;
+                    let minDistance = Infinity;
+
+                    column.querySelectorAll('.scroller-item').forEach(item => {
+                        const itemRect = item.getBoundingClientRect();
+                        const itemCenter = itemRect.top + (itemRect.height / 2);
+                        const distance = Math.abs(columnCenter - itemCenter);
+
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestItem = item;
+                        }
+                    });
+                    return closestItem;
+                };
+
+                const selectedMonthEl = getMiddleItem(document.getElementById('scroller-month-col'));
+                const selectedYearEl = getMiddleItem(document.getElementById('scroller-year-col'));
+                
+                if (selectedMonthEl) {
+                    calendarState.currentMonth = parseInt(selectedMonthEl.dataset.month, 10);
+                }
+                if (selectedYearEl) {
+                    calendarState.currentYear = parseInt(selectedYearEl.dataset.year, 10);
+                }
+                
+                hideScrollerView();
+                renderCalendar();
+            });
+        }
+            
+        if (todayBtn) {
+            todayBtn.addEventListener('click', () => {
+                const today = new Date();
+                calendarState.currentYear = today.getFullYear();
+                calendarState.currentMonth = today.getMonth();
+                const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                calendarState.startDate = todayUTC;
+                calendarState.endDate = todayUTC;
+                renderCalendar();
+            });
+        }
+
+        // Listeners for drill-down functionality
+        document.querySelectorAll('[data-drilldown]').forEach(card => {
+            card.addEventListener('click', function() {
+                const drilldownType = this.dataset.drilldown;
+                let categoryKey;
+
+                // Map UI text to our config keys
+                if (drilldownType.includes('OTIF') || drilldownType.includes('On-Time') || drilldownType.includes('In-Full')) {
+                    categoryKey = 'OTIF';
+                } else if (drilldownType.includes('Supplier')) {
+                    categoryKey = 'SupplierOTIF';
+                } else {
+                    // Fallback or handle other types
+                    categoryKey = drilldownType; // Assumes it matches a key
+                }
+                showDetailModal(categoryKey);
+            });
+        });
+        document.getElementById("closeDropdownBtn").addEventListener("click", function () {
+            const toggleEl = document.getElementById("btnopen");
+            const menuEl = document.getElementById("DropwornList");
+
+            // Bootstrap dropdown instance
+            let dropdown = bootstrap.Dropdown.getInstance(toggleEl);
+            if (!dropdown) {
+                dropdown = new bootstrap.Dropdown(toggleEl);
+            }
+
+            dropdown.hide();
+            setTimeout(() => {
+                toggleEl.classList.remove("show");
+                menuEl.classList.remove("show", "fadeIn", "fadeOut");
+            }, 300);
+        });
+    });
+    </script>
+</body>
+</html>

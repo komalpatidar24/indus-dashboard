@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Template (v16.1)</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required by DevExtreme) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DevExtreme JS & CSS (Theme and Core) -->
+    <script src="https://cdn3.devexpress.com/jslib/23.2.6/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.6/css/dx.light.css">
+
+    <!-- Dashboard Filters CSS -->
+    <link rel="stylesheet" href="dashboard-filters.css">
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        .chart-toggle-btn.btn-primary {
+            background-color: #003366 !important;
+            border-color: #003366 !important;
+            color: #ffffff !important;
+        }
+
+        .chart-toggle-btn.btn-outline-secondary {
+            color: #003366 !important;
+            border-color: #003366 !important;
+        }
+
+        .chart-toggle-btn.btn-outline-secondary:hover {
+            background-color: #003366 !important;
+            color: #ffffff !important;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="main-dashboard-content" class="container-fluid py-4 modal-body">
+        <header class="dashboard-header pb-2 d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h3 id="dashboardTitle" class="mb-0">CRM & Sales Dashboard <span id="activeFiltersDisplay"
+                    class="filter-display-container"></span></h3>
+
+            <div class="d-flex align-items-center ms-auto">
+                <!-- 1. Job/Value Toggle -->
+                <!--<div class="btn-group otif-toggle-group me-2" id="jobValueToggle" role="group">
+                    <input type="radio" class="btn-check" name="jobValueType" id="jobType" checked>
+                    <label class="btn" for="jobType">Job</label>
+                    <input type="radio" class="btn-check" name="jobValueType" id="valueType">
+                    <label class="btn" for="valueType">Value</label>
+                </div> -->
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 2. Moving Average Dropdown -->
+                <div class="btn-group me-2" id="ma-dropdown-container">
+                    <button type="button" class="btn otif-ma-button active" id="maButton">
+                        <span id="maButtonText">Loading...</span>
+                    </button>
+                    <button type="button" class="btn otif-ma-button dropdown-toggle dropdown-toggle-split active"
+                        data-bs-toggle="dropdown">
+                    </button>
+                    <ul class="dropdown-menu otif-ma-dropdown-menu" id="maDropdownMenu" style="position: relative;">
+                        <!-- Clear Button Removed -->
+                        <li class="px-3 py-2">
+                            <input type="text" class="form-control form-control-sm" id="maSearchInput"
+                                placeholder="Search weeks...">
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item active" href="#" data-ma-type="full" data-ma-week="52">(last)
+                                13-Week-MA</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <div id="maWeekOptions"></div>
+                    </ul>
+                </div>
+
+                <div class="vr me-2" style="opacity: 0.3;"></div>
+
+                <!-- 3. Time Filter Toggles -->
+                <div class="btn-group otif-toggle-group me-2" id="timeFilterContainer">
+                    <button type="button" class="btn" data-category="Day">Day</button>
+                    <button type="button" class="btn" data-category="Week">Week</button>
+                    <button type="button" class="btn" data-category="Month">Month</button>
+                    <button type="button" class="btn" data-category="Quarter">Quarter</button>
+                    <button type="button" class="btn" data-category="Year">Year</button>
+                </div>
+
+                <!-- 4. Filter Panel Toggle -->
+                <button class="btn btn-link text-secondary me-1" type="button" id="toggle-filter-panel-btn"
+                    title="Filters">
+                    <i class="bi bi-filter fs-5"></i>
+                </button>
+            </div>
+        </header>
+        <section class="kpi-section mb-3">
+            <div id="kpi-container" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+        <section class="main-content-section">
+            <div id="content-grid" class="row g-3"></div>
+        </section>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="drilldownModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="drilldownModalLabel"></h5>
+                    <div id="drilldownFilterControls"></div><button type="button" class="btn-close ms-2"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="drilldownModalBody"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="expandChartModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expandChartModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="chart-canvas-container flex-grow-1"><canvas id="expandedChartCanvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="kpiGuideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kpiGuideModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="kpiGuideContent">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-card-text"></i> Definition</h6>
+                            <p id="guide-definition" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-graph-up"></i> Interpretation</h6>
+                            <p id="guide-interpretation" class="small"></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calculator"></i> Calculation</h6>
+                            <p id="guide-calculation" class="small"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="docFormModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docFormModalLabel"></h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docFormBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI ELEMENTS -->
+    <div id="custom-tooltip" class="chart-tooltip">
+        <div class="tooltip-main-title"></div>
+        <div class="tooltip-main-content">
+            <div class="tooltip-header"><span class="tooltip-title"></span><span class="tooltip-delta"></span></div>
+            <div class="tooltip-value"></div>
+        </div>
+        <div class="tooltip-footer" style="display: none;"></div>
+        <div class="tooltip-drilldown"><button type="button" class="drilldown-btn">View Details <i
+                    class="bi bi-box-arrow-up-right"></i></button></div>
+    </div>
+    <div id="customContextMenu">
+        <ul class="context-menu-list" id="contextMenuList"></ul>
+    </div>
+    <div id="filter-popup-panel" class="d-none">
+        <div class="p-2 border-bottom position-relative text-center">
+            <h6 class="otif-filter-panel-title mb-0 m-auto">Filters</h6>
+            <button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-2"
+                id="close-filter-panel-btn"></button>
+        </div>
+        <div class="flex-grow-1" style="overflow-y: auto;">
+            <div class="p-2">
+                <div class="filter-section" id="dropdown-filters-section"></div>
+                <div class="filter-section">
+                    <div id="calendar-container">
+                        <div id="calendar-view">
+                            <div class="calendar-header">
+                                <button type="button" class="btn btn-today" id="today-btn">Today</button>
+                                <div class="d-flex align-items-center">
+                                    <button id="prev-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-left"></i></button>
+                                    <div id="month-year-selector" class="month-year-selector-btn">
+                                        <span id="month-year-display" class="month-year-text"></span>
+                                    </div>
+                                    <button id="next-month-btn" class="btn btn-icon" type="button"><i
+                                            class="bi bi-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid day-names">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+                            <div id="calendar-grid" class="calendar-grid"></div>
+                        </div>
+                        <!-- Month/Year Picker Overlay (Hidden by default) -->
+                        <div id="month-year-picker-overlay" class="d-none">
+                            <div class="picker-header">
+                                <span>Select Date</span>
+                                <button type="button" class="btn btn-apply btn-sm" id="picker-done-btn">Done</button>
+                            </div>
+                            <div class="picker-body">
+                                <div class="picker-column" id="picker-month-column">
+                                    <div class="picker-column-header">Month</div>
+                                    <!-- Months will be rendered by JS -->
+                                </div>
+                                <div class="picker-column" id="picker-year-column">
+                                    <div class="picker-column-header">Year</div>
+                                    <!-- Years will be rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="date-range-display" class="date-range-box">
+                        <div class="date-range-item"><label>From</label><span id="selected-from-date">--</span></div>
+                        <div class="date-range-item"><label>To</label><span id="selected-to-date">--</span></div>
+                    </div>
+                    <div class="p-2 d-flex gap-2">
+                        <button type="button" class="btn btn-reset w-100" id="reset-filters-btn-new">Reset</button>
+                        <button type="button" class="btn btn-apply w-100" id="apply-filters-btn-new">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="dashboard-filters.js"></script>
+    <script>
+
+        const dashboardApp = (function () {
+
+            const Utils = {
+                formatMetric(value, format, suffix = '') {
+                    if (value === null || value === undefined) return 'N/A';
+
+                    if (format === 'currency_compact') {
+                        if (Math.abs(value) >= 10000000) { // Crore
+                            return (value / 10000000).toFixed(2) + ' Cr';
+                        }
+                        if (Math.abs(value) >= 100000) { // Lakh
+                            return (value / 100000).toFixed(2) + ' L';
+                        }
+                        if (Math.abs(value) >= 1000) { // Thousand
+                            return (value / 1000).toFixed(1) + ' K';
+                        }
+                        return value.toLocaleString('en-US');
+                    }
+
+                    if (format === 'currency') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+                    if (format === 'date') return new Date(value).toLocaleString('en-GB');
+                    if (typeof value === 'number') return value.toLocaleString('en-US');
+                    return `${value}${suffix}`;
+                }, hexToRgb(hex) {
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                },
+                getComponentConfig: (id, dashboardConfig) => dashboardConfig.kpis.find(c => c.id === id) || dashboardConfig.layout.find(c => c.config.id === id)?.config,
+
+                // --- ADDED: Shared deepMerge utility ---
+                deepMerge(target, source) {
+                    const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+                    let output = { ...target };
+                    if (isObject(target) && isObject(source)) {
+                        Object.keys(source).forEach(key => {
+                            if (isObject(source[key])) {
+                                if (key in target) {
+                                    output[key] = this.deepMerge(target[key], source[key]);
+                                } else {
+                                    Object.assign(output, { [key]: source[key] });
+                                }
+                            } else {
+                                Object.assign(output, { [key]: source[key] });
+                            }
+                        });
+                    }
+                    return output;
+                }
+            };
+            // ========================================================================================================
+            // SECTION 1: CONFIGURATION (THE ONLY PART TO EDIT FOR A NEW DASHBOARD)
+            // This section simulates `config.js`.
+            // ========================================================================================================
+            const CONFIGURATION = (() => {
+                /**
+                 * HOW TO USE THIS TEMPLATE:
+                 * 1.  Update `dashboardTitle` with the title for your dashboard.
+                 * 2.  Define your Key Performance Indicators (KPIs) in the `kpiConfig` array.
+                 * 3.  Define your chart layout and configurations in the `layoutConfig` array.
+                 * 4.  Update the `DATA_PROVIDER` section to connect to your live backend API.
+                 * 5.  Ensure your data provider returns data objects with keys that match the `dataKey` properties defined here.
+                 */
+                const kpiConfig = [
+                    {
+                        id: 'kpi-inventory-value',
+                        dataKey: 'total_inventory_value',
+                        label: 'Total Inventory Value (₹)',
+                        format: 'currency_compact',
+                        cssVar: '--glow-green',
+                        secondaryMetrics: [
+                            // --- START: ADDED METRIC ---
+                            { icon: 'bi-rulers', dataKey: 'rm_paper_mt', label: 'RM (MT)', format: 'number' },
+                            // --- END: ADDED METRIC ---
+                            { icon: 'bi-box-seam', dataKey: 'raw_material_value', label: 'Other RM', format: 'currency_compact' },
+                            { icon: 'bi-boxes', dataKey: 'finished_goods_value', label: 'Consumables', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Total Inventory Value', definition: 'The total monetary value of all inventory items, including raw materials, work-in-progress, and finished goods.', interpretation: 'Indicates the capital tied up in inventory. A high value may suggest overstocking, while a low value could risk stockouts.', calculation: 'Sum of (Item Quantity * Item Cost) for all items.' },
+                        drilldownConfig: {
+                            dataKey: 'inventory_details',
+                            columns: [
+                                { key: 'item_id', label: 'Item ID' }, { key: 'category', label: 'Category' }, { key: 'location', label: 'Location' }, { key: 'quantity', label: 'Quantity' }, { key: 'value', label: 'Value (₹)', format: 'currency' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-slow-non-moving',
+                        dataKey: 'slow_non_moving_pct',
+                        label: 'Slow & Non-Moving Stock %',
+                        valueSuffix: '%',
+                        cssVar: '--glow-orange',
+                        invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { icon: 'bi-hourglass-split', dataKey: 'slow_moving_value', label: 'Slow', format: 'currency_compact' },
+                            { icon: 'bi-hourglass-bottom', dataKey: 'non_moving_value', label: 'Non-moving', format: 'currency_compact' }
+                        ],
+                        guide: { title: 'Slow & Non-Moving Stock %', definition: 'The percentage of total inventory value that has not been used or sold for an extended period. Slow-moving is 2-6 months; Non-moving is over 6 months.', interpretation: 'A high percentage indicates poor inventory turnover, obsolescence risk, and tied-up capital.', calculation: '((Value of Slow + Non-Moving Stock) / Total Inventory Value) * 100.' },
+                        drilldownConfig: {
+                            dataKey: 'slow_moving_stock_details',
+                            columns: [
+                                { key: 'item_id', label: 'Item ID' }, { key: 'last_moved_date', label: 'Last Moved', format: 'date' }, { key: 'age_in_days', label: 'Age (Days)' }, { key: 'value', label: 'Value (₹)', format: 'currency' }, { key: 'status', label: 'Status' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-dead-stock',
+                        dataKey: 'dead_stock_pct',
+                        label: 'Dead Stock %',
+                        valueSuffix: '%',
+                        cssVar: '--glow-lightblue',
+                        invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { icon: 'bi-trash', dataKey: 'expired_stock_value', label: 'Expired Value', format: 'currency_compact' },
+                            { icon: 'bi-calendar-x', dataKey: 'expired_skus', label: 'Expired SKUs' }
+                        ],
+                        guide: { title: 'Dead/Expired Stock %', definition: 'The percentage of total inventory value that is unsellable due to expiration or obsolescence.', interpretation: 'Represents a direct financial loss and inefficient inventory management. A key metric to minimize.', calculation: '(Value of Expired Stock / Total Inventory Value) * 100.' },
+                        drilldownConfig: {
+                            dataKey: 'expired_stock_details',
+                            columns: [
+                                { key: 'item_id', label: 'Item ID' }, { key: 'expiry_date', label: 'Expiry Date', format: 'date' }, { key: 'days_past_expiry', label: 'Days Expired' }, { key: 'value', label: 'Value (₹)', format: 'currency' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-grn-delayed',
+                        dataKey: 'grn_delayed_pct',
+                        label: 'GRN Delayed Clearance %',
+                        valueSuffix: '%',
+                        cssVar: '--glow-red',
+                        invertGrowthColor: true,
+                        secondaryMetrics: [
+                            { icon: 'bi-file-earmark-text', dataKey: 'delayed_grn_count', label: 'Delayed GRNs' },
+                            { icon: 'bi-clock-history', dataKey: 'avg_delay_days', label: 'Avg Delay (Days)' }
+                        ],
+                        guide: { title: 'GRN Delayed Clearance %', definition: 'The percentage of Goods Receipt Notes (GRNs) that are not processed and cleared within the standard timeframe (e.g., 48 hours).', interpretation: 'Indicates inefficiencies in the receiving and quality inspection process, which can delay payments and stock availability.', calculation: '(Number of Delayed GRNs / Total Number of GRNs) * 100.' },
+                        drilldownConfig: {
+                            dataKey: 'grn_records',
+                            columns: [
+                                { key: 'grn_id', label: 'GRN ID' }, { key: 'vendor', label: 'Vendor' }, { key: 'status', label: 'Status' }, { key: 'delay_days', label: 'Delay (Days)' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'kpi-interunit-transfer',
+                        dataKey: 'interunit_transfer_volume',
+                        label: 'Inter-Unit Transfer Volume',
+                        isCurrency: false,
+                        cssVar: '--glow-purple',
+                        secondaryMetrics: [
+                            { icon: 'bi-truck', dataKey: 'transfer_count', label: 'Transfers' },
+                            { icon: 'bi-geo-alt', dataKey: 'unique_routes', label: 'Routes' }
+                        ],
+                        guide: { title: 'Inter-Unit Transfer Volume', definition: 'The total quantity of items transferred between different business units, warehouses, or locations.', interpretation: 'Measures the internal movement of stock. High volume may indicate efficient load balancing or, conversely, poor initial stock allocation.', calculation: 'Sum of quantities for all completed interunit transfers.' },
+                        drilldownConfig: {
+                            dataKey: 'interunit_transfer_records',
+                            columns: [
+                                { key: 'transfer_id', label: 'Transfer ID' }, { key: 'from_unit', label: 'From' }, { key: 'to_unit', label: 'To' }, { key: 'item_name', label: 'Item' }, { key: 'quantity', label: 'Quantity' }
+                            ]
+                        }
+                    }
+                ];
+
+                const layoutConfig = [
+                    {
+                        type: 'dx-widget', width: 'col-lg-4',
+                        config: {
+                            id: 'po-to-grn-funnel',
+                            widgetType: 'dxFunnel',
+                            title: 'PO to GRN Funnel',
+                            dataKey: 'po_to_grn_funnel_data',
+                            hasFilter: true,
+                            filterOptions: [
+                                { value: 'all', label: 'All Categories' },
+                                { value: 'paper_reel', label: 'Paper + Reel' },
+                                { value: 'plates', label: 'Plates' },
+                                { value: 'inks', label: 'Inks' },
+                                { value: 'requirement_consumables', label: 'Consumables' },
+                                { value: 'binding_material', label: 'Binding Material' },
+                                { value: 'packing_material', label: 'Packing Material' },
+                                { value: 'stock_item', label: 'Stock Item' }
+                            ],
+                            drilldownConfig: {
+                                dataKey: 'funnel_drilldown_details',
+                                filterMapping: 'stage',
+                                columns: [
+                                    { key: 'po_no', label: 'PO Number' },
+                                    { key: 'po_date', label: 'PO Date', format: 'date' },
+                                    { key: 'vendor', label: 'Vendor Name' },
+                                    { key: 'item', label: 'Item Description' },
+                                    { key: 'ordered_qty', label: 'Ordered Quantity' },
+                                    { key: 'inward_qty', label: 'Inwarded Quantity' },
+                                    { key: 'qc_status', label: 'QC Status' },
+                                    { key: 'weight', label: 'Weight (MT)', valueSuffix: ' MT' },
+                                    { key: 'tech_name', label: 'QC Lab Tech Name' },
+                                    { key: 'release_date', label: 'Expected Release Date', format: 'date' },
+                                    { key: 'grn_no', label: 'GRN Number' },
+                                    { key: 'lead_time', label: 'Lead Time', valueSuffix: ' Days' }
+                                ]
+                            },
+                            transformer: (data) => data,
+                            options: {
+                                dataSource: [],
+                                argumentField: 'stage',
+                                valueField: 'count',
+                                palette: ['#023859', '#26658C', '#54ACBF', '#A7EBF2'], // Reverted to 4 stages palette
+                                tooltip: { enabled: true, format: "fixedPoint" },
+                                item: { border: { visible: true } },
+                                label: {
+                                    visible: true,
+                                    position: "inside",
+                                    backgroundColor: "none",
+                                    font: { color: "#ffffff" },
+                                    customizeText: function (arg) {
+                                        // Format: "1,250 PO ₹12.5 Cr" (count before stage, value after)
+                                        const count = arg.value.toLocaleString('en-US'); // arg.value now refers to the 'value' field
+                                        const stageName = arg.item.argument;
+                                        const value = arg.item.data.value; // Access the original value from data object
+
+                                        // Format currency value
+                                        let formattedValue = '';
+                                        if (value === null || value === undefined) {
+                                            formattedValue = 'N/A';
+                                        } else if (Math.abs(value) >= 10000000) { // Crore
+                                            formattedValue = '₹' + (value / 10000000).toFixed(2) + ' Cr';
+                                        } else if (Math.abs(value) >= 100000) { // Lakh
+                                            formattedValue = '₹' + (value / 100000).toFixed(2) + ' L';
+                                        } else if (Math.abs(value) >= 1000) { // Thousand
+                                            formattedValue = '₹' + (value / 1000).toFixed(1) + ' K';
+                                        } else {
+                                            formattedValue = '₹' + value.toLocaleString('en-US');
+                                        }
+
+                                        return count + ' ' + stageName + ' ' + formattedValue;
+                                    }
+                                },
+                                title: { text: "Purchase Order Process Flow", horizontalAlignment: 'left', font: { size: 14, color: '#6c757d' } }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4',
+                        config: {
+                            id: 'inventory-by-category',
+                            chartType: 'pie',
+                            title: 'Inventory Value by Category',
+                            dataKey: 'inventory_by_category',
+                            transformer: (data) => ({
+                                labels: data.map(d => d.category),
+                                datasets: [{
+                                    data: data.map(d => d.value),
+                                    backgroundColor: ['#023859', '#26658C', '#54ACBF', '#A7EBF2', '#004c4c', '#008080', '#66b2b2', '#b3cde0', '#6497b1']
+                                }]
+                            }),
+                            options: {
+                                plugins: {
+                                    legend: { position: 'right' },
+                                    centerText: { display: false },
+                                    datalabels: {
+                                        display: true,
+                                        anchor: 'end',   // Move the label point to the circumference
+                                        align: 'start',  // Align text inwards from that point
+                                        offset: 5,
+                                        formatter: (value, ctx) => {
+                                            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                            return ((value / total) * 100).toFixed(1) + '%';
+                                        },
+                                        color: '#fff',
+                                        font: { weight: '600' }
+                                    }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'inventory_category_drilldown', // Use this key (contains Paper, Inks, etc)
+                                filterMapping: 'category',
+                                columns: [
+                                    { key: 'item_code', label: 'Item Code' },
+                                    { key: 'description', label: 'Description' },
+                                    { key: 'sub_category', label: 'Sub-Category' },
+                                    { key: 'location', label: 'Godown/Location' },
+                                    { key: 'stock_qty', label: 'Stock Qty' },
+                                    { key: 'unit_price', label: 'Price', format: 'currency' },
+                                    { key: 'total_value', label: 'Total Value', format: 'currency' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4',
+                        config: {
+                            id: 'warehouse-capacity-overview',
+                            chartType: 'bar',
+                            title: 'Warehouse Capacity Overview',
+                            dataKey: 'warehouse_capacity_data',
+                            hasFilter: true,
+                            hasToggle: true,
+                            toggleOptions: [
+                                { value: 'racks', label: 'No. of Racks' },
+                                { value: 'tonnage', label: 'Tonnage' }
+                            ],
+                            filterOptions: [
+                                { value: 'all', label: 'All Warehouses' },
+                                { value: 'nsd_combined', label: 'NSD - HCBF, DTA, EOU' },
+                                { value: '208a209_combined', label: '208A-209 - EOU, HCBF' },
+                                { value: 'FBD - DTA', label: 'FBD - DTA' },
+                                { value: 'FBD - EOU', label: 'FBD - EOU' },
+                                { value: 'Kaili Godown', label: 'Kaili Godown' },
+                                { value: 'Sector 24', label: 'Sector 24' },
+                                { value: 'Sector 40', label: 'Sector 40' },
+                                { value: 'C - 35', label: 'C - 35' },
+                                { value: 'HCBF', label: 'HCBF' }
+                            ],
+                            drilldownConfig: {
+                                dataKey: 'warehouse_utilization_drilldown',
+                                filterMapping: 'name',
+                                columns: [
+                                    { key: 'name', label: 'Godown Name' },
+                                    { key: 'total_capacity', label: 'Total Bin/Rack Capacity' },
+                                    { key: 'occupied_racks', label: 'Occupied Racks' },
+                                    { key: 'empty_racks', label: 'Empty Racks' },
+                                    { key: 'utilization', label: 'Utilization %', valueSuffix: '%' },
+                                    { key: 'total_area', label: 'Total Area (Sq Ft)' },
+                                    { key: 'supervisor', label: 'Supervisor Name' }
+                                ]
+                            },
+                            transformer: (data, filterValue, config) => {
+                                const selectedWarehouse = filterValue || 'all';
+                                const viewMode = (config && config.toggleValue) ? config.toggleValue : 'racks';
+
+                                let displayData;
+                                let displayLabel;
+
+                                // Helper: aggregate multiple warehouse rows into one
+                                const aggregate = (rows) => ({
+                                    total_capacity: rows.reduce((s, d) => s + d.total_capacity, 0),
+                                    occupied_racks: rows.reduce((s, d) => s + d.occupied_racks, 0),
+                                    empty_racks: rows.reduce((s, d) => s + d.empty_racks, 0),
+                                    stock_mt: rows.reduce((s, d) => s + d.stock_mt, 0),
+                                    utilization: rows.reduce((s, d) => s + d.utilization, 0) / rows.length
+                                });
+
+                                if (selectedWarehouse === 'all') {
+                                    displayData = aggregate(data);
+                                    displayLabel = 'All Warehouses';
+                                } else if (selectedWarehouse === 'nsd_combined') {
+                                    const rows = data.filter(d => d.name.startsWith('NSD'));
+                                    displayData = rows.length ? aggregate(rows) : null;
+                                    displayLabel = 'NSD - HCBF, DTA, EOU';
+                                } else if (selectedWarehouse === '208a209_combined') {
+                                    const rows = data.filter(d => d.name.startsWith('208A-209'));
+                                    displayData = rows.length ? aggregate(rows) : null;
+                                    displayLabel = '208A-209 - EOU, HCBF';
+                                } else {
+                                    displayData = data.find(d => d.name === selectedWarehouse);
+                                    displayLabel = selectedWarehouse;
+                                }
+
+                                if (!displayData) {
+                                    return { labels: [], datasets: [] };
+                                }
+
+                                // ── Tonnage view: Stock (MT) + Utilization % ──
+                                if (viewMode === 'tonnage') {
+                                    return {
+                                        labels: ['Stock (MT)', 'Utilization (%)'],
+                                        datasets: [{
+                                            label: displayLabel,
+                                            data: [parseFloat(displayData.stock_mt.toFixed(1)), parseFloat(displayData.utilization.toFixed(1))],
+                                            backgroundColor: ['#023859', '#F59E0B'],
+                                            borderWidth: 1,
+                                            barPercentage: 0.55,
+                                            categoryPercentage: 0.7
+                                        }]
+                                    };
+                                }
+
+                                // ── Racks view (default): Total, Filled, Empty Racks ──
+                                return {
+                                    labels: ['Total Racks', 'Filled Racks', 'Empty Racks'],
+                                    datasets: [{
+                                        label: displayLabel,
+                                        data: [
+                                            displayData.total_capacity,
+                                            displayData.occupied_racks,
+                                            displayData.empty_racks
+                                        ],
+                                        backgroundColor: ['#023859', '#26658C', '#54ACBF'],
+                                        borderWidth: 1,
+                                        barPercentage: 0.7,
+                                        categoryPercentage: 0.8
+                                    }]
+                                };
+                            },
+                            options: {
+                                plugins: {
+                                    legend: { display: false },
+                                    datalabels: {
+                                        display: true,
+                                        anchor: (ctx) => ctx.dataIndex === 0 ? 'end' : 'end',
+                                        align: (ctx) => ctx.dataIndex === 0 ? 'start' : 'end',
+                                        offset: 4,
+                                        color: (ctx) => ctx.dataIndex === 0 ? '#ffffff' : '#1F2937',
+                                        font: { weight: '600' },
+                                        formatter: (value, ctx) => {
+                                            const label = ctx.chart.data.labels[ctx.dataIndex];
+                                            if (label === 'Utilization %') return value.toFixed(1) + '%';
+                                            if (label === 'Stock (MT)') return value.toFixed(1) + ' MT';
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: { display: false },
+                                        title: { display: true, text: 'Metrics', font: { weight: '600' } }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { display: true, color: '#e9ecef' },
+                                        title: { display: true, text: 'Count / Value', font: { weight: '600' } }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4',
+                        config: {
+                            id: 'sir-status-pie', chartType: 'pie',
+                            title: 'Store Issue Request (SIR) Status',
+                            dataKey: 'sir_status',
+                            drilldownConfig: {
+                                dataKey: 'sir_status_drilldown', // Key for detailed data
+                                filterMapping: 'status',         // Filters by the status clicked (Fulfilled/Pending/Cancelled)
+                                columns: [
+                                    { key: 'sir_id', label: 'SIR ID' },
+                                    { key: 'request_date', label: 'Request Date', format: 'date' },
+                                    { key: 'dept', label: 'Department' },
+                                    { key: 'requested_by', label: 'Requested By' },
+                                    { key: 'item_desc', label: 'Item Code & Description' },
+                                    { key: 'req_qty', label: 'Requested Qty' },
+                                    { key: 'issued_qty', label: 'Issued Qty' },
+                                    { key: 'aging', label: 'Aging (Days)', valueSuffix: ' Days' }
+                                ]
+                            },
+                            transformer: (data) => ({
+                                labels: data.map(d => d.status),
+                                datasets: [{ data: data.map(d => d.count), backgroundColor: ['#004c4c', '#54ACBF', '#FFBB94', '#9E9E9E'] }]
+                            }),
+                            options: {
+                                plugins: {
+                                    legend: { position: 'right' },
+                                    datalabels:
+                                    {
+                                        display: true,
+                                        anchor: 'end',   // Move the label point to the circumference
+                                        align: 'start',  // Align text inwards from that point
+                                        offset: 5,
+                                        formatter: (value, ctx) => { const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return ((value / total) * 100).toFixed(1) + '%'; }, color: '#fff', font: { weight: '600' }
+                                    }
+                                }
+                            },
+                            drilldownConfig: {
+                                dataKey: 'sir_details', filterMapping: 'status',
+                                columns: [
+                                    { key: 'sir_id', label: 'SIR ID' },
+                                    { key: 'item_code', label: 'Item Code' },
+                                    { key: 'dept', label: 'Department' },
+                                    { key: 'requested_by', label: 'Requested By' },
+                                    { key: 'quantity', label: 'Qty' },
+                                    { key: 'request_date', label: 'SIR Date', format: 'date' },
+                                    { key: 'fulfillment_date', label: 'Fulfillment Date' },
+                                    { key: 'aging_label', label: 'Aging' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4',
+                        config: {
+                            id: 'stock-status-breakdown',
+                            chartType: 'bar',
+                            title: 'Stock & Non-Stock Value',
+                            dataKey: 'stock_status_breakdown',
+                            drilldownConfig: {
+                                dataKey: 'stock_valuation_drilldown', // Key for detailed data
+                                filterMapping: 'type',                // Filters by "Stock Item" or "Non-Stock Item"
+                                columns: [
+                                    { key: 'item_code', label: 'Item Code' },
+                                    { key: 'type', label: 'Classification' },
+                                    { key: 'category', label: 'Aging Bucket' },
+                                    { key: 'qty', label: 'Current Stock Qty' },
+                                    { key: 'value', label: 'Value', format: 'currency' },
+                                    { key: 'last_trans', label: 'Last Transaction Date', format: 'date' },
+                                    { key: 'expiry', label: 'Expiry Date', format: 'date' }
+                                ]
+                            },
+                            transformer: (data) => {
+                                const labels = ['Stock Item', 'Non-Stock Item'];
+                                const categories = ['Dead Stock', 'Non-Moving Stock', 'Slow-Moving Stock', 'Moving Stock'];
+                                const colors = {
+                                    'Moving Stock': '#A7EBF2',
+                                    'Slow-Moving Stock': '#54ACBF',
+                                    'Non-Moving Stock': '#26658C',
+                                    'Dead Stock': '#023859'
+                                };
+
+                                const datasets = categories.map(category => ({
+                                    label: category,
+                                    data: labels.map(type => {
+                                        const item = data.find(d => d.type === type && d.category === category);
+                                        return item ? item.value : 0;
+                                    }),
+                                    backgroundColor: colors[category]
+                                }));
+
+                                return { labels, datasets };
+                            },
+                            options: {
+                                plugins: { legend: { position: 'top' } },
+                                scales: {
+                                    x: { stacked: true, grid: { display: false } },
+                                    y: { stacked: true, ticks: { callback: (value) => Utils.formatMetric(value, 'currency_compact').replace('.00', '') } }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-4',
+                        config: {
+                            id: 'top-transfers', chartType: 'bar',
+                            title: 'Top Inter-Unit Transfers (RM)',
+                            dataKey: 'top_transfers',
+                            transformer: (data) => ({
+                                labels: data.map(d => d.route),
+                                datasets: [{ label: 'Number of Transactions', data: data.map(d => d.volume), backgroundColor: '#023859' }]
+                            }),
+                            options: {
+                                indexAxis: 'y',
+                                plugins: { legend: { display: false }, datalabels: { display: false } },
+                                scales: { x: { beginAtZero: true, title: { display: true, text: 'Number of Transactions' } }, y: { grid: { display: false } } }
+                            },
+                            // Ensure this part of your top-transfers config looks like this:
+                            drilldownConfig: {
+                                dataKey: 'interunit_transfer_records', // Ensure this matches the data key
+                                filterMapping: 'route',
+                                columns: [
+                                    { key: 'transfer_id', label: 'Transfer ID' },
+                                    { key: 'from_unit', label: 'From Unit' },
+                                    { key: 'to_unit', label: 'To Unit' },
+                                    { key: 'item_name', label: 'Item Description' },
+                                    { key: 'quantity', label: 'Quantity' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'godown-paper-stock', chartType: 'bar',
+                            title: 'Godown-wise Paper Stock (MT)',
+                            dataKey: 'godown_paper_stock',
+                            drilldownConfig: {
+                                dataKey: 'paper_stock_drilldown', // Key for detailed stock records
+                                filterMapping: 'godown',         // Filters by the Godown name on the X-axis
+                                columns: [
+                                    { key: 'godown', label: 'Godown Name' },
+                                    { key: 'grade', label: 'Paper Grade' },
+                                    { key: 'spec', label: 'GSM / Size' },
+                                    { key: 'batch_id', label: 'Reel Number / Batch ID' },
+                                    { key: 'qty', label: 'Number of Reels/Sheets' },
+                                    { key: 'weight', label: 'Weight in MT', valueSuffix: ' MT' },
+                                    { key: 'received_date', label: 'Received Date', format: 'date' }
+                                ]
+                            },
+                            transformer: (data) => ({
+                                labels: data.map(d => d.godown),
+                                datasets: [{ label: 'Stock (MT)', data: data.map(d => d.stock_mt), backgroundColor: '#54ACBF' }]
+                            }),
+                            options: {
+                                plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'end', color: '#1F2937', font: { weight: '600' } } },
+                                scales: { x: { grid: { display: false } }, y: { beginAtZero: true, title: { display: true, text: 'Metric Tons (MT)' } } }
+                            }
+                        }
+                    },
+                    // ── GRN Clearance TAT Breakdown ──────────────────────────────────────
+                    {
+                        type: 'chart', width: 'col-lg-6',
+                        config: {
+                            id: 'grn-tat-breakdown',
+                            chartType: 'bar',
+                            title: 'GRN Clearance TAT Breakdown (Hours)',
+                            dataKey: 'grn_tat_data',
+                            drilldownConfig: {
+                                dataKey: 'grn_tat_drilldown',
+                                filterMapping: 'grn_id',
+                                columns: [
+                                    { key: 'grn_id', label: 'GRN No.' },
+                                    { key: 'vendor', label: 'Vendor' },
+                                    { key: 'material', label: 'Material' },
+                                    { key: 'gate_in_time', label: 'Gate-in Time', format: 'date' },
+                                    { key: 'grn_time', label: 'GRN Created', format: 'date' },
+                                    { key: 'qc_start', label: 'QC Start', format: 'date' },
+                                    { key: 'qc_end', label: 'QC End', format: 'date' },
+                                    { key: 'posted_time', label: 'GRN Posted', format: 'date' },
+                                    { key: 'total_tat', label: 'Total TAT (hrs)', valueSuffix: ' hrs' },
+                                    { key: 'status', label: 'Status' }
+                                ]
+                            },
+                            transformer: (data) => {
+                                // Aggregate: compute average hours per stage across all GRNs
+                                const avg = (key) => parseFloat(
+                                    (data.reduce((sum, d) => sum + d[key], 0) / data.length).toFixed(1)
+                                );
+                                return {
+                                    labels: ['Gate-in \u2192 GRN', 'GRN \u2192 QC Start', 'QC Duration', 'QC \u2192 GRN Posting'],
+                                    datasets: [{
+                                        label: 'Avg Duration (hrs)',
+                                        data: [
+                                            avg('gate_to_grn'),
+                                            avg('grn_to_qc'),
+                                            avg('qc_duration'),
+                                            avg('qc_to_posting')
+                                        ],
+                                        backgroundColor: ['#003366', '#26658C', '#54ACBF', '#A7EBF2'],
+                                        borderRadius: 6,
+                                        barPercentage: 0.55,
+                                        categoryPercentage: 0.7
+                                    }]
+                                };
+                            },
+                            options: {
+                                plugins: {
+                                    legend: { display: false },
+                                    datalabels: {
+                                        display: true,
+                                        anchor: 'end',
+                                        align: 'end',
+                                        formatter: (v) => v.toFixed(1) + ' h',
+                                        color: '#1F2937',
+                                        font: { size: 12, weight: '700' }
+                                    },
+                                    annotation: {
+                                        annotations: {
+                                            avgLine: {
+                                                type: 'line',
+                                                scaleID: 'y',
+                                                value: 10,  // rough reference — update to real SLA target per stage
+                                                borderColor: '#F59E0B',
+                                                borderWidth: 1.5,
+                                                borderDash: [5, 4],
+                                                label: {
+                                                    content: 'Target',
+                                                    display: true,
+                                                    position: 'end',
+                                                    backgroundColor: '#F59E0B',
+                                                    color: '#fff',
+                                                    font: { size: 10, weight: '600' },
+                                                    padding: { x: 5, y: 3 },
+                                                    borderRadius: 3
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: { display: false },
+                                        ticks: { font: { size: 12, weight: '600' } }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: '#e9ecef' },
+                                        title: { display: true, text: 'Avg Duration (Hours)', font: { weight: '600' } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ];
+
+
+                const contextMenuConfig = {
+                    actions: [
+                        { id: 'drilldown', label: 'View Details', icon: 'bi-table' },
+                        { id: 'expand', label: 'Expand View', icon: 'bi-arrows-fullscreen' },
+                        { id: 'guide', label: 'Definition / Guide', icon: 'bi-question-circle' },
+                        { type: 'separator' },
+                        { id: 'share', label: 'Share via Email', icon: 'bi-envelope' },
+                        {
+                            id: 'export', label: 'Export', icon: 'bi-download', submenu: [
+                                { id: 'export-png', label: 'Export as PNG', icon: 'bi-file-earmark-image' },
+                                { id: 'export-pdf', label: 'Export as PDF', icon: 'bi-filetype-pdf' }
+                            ]
+                        },
+                        { id: 'refresh', label: 'Refresh Data', icon: 'bi-arrow-clockwise' },
+                        { type: 'separator' },
+                        { id: 'ai-insight', label: 'AI Insight', icon: 'bi-magic' }
+                    ]
+                };
+                return {
+                    title: 'Store & Inventory Dashboard',
+                    kpis: kpiConfig,
+                    layout: layoutConfig,
+
+                    contextMenu: contextMenuConfig
+                };
+            })();
+            // ========================================================================================================
+            // SECTION 2: DATA PROVIDER MODULE
+            // This section simulates `dataProvider.js`. Swap the provider class to connect to a live backend.
+            // ========================================================================================================
+            const DATA_PROVIDER = (() => {
+                const SharedTransformers = {
+                    aggregateByStatus: (data, periodIndex) => { const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const statusCounts = filteredData.reduce((acc, d) => { acc[d.status] = (acc[d.status] || 0) + 1; return acc; }, {}); return { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#03A9F4', '#003366', '#4CAF50', '#9E9E9E'] }] }; },
+                    aggregateByStatus: (data, periodIndex) => { const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const statusCounts = filteredData.reduce((acc, d) => { acc[d.status] = (acc[d.status] || 0) + 1; return acc; }, {}); return { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#03A9F4', '#003366', '#4CAF50', '#9E9E9E'] }] }; },
+                    transformForPareto: (data) => {
+                        const sortedData = [...data].sort((a, b) => b.count - a.count);
+                        const labels = sortedData.map(d => d.reason);
+                        const counts = sortedData.map(d => d.count);
+                        const total = counts.reduce((sum, val) => sum + val, 0);
+                        let cumulative = 0;
+                        const cumulativePercentage = counts.map(count => { cumulative += count; return total > 0 ? (cumulative / total) * 100 : 0; });
+
+                        // MODIFICATION: Removed the conditional coloring logic.
+                        // All bars will now use the 'accentNeutral' color as requested.
+                        const primaryColor = '#003366';
+                        const secondaryColor = '#9E9E9E';
+                        let eightyPercentReached = false;
+                        const backgroundColors = cumulativePercentage.map(p => {
+                            if (eightyPercentReached) return secondaryColor;
+                            if (p >= 80) eightyPercentReached = true;
+                            return primaryColor;
+                        });
+                        return {
+                            labels,
+                            // REMOVED DUPLICATE 'datasets' KEY
+                            datasets: [
+                                { type: 'bar', label: 'Count', data: counts, backgroundColor: backgroundColors, yAxisID: 'y', order: 2 },
+                                { type: 'line', label: 'Cumulative %', data: cumulativePercentage, borderColor: '#EF4444', tension: 0.4, yAxisID: 'y1', order: 1, pointBackgroundColor: '#EF4444' }
+                            ]
+                        };
+                    },
+                    transformForRadar: (data) => {
+                        const labels = ['Efficiency (Cycle Time)', 'Quality Score', 'Business Value'];
+                        const colors = ['#344e41', '#3a5a40', '#588157', '#a3b18a', '#dad7cd'];
+                        const metrics = { cycleTime: data.map(v => v.avgCycleTime), quality: data.map(v => v.avgQualityScore), value: data.map(v => v.totalValue) };
+                        const minMax = { cycleTime: { min: Math.min(...metrics.cycleTime), max: Math.max(...metrics.cycleTime) }, quality: { min: Math.min(...metrics.quality), max: Math.max(...metrics.quality) }, value: { min: Math.min(...metrics.value), max: Math.max(...metrics.value) } };
+                        const normalize = (val, min, max, invert = false) => {
+                            if (max - min === 0) return 50;
+                            const normalized = ((val - min) / (max - min)) * 100; return invert ? 100 - normalized : normalized;
+                        };
+                        const datasets = data.map((vendor, index) => ({
+                            label: vendor.name, data: [normalize(vendor.avgCycleTime, minMax.cycleTime.min, minMax.cycleTime.max, true),
+                            normalize(vendor.avgQualityScore, minMax.quality.min, minMax.quality.max),
+                            normalize(vendor.totalValue, minMax.value.min, minMax.value.max)], borderColor: colors[index % colors.length].replace('0.4', '1'), backgroundColor: colors[index % colors.length], pointBackgroundColor: colors[index % colors.length].replace('0.4', '1'),
+                        }));
+                        return { labels, datasets };
+                    },
+                    transformForTopN: (data, periodIndex, config) => { const { n = 5, categoryKey, valueKey, datasetLabel = 'Value', chartType = 'bar' } = config.transformerConfig; if (!categoryKey || !valueKey) { throw new Error(`'transformerConfig' for TopN must include 'categoryKey' and 'valueKey'.`); } const filteredData = periodIndex !== null ? data.filter(d => d.date.getMonth() === periodIndex) : data; const totals = filteredData.reduce((acc, d) => { const category = d[categoryKey]; const value = d[valueKey]; if (category !== undefined && typeof value === 'number') { acc[category] = (acc[category] || 0) + value; } return acc; }, {}); const topN = Object.entries(totals).sort(([, a], [, b]) => b - a).slice(0, n); const labels = topN.map(([key]) => key); const values = topN.map(([, val]) => val); const backgroundColor = chartType === 'line' ? 'rgba(16, 185, 129, 0.2)' : '#003366'; const borderColor = chartType === 'line' ? '#10B981' : undefined; return { labels, datasets: [{ label: datasetLabel, data: values, backgroundColor: backgroundColor, borderColor: borderColor, fill: chartType === 'line', tension: 0.3 }] }; },
+                    transformForRejectionTrend: (data) => { const monthlyData = data.reduce((acc, d) => { const month = d.date.toLocaleString('default', { year: 'numeric', month: 'short' }); if (!acc[month]) { acc[month] = { total: 0, rejected: 0 }; } acc[month].total++; if (d.status === 'Rejected') { acc[month].rejected++; } return acc; }, {}); const labels = Object.keys(monthlyData).sort((a, b) => new Date(a) - new Date(b)); const rates = labels.map(label => { const month = monthlyData[label]; return month.total > 0 ? (month.rejected / month.total) * 100 : 0; }); return { labels, datasets: [{ label: 'Rejection Rate', data: rates, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 }] }; },
+                    transformForStackedBar: (data) => { const labels = [...new Set(data.map(item => item.issue))]; const datasets = {}; const materialCauses = [...new Set(data.map(item => item.material_cause))]; const colors = ['#003366', '#03A9F4', '#4CAF50', '#FF9800', '#9C27B0', '#9E9E9E']; materialCauses.forEach(cause => { datasets[cause] = new Array(labels.length).fill(0); }); data.forEach(item => { const labelIndex = labels.indexOf(item.issue); if (labelIndex > -1) { datasets[item.material_cause][labelIndex] += item.count; } }); return { labels, datasets: Object.keys(datasets).map((cause, index) => ({ label: cause, data: datasets[cause], backgroundColor: colors[index % colors.length] })) }; }
+                };
+
+                class MockDataProvider {
+                    constructor(cacheTTL = 300000) {
+                        this.cache = new Map();
+                        this.cacheTTL = cacheTTL;
+                    }
+
+                    async fetchKpiData() {
+                        await new Promise(r => setTimeout(r, 250));
+                        return {
+                            total_inventory_value: { current: 12500000, previous: 12100000, raw_material_value: 7500000, finished_goods_value: 5000000, rm_paper_mt: 450.7, trend: [11.8, 11.9, 12.0, 12.2, 12.1, 12.5, 12.4].map(v => v * 1000000) },
+                            slow_non_moving_pct: { current: 15.2, previous: 16.1, slow_moving_value: 1200000, non_moving_value: 700000, trend: [16.5, 16.3, 16.1, 15.8, 15.5, 15.2, 15.3] },
+                            dead_stock_pct: { current: 3.5, previous: 3.8, expired_stock_value: 437500, expired_skus: 85, trend: [4.1, 4.0, 3.8, 3.8, 3.6, 3.5, 3.4] },
+                            grn_delayed_pct: { current: 8.9, previous: 10.2, delayed_grn_count: 45, avg_delay_days: 3.2, trend: [11, 10.5, 10.2, 9.8, 9.5, 8.9, 9.1] },
+                            interunit_transfer_volume: { current: 25000, previous: 23500, transfer_count: 150, unique_routes: 25, trend: [22, 23, 22.5, 23.5, 24, 25, 24.5].map(v => v * 1000) }
+                        };
+                    }
+
+                    async fetchRawData(dataKey) {
+                        const cached = this.cache.get(dataKey);
+                        if (cached && (Date.now() - cached.timestamp < this.cacheTTL)) {
+                            return cached.data;
+                        }
+                        await new Promise(r => setTimeout(r, 400));
+                        const mockData = {
+                            po_to_grn_funnel_data: [
+                                // All Categories
+                                { stage: 'PO', count: 1250, value: 125000000, category: 'all' },
+                                { stage: 'GRN', count: 1100, value: 110000000, category: 'all' },
+                                { stage: 'Post-QC GRN', count: 1050, value: 105000000, category: 'all' },
+                                { stage: 'GRN Posted', count: 1025, value: 102500000, category: 'all' },
+                                // Paper + Reel
+                                { stage: 'PO', count: 450, value: 45000000, category: 'paper_reel' },
+                                { stage: 'GRN', count: 400, value: 40000000, category: 'paper_reel' },
+                                { stage: 'Post-QC GRN', count: 380, value: 38000000, category: 'paper_reel' },
+                                { stage: 'GRN Posted', count: 370, value: 37000000, category: 'paper_reel' },
+                                // Plates
+                                { stage: 'PO', count: 200, value: 20000000, category: 'plates' },
+                                { stage: 'GRN', count: 180, value: 18000000, category: 'plates' },
+                                { stage: 'Post-QC GRN', count: 170, value: 17000000, category: 'plates' },
+                                { stage: 'GRN Posted', count: 165, value: 16500000, category: 'plates' },
+                                // Inks
+                                { stage: 'PO', count: 300, value: 30000000, category: 'inks' },
+                                { stage: 'GRN', count: 270, value: 27000000, category: 'inks' },
+                                { stage: 'Post-QC GRN', count: 260, value: 26000000, category: 'inks' },
+                                { stage: 'GRN Posted', count: 255, value: 25500000, category: 'inks' },
+                                // Requirement Consumables
+                                { stage: 'PO', count: 150, value: 15000000, category: 'requirement_consumables' },
+                                { stage: 'GRN', count: 130, value: 13000000, category: 'requirement_consumables' },
+                                { stage: 'Post-QC GRN', count: 125, value: 12500000, category: 'requirement_consumables' },
+                                { stage: 'GRN Posted', count: 120, value: 12000000, category: 'requirement_consumables' },
+                                // Binding Material
+                                { stage: 'PO', count: 100, value: 10000000, category: 'binding_material' },
+                                { stage: 'GRN', count: 80, value: 8000000, category: 'binding_material' },
+                                { stage: 'Post-QC GRN', count: 75, value: 7500000, category: 'binding_material' },
+                                { stage: 'GRN Posted', count: 70, value: 7000000, category: 'binding_material' },
+                                // Packing Material
+                                { stage: 'PO', count: 50, value: 5000000, category: 'packing_material' },
+                                { stage: 'GRN', count: 40, value: 4000000, category: 'packing_material' },
+                                { stage: 'Post-QC GRN', count: 40, value: 4000000, category: 'packing_material' },
+                                { stage: 'GRN Posted', count: 45, value: 4500000, category: 'packing_material' }
+                            ],
+                            funnel_drilldown_details: [
+                                { id: 1, stage: 'PO', po_no: 'PO-2024-001', po_date: new Date(2025, 11, 20), vendor: 'Global Inks Co.', item: 'Cyan Ink 5L', ordered_qty: 100, inward_qty: 0, qc_status: 'Pending', weight: null, tech_name: null, release_date: null, grn_no: 'N/A', lead_time: 0 },
+                                { id: 2, stage: 'GRN', po_no: 'PO-2024-005', po_date: new Date(2025, 11, 15), vendor: 'Mumbai Supply', item: 'A4 Paper (80GSM)', ordered_qty: 500, inward_qty: 500, qc_status: 'Pending', weight: 2.5, tech_name: null, release_date: null, grn_no: 'N/A', lead_time: 5 },
+                                { id: 5, stage: 'Post-QC GRN', po_no: 'PO-2024-008', po_date: new Date(2025, 11, 10), vendor: 'Southern Adhesives', item: 'Glue Sticks XL', ordered_qty: 200, inward_qty: 200, qc_status: 'Pass', weight: 1.5, tech_name: 'Suresh Nair', release_date: new Date(2026, 0, 12), grn_no: 'N/A', lead_time: 10 },
+                                { id: 6, stage: 'GRN Posted', po_no: 'PO-2024-012', po_date: new Date(2025, 11, 5), vendor: 'Component Solutions', item: 'Printer Roller', ordered_qty: 50, inward_qty: 50, qc_status: 'Pass', weight: 0.8, tech_name: 'Rahul Singh', release_date: new Date(2026, 0, 8), grn_no: 'GRN-9981', lead_time: 15 }
+                            ],
+                            warehouse_utilization_drilldown: [
+                                { id: 1, name: '208A-209 - EOU', total_capacity: 500, occupied_racks: 462, empty_racks: 38, utilization: 92.5, total_area: '15,000', supervisor: 'Rakesh Verma' },
+                                { id: 2, name: 'NSD - HCBF', total_capacity: 400, occupied_racks: 356, empty_racks: 44, utilization: 89.1, total_area: '12,500', supervisor: 'Amit Singh' },
+                                { id: 3, name: 'FBD - DTA', total_capacity: 600, occupied_racks: 512, empty_racks: 88, utilization: 85.3, total_area: '18,000', supervisor: 'Vijay Kumar' },
+                                { id: 4, name: 'Kaili Godown', total_capacity: 350, occupied_racks: 287, empty_racks: 63, utilization: 82.0, total_area: '10,000', supervisor: 'Suresh Raina' },
+                                { id: 5, name: 'Sector 24', total_capacity: 450, occupied_racks: 354, empty_racks: 96, utilization: 78.6, total_area: '14,000', supervisor: 'Manoj Tiwari' },
+                                { id: 6, name: 'C - 35', total_capacity: 300, occupied_racks: 207, empty_racks: 93, utilization: 68.9, total_area: '9,500', supervisor: 'Rajesh Sharma' }
+                            ],
+                            sir_status_drilldown: [
+                                { id: 1, status: 'Fulfilled', sir_id: 'SIR-9901', request_date: new Date(2026, 0, 1), dept: 'Printing', requested_by: 'Amit Sharma', item_desc: 'PAP-001: Art Paper 120GSM', req_qty: 500, issued_qty: 500, aging: 0 },
+                                { id: 2, status: 'Fulfilled', sir_id: 'SIR-9902', request_date: new Date(2025, 11, 28), dept: 'Binding', requested_by: 'Suresh Kumar', item_desc: 'BIN-GL01: Hot Melt Glue', req_qty: 10, issued_qty: 10, aging: 1 },
+
+                                { id: 3, status: 'Pending', sir_id: 'SIR-9905', request_date: new Date(2026, 0, 5), dept: 'Pre-Press', requested_by: 'Vikas Gupta', item_desc: 'PLT-TH01: CTP Plate', req_qty: 100, issued_qty: 0, aging: 4 },
+                                { id: 4, status: 'Pending', sir_id: 'SIR-9906', request_date: new Date(2026, 0, 7), dept: 'Printing', requested_by: 'Rajesh Negi', item_desc: 'INK-C01: Cyan Ink', req_qty: 25, issued_qty: 0, aging: 2 },
+
+                                { id: 5, status: 'Cancelled', sir_id: 'SIR-9880', request_date: new Date(2025, 11, 15), dept: 'Packaging', requested_by: 'Manoj Kohli', item_desc: 'PKG-BOX-02: Corrugated Box', req_qty: 1000, issued_qty: 0, aging: 25 }
+                            ],
+                            // Add this inside the mockData object in fetchRawData(dataKey)
+                            rack_availability_drilldown: [
+                                { id: 1, godown: 'FBD - DTA', rack_id: 'Aisle-A-01', floor_level: 'Top', bin_id: 'BIN-102', capacity_type: 'Heavy Duty', last_item: 'Glossy Art Paper Reels' },
+                                { id: 2, godown: 'FBD - DTA', rack_id: 'Aisle-B-04', floor_level: 'Middle', bin_id: 'BIN-405', capacity_type: 'Light', last_item: 'Ink Cans (Cyan)' },
+                                { id: 3, godown: 'FBD - DTA', rack_id: 'Aisle-C-02', floor_level: 'Bottom', bin_id: 'BIN-201', capacity_type: 'Heavy Duty', last_item: 'Kraft Paper Rolls' },
+
+                                { id: 4, godown: 'NSD - HCBF', rack_id: 'Rack-09', floor_level: 'Top', bin_id: 'B-901', capacity_type: 'Heavy Duty', last_item: 'Binding Glue XL' },
+                                { id: 5, godown: 'NSD - HCBF', rack_id: 'Rack-12', floor_level: 'Bottom', bin_id: 'B-1205', capacity_type: 'Heavy Duty', last_item: 'Thermal Plates' },
+
+                                { id: 6, godown: 'Kaili Godown', rack_id: 'K-Aisle-1', floor_level: 'Middle', bin_id: 'K-105', capacity_type: 'Light', last_item: 'Packaging Tape' },
+
+                                { id: 7, godown: 'Sector 24', rack_id: 'S24-R1', floor_level: 'Top', bin_id: 'S24-101', capacity_type: 'Heavy Duty', last_item: 'Finished Goods - Books' },
+
+                                { id: 8, godown: 'C - 35', rack_id: 'C35-A1', floor_level: 'Bottom', bin_id: 'C35-B01', capacity_type: 'Light', last_item: 'Production Consumables' }
+                            ],
+                            // Add this inside the mockData object in fetchRawData(dataKey)
+                            paper_stock_drilldown: [
+                                { id: 1, godown: 'FBD - DTA', grade: 'Glossy Art Paper', spec: '120 GSM / 24x36', batch_id: 'R-9901-A', qty: 45, weight: 12.5, received_date: new Date(2025, 11, 20) },
+                                { id: 2, godown: 'FBD - DTA', grade: 'Kraft Paper', spec: '180 GSM / 40 inch', batch_id: 'R-8820-B', qty: 30, weight: 25.0, received_date: new Date(2026, 0, 2) },
+                                { id: 3, godown: 'FBD - DTA', grade: 'Maplitho', spec: '80 GSM / 23x36', batch_id: 'B-7741', qty: 5000, weight: 8.2, received_date: new Date(2026, 0, 5) },
+
+                                { id: 4, godown: 'NSD - HCBF', grade: 'Coated Board', spec: '300 GSM / 30x40', batch_id: 'R-5501-C', qty: 15, weight: 45.2, received_date: new Date(2025, 11, 15) },
+                                { id: 5, godown: 'NSD - HCBF', grade: 'Glossy Art Paper', spec: '100 GSM / 25x38', batch_id: 'R-9905-A', qty: 25, weight: 10.5, received_date: new Date(2026, 0, 8) },
+
+                                { id: 6, godown: 'Kaili Godown', grade: 'Kraft Paper', spec: '150 GSM / 42 inch', batch_id: 'R-4432-K', qty: 60, weight: 88.0, received_date: new Date(2025, 10, 10) },
+
+                                { id: 7, godown: '208A-209 - EOU', grade: 'Cyber XL Board', spec: '250 GSM / 28x40', batch_id: 'B-6612', qty: 2500, weight: 75.8, received_date: new Date(2026, 0, 1) }
+                            ],
+                            inventory_category_drilldown: [
+                                { id: 101, category: 'Paper', item_code: 'PAP-101', description: 'Art Paper 120GSM', sub_category: 'Coated', location: 'WH-FBD', stock_qty: 500, unit_price: 150, total_value: 75000, last_issue: new Date(2026, 0, 5) },
+                                { id: 102, category: 'Reel', item_code: 'REL-505', description: 'Paper Reel 80GSM', sub_category: 'Reel', location: 'WH-EOU', stock_qty: 200, unit_price: 1200, total_value: 240000, last_issue: new Date(2026, 0, 8) },
+                                // Add more records for 'Inks', 'Plates', etc. to match all chart labels
+                            ],
+
+                            stock_valuation_drilldown: [
+                                // Stock Items
+                                { id: 1, type: 'Stock Item', category: 'Moving Stock', item_code: 'RM-PAP-101', qty: 5000, value: 320000, last_trans: new Date(2026, 0, 9), expiry: null },
+                                { id: 2, type: 'Stock Item', category: 'Slow-Moving Stock', item_code: 'RM-INK-202', qty: 150, value: 45000, last_trans: new Date(2025, 10, 15), expiry: new Date(2027, 5, 20) },
+                                { id: 3, type: 'Stock Item', category: 'Non-Moving Stock', item_code: 'RM-GLUE-50', qty: 80, value: 12000, last_trans: new Date(2025, 4, 10), expiry: new Date(2026, 2, 1) },
+                                { id: 4, type: 'Stock Item', category: 'Dead Stock', item_code: 'RM-OLD-99', qty: 1000, value: 5000, last_trans: new Date(2024, 0, 1), expiry: new Date(2024, 11, 30) },
+
+                                // Non-Stock Items (Project specific or Direct Purchase)
+                                { id: 5, type: 'Non-Stock Item', category: 'Moving Stock', item_code: 'NS-CHEM-01', qty: 20, value: 150000, last_trans: new Date(2026, 0, 8), expiry: new Date(2026, 6, 1) },
+                                { id: 6, type: 'Non-Stock Item', category: 'Non-Moving Stock', item_code: 'NS-SPARE-88', qty: 5, value: 22500, last_trans: new Date(2025, 2, 20), expiry: null }
+                            ],
+                            // Add this inside the mockData object in fetchRawData(dataKey)
+                            stock_valuation_drilldown: [
+                                // Stock Items
+                                { id: 1, type: 'Stock Item', category: 'Moving Stock', item_code: 'RM-PAP-101', qty: 5000, value: 320000, last_trans: new Date(2026, 0, 9), expiry: null },
+                                { id: 2, type: 'Stock Item', category: 'Slow-Moving Stock', item_code: 'RM-INK-202', qty: 150, value: 45000, last_trans: new Date(2025, 10, 15), expiry: new Date(2027, 5, 20) },
+                                { id: 3, type: 'Stock Item', category: 'Non-Moving Stock', item_code: 'RM-GLUE-50', qty: 80, value: 12000, last_trans: new Date(2025, 4, 10), expiry: new Date(2026, 2, 1) },
+                                { id: 4, type: 'Stock Item', category: 'Dead Stock', item_code: 'RM-OLD-99', qty: 1000, value: 5000, last_trans: new Date(2024, 0, 1), expiry: new Date(2024, 11, 30) },
+
+                                // Non-Stock Items (Project specific or Direct Purchase)
+                                { id: 5, type: 'Non-Stock Item', category: 'Moving Stock', item_code: 'NS-CHEM-01', qty: 20, value: 150000, last_trans: new Date(2026, 0, 8), expiry: new Date(2026, 6, 1) },
+                                { id: 6, type: 'Non-Stock Item', category: 'Non-Moving Stock', item_code: 'NS-SPARE-88', qty: 5, value: 22500, last_trans: new Date(2025, 2, 20), expiry: null }
+                            ],
+                            // Add this inside the mockData object in fetchRawData(dataKey)
+                            filled_racks_drilldown: [
+                                { id: 1, godown: 'FBD - DTA', rack_id: 'R-101', pallet_id: 'PAL-5501', item: 'Art Paper 120GSM', occupancy_date: new Date(2025, 10, 12), weight: 1.2, pallet_count: 1 },
+                                { id: 2, godown: 'FBD - DTA', rack_id: 'R-102', pallet_id: 'PAL-5502', item: 'Art Paper 120GSM', occupancy_date: new Date(2025, 10, 12), weight: 1.2, pallet_count: 1 },
+                                { id: 3, godown: 'FBD - DTA', rack_id: 'R-205', pallet_id: 'PAL-6610', item: 'Cyan Offset Ink', occupancy_date: new Date(2025, 11, 5), weight: 0.8, pallet_count: 2 },
+
+                                { id: 4, godown: 'NSD - HCBF', rack_id: 'H-09', pallet_id: 'PAL-7701', item: 'Binding Glue', occupancy_date: new Date(2025, 9, 20), weight: 2.5, pallet_count: 3 },
+                                { id: 5, godown: 'NSD - HCBF', rack_id: 'H-12', pallet_id: 'PAL-7744', item: 'Thermal Plates', occupancy_date: new Date(2026, 0, 2), weight: 1.5, pallet_count: 1 },
+
+                                { id: 6, godown: 'Kaili Godown', rack_id: 'K-01', pallet_id: 'PAL-8801', item: 'Kraft Paper Roll', occupancy_date: new Date(2025, 11, 28), weight: 5.0, pallet_count: 1 },
+
+                                { id: 7, godown: '208A-209 - EOU', rack_id: 'E-44', pallet_id: 'PAL-9912', item: 'Cyber XL Board', occupancy_date: new Date(2025, 11, 15), weight: 2.2, pallet_count: 2 },
+
+                                { id: 8, godown: 'Sector 24', rack_id: 'S-10', pallet_id: 'PAL-1122', item: 'Finished Goods - Books', occupancy_date: new Date(2026, 0, 8), weight: 0.9, pallet_count: 1 }
+                            ],
+                            // Add this inside the mockData object in fetchRawData(dataKey)
+                            under_qc_drilldown: [
+                                { id: 1, location: 'QC Bay 1', receipt_id: 'REC-5001', inspect_date: new Date(2026, 0, 8), vendor: 'Global Inks Co.', description: 'Coated Art Paper 120GSM', weight: 8.2, status: 'In-Progress', tech_name: 'Amit Sharma', release_date: new Date(2026, 0, 12) },
+                                { id: 2, location: 'QC Bay 1', receipt_id: 'REC-5002', inspect_date: new Date(2026, 0, 9), vendor: 'Premium Paper Ltd.', description: 'Kraft Paper Roll 180GSM', weight: 7.0, status: 'In-Progress', tech_name: 'Suresh Raina', release_date: new Date(2026, 0, 13) },
+
+                                { id: 3, location: 'QC Bay 2', receipt_id: 'REC-5005', inspect_date: new Date(2026, 0, 7), vendor: 'Mumbai Supply Hub', description: 'Maplitho 80GSM', weight: 10.8, status: 'In-Progress', tech_name: 'Amit Sharma', release_date: new Date(2026, 0, 11) },
+
+                                { id: 4, location: 'On Hold Area', receipt_id: 'REC-4990', inspect_date: new Date(2026, 0, 2), vendor: 'Local Services Ltd.', description: 'Cyber XL Board 250GSM', weight: 5.1, status: 'Hold', tech_name: 'Vikas G.', release_date: new Date(2026, 0, 15) }
+                            ],
+                            godown_paper_stock: [
+                                { godown: '208A-209 - EOU', stock_mt: 75.8 },
+                                { godown: 'NSD - HCBF', stock_mt: 95.2 },
+                                { godown: 'FBD - DTA', stock_mt: 120.5 },
+                                { godown: 'Kaili Godown', stock_mt: 88.0 },
+                                { godown: 'Sector 24', stock_mt: 45.3 },
+                                { godown: 'NSD - DTA', stock_mt: 60.1 },
+                                { godown: '208A-209 - HCBF', stock_mt: 55.4 },
+                                { godown: 'C - 35', stock_mt: 25.9 },
+                                { godown: 'FBD - EOU', stock_mt: 72.3 },
+                                { godown: 'HCBF', stock_mt: 81.6 },
+                                { godown: 'NSD - EOU', stock_mt: 58.2 },
+                                { godown: 'Sector 40', stock_mt: 42.1 }
+                            ],
+                            // ── GRN Clearance TAT data (hours per stage) ──
+                            grn_tat_data: [
+                                { grn_id: 'GRN-2026-041', gate_to_grn: 3.5, grn_to_qc: 2.0, qc_duration: 8.0, qc_to_posting: 1.5 },
+                                { grn_id: 'GRN-2026-038', gate_to_grn: 1.0, grn_to_qc: 9.5, qc_duration: 12.0, qc_to_posting: 28.5 },
+                                { grn_id: 'GRN-2026-035', gate_to_grn: 6.0, grn_to_qc: 2.5, qc_duration: 7.0, qc_to_posting: 30.5 },
+                                { grn_id: 'GRN-2026-033', gate_to_grn: 2.0, grn_to_qc: 4.0, qc_duration: 18.0, qc_to_posting: 5.0 },
+                                { grn_id: 'GRN-2026-030', gate_to_grn: 4.5, grn_to_qc: 1.5, qc_duration: 6.0, qc_to_posting: 3.0 },
+                                { grn_id: 'GRN-2026-027', gate_to_grn: 8.0, grn_to_qc: 3.0, qc_duration: 22.0, qc_to_posting: 18.0 },
+                                { grn_id: 'GRN-2026-024', gate_to_grn: 1.5, grn_to_qc: 2.0, qc_duration: 10.0, qc_to_posting: 2.5 },
+                                { grn_id: 'GRN-2026-021', gate_to_grn: 5.0, grn_to_qc: 6.5, qc_duration: 14.0, qc_to_posting: 24.0 },
+                                { grn_id: 'GRN-2026-018', gate_to_grn: 2.5, grn_to_qc: 1.0, qc_duration: 9.0, qc_to_posting: 4.5 },
+                                { grn_id: 'GRN-2026-015', gate_to_grn: 12.0, grn_to_qc: 5.0, qc_duration: 24.0, qc_to_posting: 16.0 }
+                            ],
+                            grn_tat_drilldown: [
+                                { grn_id: 'GRN-2026-041', vendor: 'Mumbai Supply Hub', material: 'Art Paper 120GSM', gate_in_time: new Date(2026, 1, 20, 8, 10), grn_time: new Date(2026, 1, 20, 11, 40), qc_start: new Date(2026, 1, 20, 13, 40), qc_end: new Date(2026, 1, 20, 21, 40), posted_time: new Date(2026, 1, 20, 23, 10), total_tat: 15.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-038', vendor: 'Global Inks Co.', material: 'Cyan Offset Ink', gate_in_time: new Date(2026, 1, 19, 9, 0), grn_time: new Date(2026, 1, 19, 10, 0), qc_start: new Date(2026, 1, 19, 19, 30), qc_end: new Date(2026, 1, 20, 7, 30), posted_time: new Date(2026, 1, 21, 12, 0), total_tat: 51.0, status: 'Delayed' },
+                                { grn_id: 'GRN-2026-035', vendor: 'Premium Paper Ltd.', material: 'Kraft Paper 180GSM', gate_in_time: new Date(2026, 1, 18, 7, 30), grn_time: new Date(2026, 1, 18, 13, 30), qc_start: new Date(2026, 1, 18, 16, 0), qc_end: new Date(2026, 1, 18, 23, 0), posted_time: new Date(2026, 1, 20, 5, 30), total_tat: 46.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-033', vendor: 'Southern Adhesives', material: 'Glue Sticks XL', gate_in_time: new Date(2026, 1, 17, 10, 0), grn_time: new Date(2026, 1, 17, 12, 0), qc_start: new Date(2026, 1, 17, 16, 0), qc_end: new Date(2026, 1, 18, 10, 0), posted_time: new Date(2026, 1, 18, 15, 0), total_tat: 29.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-030', vendor: 'Component Solutions', material: 'Printer Roller', gate_in_time: new Date(2026, 1, 16, 8, 0), grn_time: new Date(2026, 1, 16, 12, 30), qc_start: new Date(2026, 1, 16, 14, 0), qc_end: new Date(2026, 1, 16, 20, 0), posted_time: new Date(2026, 1, 16, 23, 0), total_tat: 15.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-027', vendor: 'National Plates Co.', material: 'CTP Plates', gate_in_time: new Date(2026, 1, 15, 7, 0), grn_time: new Date(2026, 1, 15, 15, 0), qc_start: new Date(2026, 1, 15, 18, 0), qc_end: new Date(2026, 1, 16, 16, 0), posted_time: new Date(2026, 1, 17, 10, 0), total_tat: 51.0, status: 'Delayed' },
+                                { grn_id: 'GRN-2026-024', vendor: 'Pacific Chemicals', material: 'Fountain Solution', gate_in_time: new Date(2026, 1, 14, 9, 30), grn_time: new Date(2026, 1, 14, 11, 0), qc_start: new Date(2026, 1, 14, 13, 0), qc_end: new Date(2026, 1, 14, 23, 0), posted_time: new Date(2026, 1, 15, 1, 30), total_tat: 16.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-021', vendor: 'Eastern Binding Corp.', material: 'PVA Binding Glue', gate_in_time: new Date(2026, 1, 13, 8, 0), grn_time: new Date(2026, 1, 13, 13, 0), qc_start: new Date(2026, 1, 13, 19, 30), qc_end: new Date(2026, 1, 14, 9, 30), posted_time: new Date(2026, 1, 15, 9, 30), total_tat: 49.5, status: 'Delayed' },
+                                { grn_id: 'GRN-2026-018', vendor: 'Local Consumables Ltd.', material: 'Packing Tape', gate_in_time: new Date(2026, 1, 12, 10, 0), grn_time: new Date(2026, 1, 12, 12, 30), qc_start: new Date(2026, 1, 12, 13, 30), qc_end: new Date(2026, 1, 12, 22, 30), posted_time: new Date(2026, 1, 13, 3, 0), total_tat: 17.0, status: 'Cleared' },
+                                { grn_id: 'GRN-2026-015', vendor: 'HQ Paper Mills', material: 'Maplitho 80GSM', gate_in_time: new Date(2026, 1, 11, 6, 0), grn_time: new Date(2026, 1, 11, 18, 0), qc_start: new Date(2026, 1, 11, 23, 0), qc_end: new Date(2026, 1, 12, 23, 0), posted_time: new Date(2026, 1, 13, 15, 0), total_tat: 57.0, status: 'Delayed' }
+                            ],
+                            rack_availability: [
+                                { godown: 'FBD - DTA', empty_racks: 15 },
+                                { godown: 'NSD - HCBF', empty_racks: 8 },
+                                { godown: 'Kaili Godown', empty_racks: 22 },
+                                { godown: '208A-209 - EOU', empty_racks: 5 },
+                                { godown: 'Sector 24', empty_racks: 30 },
+                                { godown: 'C - 35', empty_racks: 12 }
+                            ],
+                            filled_racks_data: [
+                                { godown: 'FBD - DTA', count: 250, weight_mt: 120.5 },
+                                { godown: 'NSD - HCBF', count: 180, weight_mt: 95.2 },
+                                { godown: 'Kaili Godown', count: 150, weight_mt: 88.0 },
+                                { godown: '208A-209 - EOU', count: 210, weight_mt: 75.8 },
+                                { godown: 'Sector 24', count: 90, weight_mt: 45.3 },
+                                { godown: 'C - 35', count: 60, weight_mt: 25.9 }
+                            ],
+                            under_qc_stock: [
+                                { location: 'QC Bay 1', stock_mt: 15.2 },
+                                { location: 'QC Bay 2', stock_mt: 10.8 },
+                                { location: 'On Hold Area', stock_mt: 5.1 }
+                            ],
+                            inventory_details: Array.from({ length: 200 }, (_, i) => ({
+                                id: `ITEM-${1000 + i}`, item_id: `ITEM-${1000 + i}`, category: ['Raw Material', 'Work In Progress', 'Finished Goods'][i % 3],
+                                location: `WH-${['A', 'B', 'C'][i % 3]}`, quantity: Math.floor(Math.random() * 500) + 50, value: (Math.random() * 50000) + 1000
+                            })),
+                            slow_moving_stock_details: Array.from({ length: 100 }, (_, i) => {
+                                const age_in_days = Math.floor(Math.random() * 300) + 61; // 2 to 12 months old
+                                return {
+                                    id: `INV-${2000 + i}`, item_id: `INV-${2000 + i}`,
+                                    last_moved_date: new Date(new Date().setDate(new Date().getDate() - age_in_days)),
+                                    age_in_days: age_in_days, value: (Math.random() * 20000) + 500,
+                                    status: age_in_days > 180 ? 'Non-Moving' : 'Slow-Moving'
+                                };
+                            }),
+                            expired_stock_details: Array.from({ length: 85 }, (_, i) => {
+                                const days_past_expiry = Math.floor(Math.random() * 90) + 1;
+                                return {
+                                    id: `EXP-${3000 + i}`, item_id: `EXP-${3000 + i}`,
+                                    expiry_date: new Date(new Date().setDate(new Date().getDate() - days_past_expiry)),
+                                    days_past_expiry: days_past_expiry, value: (Math.random() * 10000) + 200
+                                };
+                            }),
+                            grn_records: Array.from({ length: 500 }, (_, i) => {
+                                const isDelayed = i < 45; // First 45 are delayed
+                                return {
+                                    id: `GRN-${4000 + i}`, grn_id: `GRN-${4000 + i}`, vendor: `Vendor ${['A', 'B', 'C', 'D', 'E'][i % 5]}`,
+                                    status: isDelayed ? 'Delayed' : 'Cleared', delay_days: isDelayed ? Math.floor(Math.random() * 5) + 2 : 0
+                                };
+                            }),
+                            // Locate this in your DATA_PROVIDER -> fetchRawData -> interunit_transfer_records
+                            // REPLACE ONLY THIS BLOCK in DATA_PROVIDER -> fetchRawData
+                            interunit_transfer_records: Array.from({ length: 160 }, (_, i) => {
+                                const routes = [
+                                    'FBD EOU - FBD DTA', 'HCBF - FBD DTA', 'FBD - C35', 'HCBF - C35',
+                                    'FBD EOU - HCBF', 'C35 - FBD', 'FBD EOU - C35', 'HCBF - FBD EOU'
+                                ];
+                                const selectedRoute = routes[i % routes.length];
+                                const units = selectedRoute.split(' - ');
+
+                                return {
+                                    id: `IUT-${5000 + i}`,
+                                    transfer_id: `IUT-${5000 + i}`,
+                                    from_unit: units[0],
+                                    to_unit: units[1],
+                                    route: selectedRoute, // This matches the chart label exactly
+                                    item_name: `Item ${['Paper', 'Ink', 'Plates'][i % 3]}`,
+                                    quantity: Math.floor(Math.random() * 300) + 20
+                                };
+                            }),
+                            inventory_by_category: [
+                                { category: 'Paper', value: 450000 },
+                                { category: 'Reel', value: 300000 },
+                                { category: 'Plates', value: 150000 },
+                                { category: 'Inks', value: 120000 },
+                                { category: 'Production Consumables', value: 95000 },
+                                { category: 'Binding Material', value: 80000 },
+                                { category: 'Packing Material', value: 75000 },
+                                { category: 'Maintenance Spares', value: 50000 },
+                                { category: 'Capex Items', value: 30000 }
+                            ],
+                            stock_status_breakdown: [
+                                { category: 'Moving Stock', type: 'Stock Item', value: 3200000 },
+                                { category: 'Moving Stock', type: 'Non-Stock Item', value: 1500000 },
+                                { category: 'Slow-Moving Stock', type: 'Stock Item', value: 450000 },
+                                { category: 'Slow-Moving Stock', type: 'Non-Stock Item', value: 555000 },
+                                { category: 'Non-Moving Stock', type: 'Stock Item', value: 710000 },
+                                { category: 'Non-Moving Stock', type: 'Non-Stock Item', value: 225000 },
+                                { category: 'Dead Stock', type: 'Stock Item', value: 435000 },
+                                { category: 'Dead Stock', type: 'Non-Stock Item', value: 441000 }
+                            ],
+                            sir_details: Array.from({ length: 1445 }, (_, i) => {
+                                let status = 'Fulfilled';
+                                if (i > 1250 && i <= 1400) status = 'Pending';
+                                if (i > 1400) status = 'Cancelled';
+                                return {
+                                    sir_id: `SIR-0${2001 + i}`,
+                                    item_code: `ITEM-${1001 + (i % 100)}`,
+                                    requested_by: ['Dept A', 'Dept B', 'Dept C'][i % 3],
+                                    quantity: Math.floor(Math.random() * 20) + 1,
+                                    request_date: new Date(new Date().setDate(new Date().getDate() - (i % 30))),
+                                    status: status
+                                };
+                            }),
+                            warehouse_utilization: [
+                                { name: '208A-209 - EOU', utilization: 92.5 },
+                                { name: 'NSD - HCBF', utilization: 89.1 },
+                                { name: 'FBD - DTA', utilization: 85.3 },
+                                { name: 'Kaili Godown', utilization: 82.0 },
+                                { name: 'Sector 24', utilization: 78.6 },
+                                { name: 'NSD - DTA', utilization: 75.4 },
+                                { name: '208A-209 - HCBF', utilization: 72.1 },
+                                { name: 'C - 35', utilization: 68.9 },
+                                { name: 'FBD - EOU', utilization: 65.2 },
+                                { name: 'HCBF', utilization: 61.7 },
+                                { name: 'NSD - EOU', utilization: 58.0 },
+                                { name: 'Sector 40', utilization: 55.8 }
+                            ],
+                            warehouse_capacity_data: [
+                                { name: '208A-209 - EOU', total_capacity: 500, occupied_racks: 462, empty_racks: 38, stock_mt: 245.5, utilization: 92.5 },
+                                { name: 'NSD - HCBF', total_capacity: 400, occupied_racks: 356, empty_racks: 44, stock_mt: 198.2, utilization: 89.1 },
+                                { name: 'FBD - DTA', total_capacity: 600, occupied_racks: 512, empty_racks: 88, stock_mt: 312.7, utilization: 85.3 },
+                                { name: 'Kaili Godown', total_capacity: 350, occupied_racks: 287, empty_racks: 63, stock_mt: 156.8, utilization: 82.0 },
+                                { name: 'Sector 24', total_capacity: 420, occupied_racks: 330, empty_racks: 90, stock_mt: 178.4, utilization: 78.6 },
+                                { name: 'NSD - DTA', total_capacity: 380, occupied_racks: 286, empty_racks: 94, stock_mt: 165.2, utilization: 75.4 },
+                                { name: '208A-209 - HCBF', total_capacity: 450, occupied_racks: 324, empty_racks: 126, stock_mt: 189.6, utilization: 72.1 },
+                                { name: 'C - 35', total_capacity: 320, occupied_racks: 220, empty_racks: 100, stock_mt: 134.8, utilization: 68.9 },
+                                { name: 'FBD - EOU', total_capacity: 480, occupied_racks: 313, empty_racks: 167, stock_mt: 201.4, utilization: 65.2 },
+                                { name: 'HCBF', total_capacity: 550, occupied_racks: 339, empty_racks: 211, stock_mt: 223.7, utilization: 61.7 },
+                                { name: 'NSD - EOU', total_capacity: 400, occupied_racks: 232, empty_racks: 168, stock_mt: 145.6, utilization: 58.0 },
+                                { name: 'Sector 40', total_capacity: 360, occupied_racks: 201, empty_racks: 159, stock_mt: 128.3, utilization: 55.8 }
+                            ],
+                            sir_status: [
+                                { status: 'Fulfilled', count: 1250 },
+                                { status: 'Pending', count: 150 },
+                                { status: 'Cancelled', count: 45 }
+                            ],
+                            delayed_grn_details: Array.from({ length: 48 }, (_, i) => ({
+                                grn_id: `GRN-00${721 + i}`,
+                                vendor: ['Supplier A', 'Supplier B', 'Supplier C'][i % 3],
+                                grn_date: new Date(new Date().setDate(new Date().getDate() - (10 + i % 5))),
+                                days_delayed: 3 + i % 5,
+                                status: 'Pending QC Clearance'
+                            })),
+                            transfer_details: Array.from({ length: 50 }, (_, i) => ({
+                                transfer_id: `TRN-0${950 + i}`,
+                                item_code: `ITEM-${1001 + i}`,
+                                source_wh: ['WH-CENTRAL', 'WH-SOUTH'][i % 2],
+                                dest_wh: ['WH-NORTH', 'WH-EAST'][i % 2],
+                                quantity: Math.floor(Math.random() * 100) + 20,
+                                transfer_date: new Date(new Date().setDate(new Date().getDate() - (i % 10)))
+                            })),
+                            slow_non_moving_breakdown: [
+                                { category: 'Slow-Moving', type: 'Stock Item', value: 300000 },
+                                { category: 'Slow-Moving', type: 'Non-Stock Item', value: 34500 },
+                                { category: 'Non-Moving', type: 'Stock Item', value: 115000 },
+                                { category: 'Non-Moving', type: 'Non-Stock Item', value: 12500 }
+                            ],
+
+                            top_transfers: [
+                                { route: 'FBD EOU - FBD DTA', volume: 5200 },
+                                { route: 'HCBF - FBD DTA', volume: 4850 },
+                                { route: 'FBD - C35', volume: 4100 },
+                                { route: 'HCBF - C35', volume: 3750 },
+                                { route: 'FBD EOU - HCBF', volume: 3200 },
+                                { route: 'C35 - FBD', volume: 2800 },
+                                { route: 'FBD EOU - C35', volume: 2150 },
+                                { route: 'HCBF - FBD EOU', volume: 1800 }
+                            ],
+                            inventory_item_details: Array.from({ length: 100 }, (_, i) => {
+                                const categories = ['Raw Materials', 'Finished Goods', 'Consumables', 'Spares'];
+                                const warehouses = ['WH-CENTRAL', 'WH-NORTH', 'WH-SOUTH'];
+                                const age = Math.floor(Math.random() * 500);
+                                let status = 'Active';
+                                if (age > 365) status = 'Dead Stock';
+                                else if (age > 180) status = 'Slow-Moving';
+                                const unit_cost = Math.random() * 100 + 5;
+                                const stock_on_hand = Math.floor(Math.random() * 500) + 10;
+
+                                return {
+                                    item_code: `ITEM-${1001 + i}`,
+                                    item_description: `Inventory Item ${1001 + i} Description`,
+                                    category: categories[i % categories.length],
+                                    warehouse: warehouses[i % warehouses.length],
+                                    stock_on_hand: stock_on_hand,
+                                    unit_cost: unit_cost,
+                                    total_value: stock_on_hand * unit_cost,
+                                    stock_age_days: age,
+                                    status: status
+                                };
+                            }),
+                            sir_details: [
+                                // ── Fulfilled SIRs ──
+                                { id: 1, status: 'Fulfilled', sir_id: 'SIR-2026-001', item_code: 'PAP-001', dept: 'Printing', requested_by: 'Amit Sharma', quantity: 500, request_date: new Date(2026, 1, 1), fulfillment_date: '04 Feb 2026', aging_label: '3 days to fulfill' },
+                                { id: 2, status: 'Fulfilled', sir_id: 'SIR-2026-002', item_code: 'BIN-GL01', dept: 'Binding', requested_by: 'Suresh Kumar', quantity: 10, request_date: new Date(2026, 1, 5), fulfillment_date: '08 Feb 2026', aging_label: '3 days to fulfill' },
+                                { id: 3, status: 'Fulfilled', sir_id: 'SIR-2026-003', item_code: 'INK-C01', dept: 'Printing', requested_by: 'Rajesh Negi', quantity: 25, request_date: new Date(2026, 1, 10), fulfillment_date: '13 Feb 2026', aging_label: '3 days to fulfill' },
+                                { id: 4, status: 'Fulfilled', sir_id: 'SIR-2026-004', item_code: 'PLT-TH01', dept: 'Pre-Press', requested_by: 'Vikas Gupta', quantity: 100, request_date: new Date(2026, 1, 12), fulfillment_date: '14 Feb 2026', aging_label: '2 days to fulfill' },
+                                { id: 5, status: 'Fulfilled', sir_id: 'SIR-2026-005', item_code: 'PKG-T01', dept: 'Packaging', requested_by: 'Manoj Kohli', quantity: 200, request_date: new Date(2026, 1, 15), fulfillment_date: '17 Feb 2026', aging_label: '2 days to fulfill' },
+                                { id: 6, status: 'Fulfilled', sir_id: 'SIR-2026-006', item_code: 'INK-M02', dept: 'Printing', requested_by: 'Priya Singh', quantity: 30, request_date: new Date(2026, 1, 17), fulfillment_date: '21 Feb 2026', aging_label: '4 days to fulfill' },
+                                // ── Pending SIRs ──
+                                { id: 7, status: 'Pending', sir_id: 'SIR-2026-010', item_code: 'PAP-120', dept: 'Printing', requested_by: 'Deepak Rao', quantity: 300, request_date: new Date(2026, 1, 18), fulfillment_date: 'Not yet fulfilled', aging_label: '5 days pending' },
+                                { id: 8, status: 'Pending', sir_id: 'SIR-2026-011', item_code: 'BIN-SC01', dept: 'Binding', requested_by: 'Kavita Joshi', quantity: 50, request_date: new Date(2026, 1, 15), fulfillment_date: 'Not yet fulfilled', aging_label: '8 days pending' },
+                                { id: 9, status: 'Pending', sir_id: 'SIR-2026-012', item_code: 'PLT-UV01', dept: 'Pre-Press', requested_by: 'Rohit Mehta', quantity: 75, request_date: new Date(2026, 1, 10), fulfillment_date: 'Not yet fulfilled', aging_label: '13 days pending' },
+                                { id: 10, status: 'Pending', sir_id: 'SIR-2026-013', item_code: 'INK-Y01', dept: 'Printing', requested_by: 'Sandeep Yadav', quantity: 20, request_date: new Date(2026, 1, 5), fulfillment_date: 'Not yet fulfilled', aging_label: '18 days pending' },
+                                // ── Cancelled SIRs ──
+                                { id: 11, status: 'Cancelled', sir_id: 'SIR-2026-020', item_code: 'PKG-BOX02', dept: 'Packaging', requested_by: 'Manoj Kohli', quantity: 1000, request_date: new Date(2026, 0, 20), fulfillment_date: 'Cancelled', aging_label: 'Cancelled on 25 Jan 2026' },
+                                { id: 12, status: 'Cancelled', sir_id: 'SIR-2026-021', item_code: 'INK-K01', dept: 'Printing', requested_by: 'Amit Sharma', quantity: 15, request_date: new Date(2026, 1, 1), fulfillment_date: 'Cancelled', aging_label: 'Cancelled on 03 Feb 2026' }
+                            ]
+                        };
+                        const data = mockData[dataKey];
+                        this.cache.set(dataKey, { data, timestamp: Date.now() });
+                        return data;
+                    }
+                }
+                return { SharedTransformers, getInstance: () => new MockDataProvider() };
+            })();
+
+            // ========================================================================================================
+            // SECTION 3: APPLICATION CORE
+            // This section simulates `app.js` and contains all the reusable logic.
+            // ========================================================================================================
+            const APP_CORE = (() => {
+                const dashboardConfig = CONFIGURATION;
+                const DataProvider = DATA_PROVIDER.getInstance();
+                const SharedTransformers = DATA_PROVIDER.SharedTransformers;
+                let chartInstances = {};
+                let modals = {};
+                let tooltipHideTimer = null;
+
+                const StateManager = (() => {
+                    const state = { selectedPeriodIndex: null };
+                    const subscribers = {};
+                    return {
+                        getState: (key) => key ? state[key] : state,
+                        subscribe: (key, callback) => {
+                            if (!subscribers[key]) subscribers[key] = [];
+                            subscribers[key].push(callback);
+                        },
+                        setState: (key, data) => {
+                            const currentState = state[key];
+                            let hasChanged = false;
+                            if (typeof currentState === 'object' && currentState !== null && typeof data === 'object' && data !== null) {
+                                if (JSON.stringify(currentState) !== JSON.stringify(data)) hasChanged = true;
+                            } else {
+                                if (currentState !== data) hasChanged = true;
+                            }
+                            if (!hasChanged) return;
+                            state[key] = data;
+                            if (subscribers[key]) subscribers[key].forEach(callback => callback(data));
+                        }
+                    };
+                })();
+
+                const ChartDefaults = {
+                    getChartOptions(config) {
+                        const baseOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            onHover: (e, el) => { e.native.target.style.cursor = el.length > 0 ? 'pointer' : 'default'; },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+                                tooltip: { enabled: false, external: InteractivityHandler.customTooltip }
+                            }
+                        };
+
+                        // Apply type-specific defaults
+                        switch (config.chartType) {
+                            case 'doughnut':
+                                baseOptions.plugins.legend.display = false;
+                                break;
+                            case 'bubble':
+                                baseOptions.plugins.legend.display = false;
+                                // Bubble chart tooltip is now handled by the main customTooltip handler
+                                break;
+                        }
+
+                        // Merge user-defined options from the config over the defaults
+                        return Utils.deepMerge(baseOptions, config.options || {});
+                    }
+
+                };
+                const ActionRegistry = {
+                    setPeriodIndex: (e, elements, chart) => {
+                        if (elements.length > 0) {
+                            const newIndex = elements[0].index;
+                            StateManager.setState('selectedPeriodIndex', newIndex);
+                            chart.setActiveElements([{ datasetIndex: 0, index: newIndex }]);
+                            chart.update();
+                        }
+                    }
+                };
+
+                async function init() {
+                    try {
+                        ConfigValidator.validate(dashboardConfig);
+                    } catch (error) {
+                        console.error("Dashboard Configuration Error:", error.message);
+                        document.body.innerHTML = `<div class="alert alert-danger m-4" role="alert"><strong>Configuration Error:</strong> ${error.message}</div>`;
+                        return;
+                    }
+
+                    Chart.register(ChartDataLabels);
+                    Chart.defaults.plugins.datalabels.display = false;
+                    const centerTextPlugin = { id: 'centerText', afterDraw: (chart) => { const { centerText } = chart.config.options.plugins; if (centerText?.display) { const { ctx, chartArea: { top, left, width, height } } = chart; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = left + width / 2, valueY = top + height / 2 - 10, labelY = valueY + 22; ctx.font = `700 ${centerText.fontSize || '24px'} Inter`; ctx.fillStyle = centerText.color || '#212529'; ctx.fillText(centerText.text, centerX, valueY); if (centerText.label) { ctx.font = `500 1rem Inter`; ctx.fillStyle = '#6B7280'; ctx.fillText(centerText.label, centerX, labelY); } ctx.restore(); } } };
+                    Chart.register(centerTextPlugin);
+
+                    document.title = dashboardConfig.title;
+                    document.getElementById('dashboardTitle').textContent = dashboardConfig.title;
+                    ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'].forEach(id => { modals[id] = new bootstrap.Modal(document.getElementById(id)); });
+
+                    renderLayoutShells();
+                    InteractivityHandler.init();
+                    setupSubscriptions();
+
+                    await initialDataFetch();
+                }
+
+                async function initialDataFetch() {
+                    const kpiDataPromise = DataProvider.fetchKpiData();
+
+                    // Collect ALL unique data keys (Main Charts + KPI Drilldowns + Layout Drilldowns)
+                    const allDataKeys = new Set();
+
+                    // 1. Get keys from KPIs
+                    dashboardConfig.kpis.forEach(k => {
+                        if (k.drilldownConfig?.dataKey) allDataKeys.add(k.drilldownConfig.dataKey);
+                    });
+
+                    // 2. Get keys from Layout (Charts/Widgets)
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.config.dataKey) allDataKeys.add(item.config.dataKey);
+                        if (item.config.drilldownConfig?.dataKey) allDataKeys.add(item.config.drilldownConfig.dataKey);
+                    });
+
+                    const keysToFetch = Array.from(allDataKeys).filter(Boolean);
+                    const rawDataPromises = keysToFetch.map(key => DataProvider.fetchRawData(key));
+
+                    const [kpiData] = await Promise.all([kpiDataPromise]);
+                    StateManager.setState('kpiData', kpiData);
+                    renderKpis();
+
+                    const allRawData = await Promise.all(rawDataPromises);
+                    allRawData.forEach((data, index) => {
+                        if (data) {
+                            StateManager.setState(keysToFetch[index], data);
+                        }
+                    });
+                }
+
+
+
+                function renderLayoutShells() {
+                    document.getElementById('kpi-container').innerHTML = dashboardConfig.kpis.map(c => `<div class="col" id="shell-${c.id}"></div>`).join('');
+                    const loadingSpinner = `<div class="chart-feedback-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+                    document.getElementById('content-grid').innerHTML = dashboardConfig.layout.map(item => {
+                        const canvasOrDiv = item.type === 'chart' ? `<canvas id="${item.config.id}"></canvas>` : `<div id="${item.config.id}" style="width: 100%; height: 100%;"></div>`;
+
+                        // Add filter and/or toggle for charts that need them
+                        let titleHtml = '';
+                        const _hasFilter = item.config.hasFilter && item.config.filterOptions;
+                        const _hasToggle = item.config.hasToggle && item.config.toggleOptions;
+                        if (_hasFilter || _hasToggle) {
+                            const filterSelectHtml = _hasFilter ? (() => {
+                                const opts = item.config.filterOptions.map(o =>
+                                    `<option value="${o.value}">${o.label}</option>`
+                                ).join('');
+                                return `<select class="form-select form-select-sm" id="filter-${item.config.id}" style="max-width:180px;">${opts}</select>`;
+                            })() : '';
+                            const toggleBtnsHtml = _hasToggle ? (() => {
+                                const btns = item.config.toggleOptions.map((o, i) =>
+                                    `<button type="button" class="btn ${i === 0 ? 'btn-primary' : 'btn-outline-secondary'} chart-toggle-btn"
+                                        data-chart-id="${item.config.id}" data-toggle-value="${o.value}"
+                                        style="font-size:0.7rem;padding:2px 10px;line-height:1.4;">${o.label}</button>`
+                                ).join('');
+                                return `<div class="btn-group" id="toggle-${item.config.id}" role="group">${btns}</div>`;
+                            })() : '';
+                            titleHtml = `
+                                <div class="d-flex justify-content-between align-items-start mb-0">
+                                    <h3 class="content-title mb-0">${item.config.title}</h3>
+                                    <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0 ms-2">
+                                        ${filterSelectHtml}
+                                        ${toggleBtnsHtml ? `<div>${toggleBtnsHtml}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            titleHtml = `<h3 class="content-title">${item.config.title}</h3>`;
+                        }
+
+                        return `<div class="${item.width}" id="container-${item.config.id}"><div class="content-wrapper context-menu-target" data-component-id="${item.config.id}">${titleHtml}<div class="chart-canvas-container">${loadingSpinner}${canvasOrDiv}</div></div></div>`;
+                    }).join('');
+
+                    // Set up filter and toggle event listeners
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.config.hasFilter) {
+                            const filterEl = document.getElementById(`filter-${item.config.id}`);
+                            if (filterEl) {
+                                filterEl.addEventListener('change', (e) => {
+                                    StateManager.setState(`${item.config.id}_category_filter`, e.target.value);
+                                });
+                            }
+                        }
+                        if (item.config.hasToggle) {
+                            const toggleEl = document.getElementById(`toggle-${item.config.id}`);
+                            if (toggleEl) {
+                                toggleEl.addEventListener('click', (e) => {
+                                    const btn = e.target.closest('.chart-toggle-btn');
+                                    if (!btn || btn.dataset.chartId !== item.config.id) return;
+                                    toggleEl.querySelectorAll('.chart-toggle-btn').forEach(b => {
+                                        b.classList.remove('btn-primary');
+                                        b.classList.add('btn-outline-secondary');
+                                    });
+                                    btn.classList.remove('btn-outline-secondary');
+                                    btn.classList.add('btn-primary');
+                                    StateManager.setState(`${item.config.id}_toggle`, btn.dataset.toggleValue);
+                                });
+                            }
+                        }
+                    });
+                }
+
+                function setupSubscriptions() {
+                    dashboardConfig.layout.forEach(item => {
+                        if (item.type === 'chart') {
+                            StateManager.subscribe(item.config.dataKey, () => ChartHandler.render(item.config));
+                            if (item.config.isPeriodSensitive) {
+                                StateManager.subscribe('selectedPeriodIndex', () => ChartHandler.render(item.config));
+                            }
+                            // Subscribe to category filter changes for charts
+                            if (item.config.hasFilter) {
+                                StateManager.subscribe(`${item.config.id}_category_filter`, () => ChartHandler.render(item.config));
+                            }
+                            // Subscribe to toggle changes for charts
+                            if (item.config.hasToggle) {
+                                StateManager.subscribe(`${item.config.id}_toggle`, () => ChartHandler.render(item.config));
+                            }
+                        } else if (item.type === 'dx-widget') {
+                            StateManager.subscribe(item.config.dataKey, () => DxWidgetHandler.render(item.config));
+                            // Subscribe to category filter changes
+                            if (item.config.hasFilter) {
+                                StateManager.subscribe(`${item.config.id}_category_filter`, () => DxWidgetHandler.render(item.config));
+                            }
+                        } else if (item.type === 'custom-html') { // ADDED THIS BLOCK
+                            StateManager.subscribe(item.config.dataKey, () => CustomHtmlHandler.render(item.config));
+                        }
+                    });
+
+                }
+                const DxWidgetHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        const widgetContainer = document.getElementById(config.id);
+                        const feedbackEl = container.querySelector('.chart-feedback-overlay');
+                        try {
+                            if (!widgetContainer) throw new Error(`Container with id '${config.id}' not found.`);
+                            let rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) return;
+
+                            // Apply category filter if present
+                            if (config.hasFilter) {
+                                const categoryFilter = StateManager.getState(`${config.id}_category_filter`) || 'all';
+                                // Always filter by the selected category (including 'all')
+                                rawData = rawData.filter(item => item.category === categoryFilter);
+                            }
+
+                            const data = config.transformer ? config.transformer(rawData) : rawData;
+                            const options = { ...config.options };
+
+                            // Specific logic for DevExtreme widgets that take a direct value
+                            if (config.widgetType === 'dxCircularGauge' && Array.isArray(data) && data.length > 0) {
+                                options.value = data[0].value;
+                            } else {
+                                options.dataSource = data;
+                            }
+
+                            // Initialize the DevExtreme widget
+                            $(widgetContainer)[config.widgetType](options);
+
+                            if (feedbackEl) feedbackEl.remove();
+                        } catch (error) {
+                            console.error(`Failed to render widget '${config.id}':`, error);
+                            ChartHandler.renderErrorState(container.querySelector('.chart-canvas-container'), error);
+                        }
+                    }
+                };
+
+                const CustomHtmlHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        try {
+                            if (!canvasContainer) throw new Error(`Container for component '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) return;
+
+                            // Inject subtitle if it doesn't exist
+                            const titleEl = container.querySelector('.content-title');
+                            let subtitleEl = container.querySelector('.content-subtitle');
+                            if (config.subtitle && !subtitleEl) {
+                                subtitleEl = document.createElement('p');
+                                subtitleEl.className = 'content-subtitle text-muted small mb-2';
+                                subtitleEl.style.marginTop = '-0.5rem';
+                                subtitleEl.style.marginLeft = '1rem';
+                                subtitleEl.textContent = config.subtitle;
+                                titleEl.insertAdjacentElement('afterend', subtitleEl);
+                            }
+
+                            const stageHtml = rawData.map(item => `
+                <div style="background-color: ${item.color}; color: white; padding: 1rem; text-align: center; font-size: 1rem; font-weight: 500; border-bottom: 2px solid white;">
+                    ${item.stage} ${Utils.formatMetric(item.count)}
+                </div>
+            `).join('');
+
+                            // MODIFICATION START: Override conflicting container styles
+                            canvasContainer.style.display = 'block'; // Override 'flex' to prevent centering
+                            canvasContainer.style.height = 'auto';   // Override '220px' to allow natural height
+                            canvasContainer.style.padding = '0.5rem';
+                            // MODIFICATION END
+
+                            canvasContainer.innerHTML = `<div style="width: 100%; border-radius: 0.5rem; overflow: hidden; border: 1px solid #E5E7EB;">${stageHtml}</div>`;
+
+                        } catch (error) {
+                            console.error(`Failed to render custom HTML component '${config.id}':`, error);
+                            ChartHandler.renderErrorState(canvasContainer, error);
+                        }
+                    }
+                };
+                function renderKpis() {
+                    const { kpiData } = StateManager.getState();
+                    if (!kpiData) return;
+                    dashboardConfig.kpis.forEach(config => {
+                        const data = kpiData[config.dataKey];
+                        if (!data) return;
+                        const growth = data.previous > 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
+                        const container = document.getElementById(`shell-${config.id}`);
+
+                        const isPositiveGrowth = growth >= 0;
+                        const isGood = config.invertGrowthColor ? !isPositiveGrowth : isPositiveGrowth;
+
+                        // --- LOGIC CORRECTION & ENHANCEMENT ---
+                        // This logic now prioritizes the `config.format` property for primary values
+                        // and fixes the bug where a boolean was passed instead of the string 'currency'.
+                        const primaryFormat = config.format || (config.isCurrency ? 'currency' : undefined);
+
+                        container.innerHTML = `<div class="card kpi-card context-menu-target" data-component-id="${config.id}">
+            <div class="card-body">
+                <div class="kpi-header">
+                    <div class="kpi-title-container">
+                        ${config.mainIcon ? `<i class="bi ${config.mainIcon}"></i>` : ''}
+                        <span class="kpi-title">${config.label}</span>
+                    </div>
+                    <div class="kpi-growth ${isGood ? 'positive' : 'negative'}">
+                        <i class="bi ${isPositiveGrowth ? 'bi-arrow-up-short' : 'bi-arrow-down-short'}"></i> ${Math.abs(growth).toFixed(1)}%
+                    </div>
+                </div>
+
+                <div class="kpi-body">
+                    <div class="kpi-primary-metrics">
+                        <span class="kpi-value">${Utils.formatMetric(data.current, primaryFormat, config.valueSuffix)}</span>
+                        <span class="kpi-previous-value">Prev: ${Utils.formatMetric(data.previous, primaryFormat, config.valueSuffix)}</span>
+                    </div>
+                    <div class="kpi-secondary-metrics">
+                        ${config.secondaryMetrics.map(sm => `<div class="metric-item"><i class="bi ${sm.icon}"></i><span>${sm.label ? sm.label + ': ' : ''}${Utils.formatMetric(data[sm.dataKey], sm.format)}</span></div>`).join('')}
+                    </div>
+                </div>
+
+                <div class="kpi-footer">
+                    <div class="kpi-chart-container">
+                        <canvas id="sparkline-${config.id}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+                        renderSparkline(config.id, data.trend, config.cssVar);
+                    });
+                }
+
+                function renderSparkline(id, data, colorVarName) {
+                    const ctx = document.getElementById(`sparkline-${id}`)?.getContext('2d');
+                    if (!ctx) return;
+
+                    const trendColor = getComputedStyle(document.documentElement).getPropertyValue(colorVarName).trim();
+                    const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                    if (!trendColorRGB) {
+                        console.error(`Invalid color format or CSS variable not found for: ${colorVarName}`);
+                        return;
+                    }
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                    // MODIFIED: Implemented a 3-stop gradient for a darker top that fades out.
+                    gradient.addColorStop(0, `rgba(${trendColorRGB}, 0.45)`);  // Darker start color near the line
+                    gradient.addColorStop(0.4, `rgba(${trendColorRGB}, 0.1)`);   // Fade significantly by 40% height
+                    gradient.addColorStop(1, `rgba(${trendColorRGB}, 0)`);      // Fully transparent at the bottom
+
+                    if (chartInstances[id]) chartInstances[id].destroy();
+
+                    chartInstances[id] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(() => ''),
+                            datasets: [{
+                                data: data,
+                                borderColor: trendColor,
+                                borderWidth: 2,
+                                fill: true,
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                pointRadius: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { x: { display: false }, y: { display: false } },
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            layout: {
+                                padding: 0
+                            }
+                        }
+                    });
+                }
+                const ChartHandler = {
+                    render(config) {
+                        const container = document.getElementById(`container-${config.id}`);
+                        if (!container) return; // Exit if container not found
+                        const canvasContainer = container.querySelector('.chart-canvas-container');
+                        const feedbackEl = canvasContainer.querySelector('.chart-feedback-overlay');
+                        try {
+                            const ctx = canvasContainer.querySelector('canvas')?.getContext('2d');
+                            if (!ctx) throw new Error(`Canvas with id '${config.id}' not found.`);
+                            const rawData = StateManager.getState(config.dataKey);
+                            if (!rawData) { return; }
+                            const periodIndex = StateManager.getState('selectedPeriodIndex');
+
+                            // Get filter value if hasFilter is enabled
+                            let filterValue = null;
+                            if (config.hasFilter) {
+                                filterValue = StateManager.getState(`${config.id}_category_filter`) || (config.filterOptions?.[0]?.value || null);
+                            }
+                            // Get toggle value if hasToggle is enabled
+                            let toggleValue = null;
+                            if (config.hasToggle) {
+                                toggleValue = StateManager.getState(`${config.id}_toggle`) || (config.toggleOptions?.[0]?.value || null);
+                            }
+
+                            let transformer;
+                            if (typeof config.transformer === 'function') {
+                                transformer = config.transformer;
+                            } else if (typeof config.transformer === 'string' && SharedTransformers[config.transformer]) {
+                                transformer = SharedTransformers[config.transformer];
+                            } else {
+                                throw new Error(`Transformer '${config.transformer}' is not a valid function or a key in SharedTransformers.`);
+                            }
+                            // Pass filter and toggle values to transformer
+                            const data = transformer(rawData, filterValue || periodIndex, { ...config, toggleValue });
+                            if (chartInstances[config.id]) chartInstances[config.id].destroy();
+
+                            let finalOptions = ChartDefaults.getChartOptions(config);
+
+                            // MODIFICATION START: Dynamically add onClick for drilldown
+                            if (config.drilldownConfig) {
+                                finalOptions.onClick = (e, elements) => {
+                                    if (elements.length > 0) {
+                                        const dataIndex = elements[0].index;
+                                        initiateDrilldown(config.id, { dataIndex });
+                                    }
+                                };
+                            } else if (config.onClickAction && ActionRegistry[config.onClickAction]) {
+                                finalOptions.onClick = ActionRegistry[config.onClickAction];
+                            }
+                            // MODIFICATION END
+
+                            if (config.chartType === 'doughnut') {
+                                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (finalOptions.plugins.centerText) {
+                                    finalOptions.plugins.centerText.text = Utils.formatMetric(total, 'currency_compact');
+                                }
+                                finalOptions.onHover = (event, elements, chart) => {
+                                    const centerText = chart.config.options.plugins.centerText;
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        centerText.text = Utils.formatMetric(chart.data.datasets[0].data[index], 'currency_compact');
+                                        centerText.label = chart.data.labels[index];
+                                    } else {
+                                        centerText.text = Utils.formatMetric(total, 'currency_compact');
+                                        centerText.label = 'Total Value';
+                                    }
+                                    chart.update('none');
+                                };
+                            }
+                            if (feedbackEl) feedbackEl.remove();
+                            chartInstances[config.id] = new Chart(ctx, { type: config.chartType, data, options: finalOptions });
+                        } catch (error) {
+                            console.error(`Failed to render chart '${config.id}':`, error);
+                            this.renderErrorState(canvasContainer, error);
+                        }
+                    },
+                    renderErrorState(container, error) {
+                        container.innerHTML = `<div class="chart-feedback-overlay"><i class="bi bi-exclamation-triangle-fill"></i><strong>Chart Failed to Load</strong><small class="mt-1">${error.message}</small></div>`;
+                    }
+                };
+
+
+
+                const DrilldownService = {
+                    show(title, columns, dataRows, filters, docFormConfig) {
+                        const filterControls = document.getElementById('drilldownFilterControls');
+                        const modalBody = document.getElementById('drilldownModalBody');
+
+                        if (docFormConfig) {
+                            modalBody.dataset.docFormConfig = JSON.stringify(docFormConfig);
+                        } else {
+                            delete modalBody.dataset.docFormConfig;
+                        }
+
+                        if (filters) {
+                            filterControls.innerHTML = filters.map(opt => `<div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="drilldownFilter" id="filter_${opt.value}" value="${opt.value}" ${opt.default ? 'checked' : ''}><label class="form-check-label small" for="filter_${opt.value}">${opt.label}</label></div>`).join('');
+                        } else {
+                            filterControls.innerHTML = '';
+                        }
+
+                        const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+                        const rows = dataRows.map(row => `<tr data-doc-id="${row.id}" data-status="${row.status}">${columns.map(col => `<td>${Utils.formatMetric(row[col.key], col.format)}</td>`).join('')}</tr>`).join('');
+
+                        document.getElementById('drilldownModalLabel').textContent = title;
+                        modalBody.innerHTML = `<div class="table-responsive"><table class="table table-hover"><thead id="drilldownThead"><tr>${headers}</tr></thead><tbody id="drilldownTbody">${rows}</tbody></table></div>`;
+                        modals.drilldownModal.show();
+                    },
+                    showPlaceholder(title, message) {
+                        document.getElementById('drilldownModalLabel').textContent = `Details for ${title}`;
+                        document.getElementById('drilldownModalBody').innerHTML = `<p class="p-3">${message}</p>`;
+                        modals.drilldownModal.show();
+                    }
+                };
+
+                // --- ADDED: New orchestrator function for all drilldown actions ---
+                function initiateDrilldown(componentId, context = {}) {
+                    const config = Utils.getComponentConfig(componentId, dashboardConfig);
+
+                    // 1. Handle redirection if the component has a specific drilldown target
+                    if (config.drilldownTarget && !context.dataIndex && !context.customLabel) {
+                        return initiateDrilldown(config.drilldownTarget);
+                    }
+
+                    const drilldownConfig = config?.drilldownConfig;
+                    if (!drilldownConfig) {
+                        return DrilldownService.showPlaceholder(config.label || config.title, `No drilldown configured.`);
+                    }
+
+                    const { dataKey, columns, filters, docFormConfig, filterMapping, filterPredicate } = drilldownConfig;
+                    let title = `Detailed View: ${config.label || config.title}`;
+                    const rawData = StateManager.getState(dataKey);
+
+                    if (!rawData || !Array.isArray(rawData)) {
+                        return DrilldownService.showPlaceholder(title, `No detailed data available for key: ${dataKey}`);
+                    }
+
+                    let filteredData = [...rawData];
+
+                    // 2. Apply general predicates if defined
+                    if (filterPredicate && typeof filterPredicate === 'function') {
+                        filteredData = rawData.filter(filterPredicate);
+                    }
+
+                    // 3. Extract label from context (Handles Funnel, Tooltip clicks, and Context Menu)
+                    let label = context.customLabel;
+
+                    if (context.dataIndex !== undefined) {
+                        const chart = chartInstances[componentId];
+                        if (chart && chart.data.labels && chart.data.labels[context.dataIndex] !== undefined) {
+                            label = chart.data.labels[context.dataIndex];
+                        }
+                    }
+
+                    // 4. Robust Filtering (SOLVES THE "EMPTY DATA" PROBLEM)
+                    // Inside initiateDrilldown function...
+
+                    // Inside initiateDrilldown function...
+
+                    // Inside initiateDrilldown function, find the filter logic and update it:
+                    // Find this inside the initiateDrilldown function
+                    if (label && filterMapping) {
+                        const targetLabel = String(label).trim().toLowerCase();
+                        title += ` (${label})`;
+
+                        filteredData = rawData.filter(item => {
+                            // Standard matching (Category, Warehouse, etc.)
+                            const itemValue = item[filterMapping];
+                            if (itemValue !== undefined && itemValue !== null) {
+                                if (String(itemValue).trim().toLowerCase() === targetLabel) return true;
+                            }
+
+                            // SPECIAL CASE: For Top Transfers where the label is "From - To"
+                            // If the direct mapping failed, we check if from_unit and to_unit are inside the label
+                            if (item.from_unit && item.to_unit) {
+                                const combinedRoute = `${item.from_unit} - ${item.to_unit}`.toLowerCase();
+                                if (combinedRoute === targetLabel) return true;
+                            }
+
+                            return false;
+                        });
+                    }
+                    // 5. Show the report
+                    DrilldownService.show(title, columns, filteredData, filters, docFormConfig);
+                }
+
+                const DocFormHandler = {
+                    show(docId, config) {
+                        const rawData = StateManager.getState(config.dataKey);
+                        const data = rawData.find(item => item.id === docId);
+                        if (!data) { alert(`Details for ${docId} not found.`); return; }
+                        const bodyHtml = `<div class="row">${config.fields.map(field => `<div class="col-md-6 form-readonly-group"><label>${field.label}</label><input type="text" class="form-control" value="${Utils.formatMetric(data[field.key], field.format)}" readonly></div>`).join('')}</div>`;
+                        document.getElementById('docFormModalLabel').textContent = `Details for: ${docId}`;
+                        document.getElementById('docFormBody').innerHTML = bodyHtml;
+                        modals.drilldownModal.classList.add('is-blurred');
+                        modals.docFormModal.show();
+                    }
+                };
+
+                const ExpandChartHandler = {
+                    show(componentId) {
+                        const originalChart = chartInstances[componentId];
+                        const config = Utils.getComponentConfig(componentId, dashboardConfig);
+                        if (!originalChart || !config) { alert('Cannot expand: chart instance not found.'); return; }
+
+                        const ctx = document.getElementById('expandedChartCanvas').getContext('2d');
+                        const chartData = JSON.parse(JSON.stringify(originalChart.data));
+
+                        const originalOptions = originalChart.config.options;
+                        const expansionOverrides = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    enabled: true,
+                                    external: null
+                                }
+                            }
+                        };
+
+                        const finalOptions = Utils.deepMerge(JSON.parse(JSON.stringify(originalOptions)), expansionOverrides);
+
+                        const isKpiCard = dashboardConfig.kpis.some(k => k.id === componentId);
+                        if (isKpiCard) {
+                            const kpiData = StateManager.getState('kpiData')[config.dataKey];
+                            if (kpiData && kpiData.trend_labels) {
+                                chartData.labels = kpiData.trend_labels;
+                            }
+                            chartData.datasets[0].label = config.label;
+
+                            // START: MODIFICATION
+                            // Dynamically set colors based on the source KPI's configured CSS variable
+                            if (config.cssVar) {
+                                const trendColor = getComputedStyle(document.documentElement).getPropertyValue(config.cssVar).trim();
+                                const trendColorRGB = Utils.hexToRgb(trendColor);
+
+                                if (trendColor && trendColorRGB) {
+                                    chartData.datasets[0].borderColor = trendColor;
+                                    chartData.datasets[0].backgroundColor = `rgba(${trendColorRGB}, 0.2)`;
+                                    chartData.datasets[0].fill = true;
+                                    chartData.datasets[0].tension = 0.3;
+                                }
+                            }
+                            // END: MODIFICATION
+                        }
+
+                        document.getElementById('expandChartModalLabel').textContent = `Expanded View: ${config.label || config.title}`;
+
+                        if (chartInstances['expandedChart']) chartInstances['expandedChart'].destroy();
+                        chartInstances['expandedChart'] = new Chart(ctx, { type: originalChart.config.type, data: chartData, options: finalOptions });
+                        modals.expandChartModal.show();
+                    }
+                };
+
+                const GuideHandler = { show(kpiConfig) { if (!kpiConfig?.guide) { alert('No guide available for this KPI.'); return; } const { title, definition, interpretation, calculation } = kpiConfig.guide; document.getElementById('kpiGuideModalLabel').textContent = `Guide: ${title}`; document.getElementById('guide-definition').textContent = definition; document.getElementById('guide-interpretation').textContent = interpretation; document.getElementById('guide-calculation').textContent = calculation; modals.kpiGuideModal.show(); } };
+
+                const InteractivityHandler = {
+                    init() {
+                        const mainContent = document.getElementById('main-dashboard-content');
+                        const modalIds = ['drilldownModal', 'expandChartModal', 'kpiGuideModal', 'docFormModal'];
+
+                        modalIds.forEach(id => {
+                            const modalEl = document.getElementById(id);
+                            if (modalEl) {
+                                // Add blur when any modal opens
+                                modalEl.addEventListener('show.bs.modal', () => {
+                                    mainContent.classList.add('dashboard-blur');
+                                });
+                                const menu = document.getElementById('customContextMenu');
+                                const hideMenu = () => menu.style.display = 'none';
+
+                                document.addEventListener('click', hideMenu);
+                                document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+
+                                document.body.addEventListener('contextmenu', e => {
+                                    const target = e.target.closest('.context-menu-target');
+                                    if (target) {
+                                        e.preventDefault();
+                                        this.showContextMenu(e, target.dataset.componentId);
+                                    }
+                                });
+
+                                // Remove blur only if NO other modals are currently open (handles stacked modals)
+                                modalEl.addEventListener('hidden.bs.modal', () => {
+                                    const isAnyModalOpen = modalIds.some(mid => {
+                                        const m = document.getElementById(mid);
+                                        // Bootstrap adds the 'show' class to visible modals
+                                        return m && m.classList.contains('show');
+                                    });
+
+                                    if (!isAnyModalOpen) {
+                                        mainContent.classList.remove('dashboard-blur');
+                                    }
+                                });
+                            }
+                        });
+                        const menu = document.getElementById('customContextMenu');
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        const drilldownModalEl = document.getElementById('drilldownModal');
+                        const hideMenu = () => menu.style.display = 'none';
+                        const hideTooltip = () => { if (tooltipEl) { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; } };
+                        document.addEventListener('click', hideMenu);
+                        document.addEventListener('keydown', e => e.key === 'Escape' && hideMenu());
+                        document.body.addEventListener('contextmenu', e => { const target = e.target.closest('.context-menu-target'); if (target) { e.preventDefault(); this.showContextMenu(e, target.dataset.componentId); } });
+                        document.body.addEventListener('click', e => {
+                            const target = e.target.closest('.kpi-card');
+                            if (target) initiateDrilldown(target.dataset.componentId);
+                        });
+                        tooltipEl.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+                        tooltipEl.addEventListener('mouseleave', () => { tooltipHideTimer = setTimeout(hideTooltip, 300); });
+                        document.getElementById('drilldownFilterControls').addEventListener('change', e => { if (e.target.name === 'drilldownFilter') { const filterValue = e.target.value; document.getElementById('drilldownTbody').querySelectorAll('tr').forEach(row => { row.style.display = (filterValue === 'all' || row.dataset.status === filterValue) ? '' : 'none'; }); } });
+
+                        // --- FIX: Add delegated event listener for drilldown table rows ---
+                        drilldownModalEl.addEventListener('click', e => {
+                            const row = e.target.closest('tr[data-doc-id]');
+                            const configStr = drilldownModalEl.querySelector('.modal-body').dataset.docFormConfig;
+                            if (row && configStr) {
+                                const config = JSON.parse(configStr);
+                                DocFormHandler.show(row.dataset.docId, config);
+                            }
+                        });
+
+                        drilldownModalEl.addEventListener('hidden.bs.modal', () => {
+                            const modalBody = drilldownModalEl.querySelector('.modal-body');
+                            if (modalBody.dataset.docFormConfig) {
+                                delete modalBody.dataset.docFormConfig;
+                            }
+                        });
+
+                        document.getElementById('docFormModal').addEventListener('hidden.bs.modal', () => modals.drilldownModal.classList.remove('is-blurred'));
+                        document.getElementById('expandChartModal').addEventListener('hidden.bs.modal', () => {
+                            if (chartInstances['expandedChart']) {
+                                chartInstances['expandedChart'].destroy();
+                                chartInstances['expandedChart'] = null;
+                            }
+                        });
+                    },
+                    showContextMenu(event, componentId) {
+                        const menu = document.getElementById('customContextMenu');
+                        const menuList = document.getElementById('contextMenuList');
+                        const actions = dashboardConfig.contextMenu.actions;
+
+                        // This helper function handles submenus (the arrows) and separators
+                        const renderItems = (items) => items.map(a =>
+                            a.type === 'separator' ? '<li class="context-menu-separator"></li>' :
+                                `<li class="context-menu-item" data-action="${a.id}">
+            <i class="bi ${a.icon}"></i>
+            <span>${a.label}</span>
+            ${a.submenu ? `<i class="bi bi-chevron-right ms-auto"></i><ul class="context-menu-sublist">${renderItems(a.submenu)}</ul>` : ''}
+        </li>`
+                        ).join('');
+
+                        menuList.innerHTML = renderItems(actions);
+
+                        // Add click listeners (ignoring items that just open submenus)
+                        menu.querySelectorAll('.context-menu-item').forEach(item => {
+                            if (!item.querySelector('.context-menu-sublist')) {
+                                item.addEventListener('click', () => this.handleContextMenuAction(item.dataset.action, componentId));
+                            }
+                        });
+
+                        menu.style.display = 'block';
+                        const { offsetWidth: menuW, offsetHeight: menuH } = menu;
+                        let left = event.clientX, top = event.clientY;
+
+                        if (left + menuW > window.innerWidth) left -= menuW;
+                        if (top + menuH > window.innerHeight) top -= menuH;
+
+                        menu.style.left = `${left + window.scrollX}px`;
+                        menu.style.top = `${top + window.scrollY}px`;
+                    },
+                    handleContextMenuAction(action, componentId) {
+                        const config = Utils.getComponentConfig(componentId, dashboardConfig);
+                        switch (action) {
+                            case 'drilldown': initiateDrilldown(componentId); break;
+                            case 'expand': ExpandChartHandler.show(componentId); break;
+                            case 'guide': if (config.guide) GuideHandler.show(config); break;
+                            case 'refresh': location.reload(); break;
+                            case 'share':
+                                const subject = encodeURIComponent(`Dashboard Insight: ${config.label || config.title}`);
+                                window.location.href = `mailto:?subject=${subject}&body=Check out the latest data for ${config.label || config.title}.`;
+                                break;
+                            case 'ai-insight':
+                                alert("AI Insight: Generating automated analysis for " + (config.label || config.title) + "...");
+                                break;
+                            case 'export-png':
+                                const chart = chartInstances[componentId];
+                                if (chart) {
+                                    const a = document.createElement('a');
+                                    a.href = chart.toBase64Image();
+                                    a.download = `${componentId}.png`;
+                                    a.click();
+                                }
+                                break;
+                        }
+                    },
+
+                    customTooltip(context) {
+                        const { chart, tooltip } = context;
+                        const tooltipEl = document.getElementById('custom-tooltip');
+                        clearTimeout(tooltipHideTimer);
+                        if (tooltip.opacity === 0) { tooltipHideTimer = setTimeout(() => { tooltipEl.style.opacity = 0; tooltipEl.style.pointerEvents = 'none'; }, 300); return; }
+
+                        const titleEl = tooltipEl.querySelector('.tooltip-main-title');
+                        const headerEl = tooltipEl.querySelector('.tooltip-header');
+                        const valueEl = tooltipEl.querySelector('.tooltip-value');
+                        const seriesTitleEl = tooltipEl.querySelector('.tooltip-title');
+                        const deltaEl = tooltipEl.querySelector('.tooltip-delta');
+                        const footerEl = tooltipEl.querySelector('.tooltip-footer');
+
+                        // Reset common elements
+                        headerEl.style.display = 'flex';
+                        deltaEl.style.display = 'none';
+                        footerEl.style.display = 'none';
+
+                        // --- FIX: Changed chart.config.id to chart.canvas.id ---
+                        if (chart.canvas.id.startsWith('pareto')) {
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            headerEl.style.display = 'none';
+                            valueEl.textContent = '';
+                            const footerContent = tooltip.dataPoints.map(dp => {
+                                const isPercentage = dp.dataset.label.includes('%');
+                                const value = isPercentage ? `${dp.raw.toFixed(1)}%` : Utils.formatMetric(dp.raw);
+                                return `<div class="footer-row"><span>${dp.dataset.label}</span><span>${value}</span></div>`;
+                            }).join('');
+                            footerEl.innerHTML = footerContent;
+                            footerEl.style.display = 'flex';
+                        } else { // Default handler for bar, line, doughnut, radar etc.
+                            const dp = tooltip.dataPoints[0];
+                            if (!dp) return;
+                            titleEl.textContent = tooltip.title.join(' ') || '';
+                            seriesTitleEl.textContent = dp.dataset.label || '';
+                            valueEl.textContent = Utils.formatMetric(dp.raw);
+                            const prev = dp.dataIndex > 0 ? chart.data.datasets[dp.datasetIndex].data[dp.dataIndex - 1] : null;
+                            if (prev !== null && prev !== 0 && typeof dp.raw === 'number') { const change = ((dp.raw - prev) / prev) * 100, isPos = change >= 0; deltaEl.className = `tooltip-delta ${isPos ? 'positive' : 'negative'}`; deltaEl.innerHTML = `<i class="bi ${isPos ? 'bi-arrow-up' : 'bi-arrow-down'}"></i> ${Math.abs(change).toFixed(1)}%`; deltaEl.style.display = 'flex'; }
+                            const footerContent = chart.data.datasets.map((ds, i) => i !== dp.datasetIndex && ds.data[dp.dataIndex] !== undefined ? `<div class="footer-row"><span>${ds.label}</span><span>${Utils.formatMetric(ds.data[dp.dataIndex])}</span></div>` : null).filter(Boolean);
+                            if (footerContent.length > 0) { footerEl.innerHTML = footerContent.join(''); footerEl.style.display = 'flex'; }
+                        }
+
+                        tooltipEl.querySelector('.drilldown-btn').onclick = () => initiateDrilldown(chart.canvas.id, { dataIndex: tooltip.dataPoints[0].dataIndex });
+                        const canvasRect = chart.canvas.getBoundingClientRect();
+                        tooltipEl.style.opacity = 1;
+                        tooltipEl.style.pointerEvents = 'all';
+                        tooltipEl.style.left = (canvasRect.left + window.scrollX + tooltip.caretX) + 'px';
+                        tooltipEl.style.top = (canvasRect.top + window.scrollY + tooltip.caretY) + 'px';
+                    }
+                };
+
+                const ConfigValidator = {
+                    validate(config) {
+                        if (!config.title) throw new Error("`title` is missing.");
+                        if (!Array.isArray(config.kpis)) throw new Error("`kpis` must be an array.");
+                        if (!Array.isArray(config.layout)) throw new Error("`layout` must be an array.");
+                        config.kpis.forEach((kpi, i) => {
+                            if (!kpi.id || !kpi.dataKey || !kpi.label) throw new Error(`KPI at index ${i} is missing required keys (id, dataKey, label).`);
+                        });
+                        config.layout.forEach((item, i) => {
+                            if (!item.type || !item.width || !item.config) throw new Error(`Layout item at index ${i} is missing required keys (type, width, config).`);
+                            const chartConfig = item.config;
+                            if (chartConfig.drilldownConfig && !Array.isArray(chartConfig.drilldownConfig.columns)) {
+                                throw new Error(`Drilldown config for chart '${chartConfig.id}' is missing a 'columns' array.`);
+                            }
+                            // MODIFICATION START: Only validate transformer for items of type 'chart'.
+                            if (item.type === 'chart') {
+                                if (typeof chartConfig.transformer !== 'function' && !SharedTransformers[chartConfig.transformer]) {
+                                    throw new Error(`Transformer for chart '${chartConfig.id}' must be a function or a key in SharedTransformers.`);
+                                }
+                            }
+                            // MODIFICATION END
+                        });
+                    }
+                };
+
+                return { init };
+            })();
+
+            // Initialize the application
+            APP_CORE.init();
+
+            // Initialize Dashboard Filters
+            if (typeof DashboardFilters !== 'undefined') {
+                DashboardFilters.init({
+                    container: '#main-dashboard-content',
+
+                    // Moving Average Configuration
+                    movingAverage: {
+                        enabled: true,
+                        period: 13,
+                        maxWeeks: 52,
+                        lineColor: '#03A9F4',
+                        lineDash: [5, 5],
+                        buttonTextSelector: '#maButtonText',
+                        weekOptionsContainer: '#maWeekOptions',
+                        dropdownSelector: '#ma-dropdown-container',
+                        onWeekChange: function (week) {
+                            console.log('MA Week changed to:', week);
+                            // Add your chart update logic here if needed
+                        }
+                    },
+
+                    // Time Period Filters
+                    timeFilters: {
+                        enabled: true,
+                        categories: ['Day', 'Week', 'Month', 'Quarter', 'Year'],
+                        defaultSelection: 'Week',
+                        containerSelector: '#timeFilterContainer'
+                    },
+
+                    // Custom Dropdown Filters
+                    customFilters: {
+                        enabled: true,
+                        filters: [
+                            {
+                                id: 'productionUnit',
+                                label: 'Production Unit',
+                                dataSource: [
+                                    'Faridabad – DTA',
+                                    'Faridabad – EOU',
+                                    'C-35 Noida',
+                                    'HCBF',
+                                    'Thomson Press (ISD)'
+                                ],
+                                type: 'select',
+                                width: 6
+                            },
+                            {
+                                id: 'purchaseCategory',
+                                label: 'Purchase Category',
+                                dataSource: [
+                                    'Domestic',
+                                    'Import'
+                                ],
+                                type: 'select',
+                                width: 6
+                            }
+                        ]
+                    },
+
+                    // Filter Panel Configuration
+                    filterPanel: {
+                        enabled: true,
+                        panelSelector: '#filter-popup-panel',
+                        toggleButtonSelector: '#toggle-filter-panel-btn',
+                        closeButtonSelector: '#close-filter-panel-btn',
+                        applyButtonSelector: '#apply-filters-btn-new',
+                        resetButtonSelector: '#reset-filters-btn-new'
+                    },
+
+                    // Calendar Configuration
+                    calendar: {
+                        enabled: true,
+                        containerSelector: '#calendar-container',
+                        gridSelector: '#calendar-grid',
+                        prevButtonSelector: '#prev-month-btn',
+                        nextButtonSelector: '#next-month-btn',
+                        todayButtonSelector: '#today-btn',
+                        monthYearDisplaySelector: '#month-year-display',
+                        fromDateSelector: '#selected-from-date',
+                        toDateSelector: '#selected-to-date'
+                    },
+
+                    // Callback when filters change
+                    onFilterChange: function (filters) {
+                        console.log('Filters changed:', filters);
+                        // Add your filter logic here
+                        // filters.timeSelection - selected time periods
+                        // filters.startDate / filters.endDate - selected date range
+                        // filters.customFilters - custom filter values
+                    }
+                });
+
+                console.log('✅ Dashboard Filters initialized successfully');
+            } else {
+                console.warn('⚠️ DashboardFilters not found - filters may not work');
+            }
+        })();
+    </script>
+</body>
+
+</html>

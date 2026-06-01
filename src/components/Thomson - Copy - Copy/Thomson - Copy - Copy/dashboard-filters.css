@@ -1,0 +1,1611 @@
+/* =========================================
+   1. GLOBAL VARIABLES & THEME
+   ========================================= */
+:root {
+    --app-primary-color: #003366;
+    --app-primary-rgb: 0, 51, 102;
+    --light-gray: #f8f9fa;
+    --border-color: #e9ecef;
+    --text-color-default: #344767;
+    --bs-primary: var(--app-primary-color);
+    --bs-primary-rgb: var(--app-primary-rgb);
+    /* Glow Colors */
+    --glow-green: #4CAF50;
+    --glow-blue: #003366;
+    --glow-lightblue: #03A9F4;
+    --glow-orange: #FF9800;
+    --glow-purple: #9C27B0;
+    --glow-red: #f44336;
+    --glow-gray: #9E9E9E;
+    /* Chart Grid Colors */
+    --chart-grid-color: #E5E7EB;
+}
+
+
+.dx-popup-flex-height .dx-popup-content {
+    padding: 0px !important
+}
+
+.dx-texteditor-input-container {
+    padding: 5px !important
+}
+
+/* =========================================
+   2. BASE STYLES & TYPOGRAPHY
+   ========================================= */
+body {
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    background-color: #F8FAFC;
+    color: #1F2937;
+    font-size: 0.9rem;
+    overflow-x: hidden;
+    padding: 0 15px 15px 15px;
+    /* Prevents horizontal scrolling globally */
+}
+
+.dashboard-header h3 {
+    color: #003366;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* =========================================
+   3. KPI CARD COMPONENT
+   ========================================= */
+.kpi-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 15px rgba(0, 43, 92, 0.07);
+    color: #374151;
+    cursor: pointer;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    z-index: 1;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 43, 92, 0.12);
+}
+
+.kpi-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0.75rem;
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-title-container {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.kpi-title-container i {
+    font-size: 1rem;
+}
+
+.kpi-title {
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: inherit;
+    color: inherit;
+}
+
+.kpi-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-grow: 1;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.kpi-footer {
+    width: calc(100% + 1.5rem);
+    height: 50px;
+    margin: 0.75rem -0.75rem -0.75rem -0.75rem;
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+    overflow: hidden;
+}
+
+/* KPI Metrics */
+.kpi-primary-metrics {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.kpi-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.kpi-previous-value {
+    font-size: 0.60rem;
+    font-weight: 500;
+    color: #6B7280;
+    opacity: 0.8;
+}
+
+.kpi-growth {
+    font-size: 0.75rem;
+    font-weight: 700;
+    /* Top: 0.2rem, Right: 0, Bottom: 0.2rem, Left: 0.5rem */
+    padding: 0.2rem 0 0.2rem 0.5rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    white-space: nowrap;
+    text-align: right;
+    justify-content: flex-end;
+}
+
+.kpi-growth.positive {
+    color: #10B981;
+}
+
+.kpi-growth.negative {
+    color: #EF4444;
+}
+
+.kpi-secondary-metrics {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Pushes the stack to the right */
+    text-align: right;
+    gap: 0.25rem;
+    padding-left: 0;
+    flex-shrink: 0;
+}
+
+.kpi-secondary-metrics .metric-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    font-size: 0.60rem;
+    font-weight: 500;
+    color: #374151;
+    width: 100%;
+}
+
+.kpi-chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================================
+   4. CONTENT WRAPPERS & CHARTS
+   ========================================= */
+.content-wrapper {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    padding: 0.15rem;
+    width: 100%;
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: auto !important;
+}
+
+.chart-canvas-container {
+    position: relative;
+    height: 250px;
+    min-height: 250px;
+    max-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Target the canvas directly within your chart containers */
+.chart-canvas-container canvas {
+    width: 100% !important;
+    /* Force canvas to take 100% of its parent's width */
+    height: 100% !important;
+    /* Force canvas to take 100% of its parent's height */
+    max-width: 100% !important;
+    /* Ensure it doesn't overflow */
+    max-height: 100% !important;
+    /* Ensure it doesn't overflow */
+    display: block;
+    /* Remove extra space below canvas */
+}
+
+
+
+
+.content-title {
+    font-size: 0.95rem;
+    margin: 0.75rem 0.5rem 0.5rem 1rem !important;
+    white-space: normal !important;
+    /* Enable wrapping */
+    line-height: 1.2;
+    flex: 1;
+    min-width: 0;
+    /* Allows flex-item to shrink/wrap correctly */
+}
+
+.content-header {
+    padding: 0.75rem 1rem 0rem 1rem;
+}
+
+
+.chart-feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #64748B;
+    text-align: center;
+    padding: 1rem;
+    z-index: 10;
+}
+
+.chart-feedback-overlay i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Chart Tooltips */
+.chart-tooltip {
+    background-color: #002a55;
+    color: #E5E7EB;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
+    width: 220px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border: 1px solid #374151;
+    transform: translate(-50%, calc(-100% - 15px));
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: opacity 0.2s ease;
+}
+
+.chart-tooltip .tooltip-main-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #374151;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.chart-tooltip .tooltip-main-content {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.chart-tooltip .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-tooltip .tooltip-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #9CA3AF;
+}
+
+.chart-tooltip .tooltip-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.chart-tooltip .tooltip-delta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.chart-tooltip .tooltip-delta.positive {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.chart-tooltip .tooltip-delta.negative {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.chart-tooltip .tooltip-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid #374151;
+    margin-top: 0.25rem;
+}
+
+.chart-tooltip .footer-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+}
+
+.chart-tooltip .footer-row span:first-child {
+    color: #9CA3AF;
+}
+
+.chart-tooltip .footer-row span:last-child {
+    font-weight: 500;
+    color: #E5E7EB;
+}
+
+.chart-tooltip .drilldown-btn {
+    background: none;
+    border: none;
+    color: #60A5FA;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    margin-top: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* =========================================
+   5. UI CONTROLS (Context Menu, Tables, Forms)
+   ========================================= */
+/* Context Menu */
+#customContextMenu {
+    position: absolute;
+    z-index: 1056;
+    display: none;
+    width: 260px;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 5px 20px rgba(0, 43, 92, 0.15);
+    padding: 0.5rem 0;
+    border: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    transform: translateZ(0);
+}
+
+.context-menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    color: #344767;
+    transition: background-color 0.2s ease;
+    gap: 0.85rem;
+    position: relative;
+}
+
+.context-menu-item:hover {
+    background-color: #f0f2f5;
+    color: #003366;
+}
+
+.context-menu-item:hover>i {
+    color: #003366;
+}
+
+.context-menu-item i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: #e9ecef;
+    margin: 0.3rem 0;
+}
+
+.context-menu-item .bi-chevron-right {
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+.context-menu-sublist {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -0.5rem;
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 5px 15px rgba(0, 43, 92, 0.12);
+    border: 1px solid #e9ecef;
+    min-width: 180px;
+}
+
+.context-menu-item:hover .context-menu-sublist {
+    display: block;
+}
+
+/* Tables & Drilldown */
+#drilldownFilterControls {
+    margin-left: auto;
+    z-index: 100;
+}
+
+#drilldownTbody tr {
+    cursor: pointer;
+}
+
+.table-hover>tbody>tr:hover {
+    background-color: #E0F7FA;
+    color: #1F2937;
+}
+
+/* Forms */
+.form-readonly-group {
+    margin-bottom: 1rem;
+}
+
+.form-readonly-group label {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-bottom: 0.25rem;
+}
+
+.form-readonly-group .form-control[readonly] {
+    background-color: #F3F4F6;
+    opacity: 1;
+    border-color: #D1D5DB;
+}
+
+/* Modals */
+#kpiGuideContent h6 {
+    margin-bottom: 0.75rem;
+    color: #003366;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#drilldownModal.is-blurred .modal-dialog {
+    filter: blur(4px);
+    transition: filter 0.2s ease;
+    pointer-events: none;
+}
+
+.modal-backdrop {
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Blur effect for background when modal is open */
+/*.dashboard-blur {
+    filter: blur(6px);
+    transition: filter 0.3s ease-in-out;
+    pointer-events: none;
+}*/
+.dashboard-blur,
+.dashboard-content-blur {
+    filter: blur(6px);
+    transition: filter 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+
+/* =========================================
+   6. DASHBOARD SPECIFIC MODULES
+   ========================================= */
+
+/* --- Pre-Press Specifics (Calendar & OTIF) --- */
+.otif-toggle-group {
+    display: inline-flex;
+    background-color: #f8f9fa;
+    border-radius: 50px;
+    padding: 0px;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.otif-toggle-group .btn {
+    border-radius: 50px !important;
+    border: none;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    color: var(--text-color-default);
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.otif-toggle-group .btn.active {
+    background-color: var(--app-primary-color) !important;
+    color: #fff;
+    box-shadow: none;
+}
+
+.otif-toggle-group input[type="radio"]:checked+.btn {
+    background-color: var(--app-primary-color) !important;
+    color: #fff;
+    box-shadow: none;
+}
+
+#main-dashboard-content.content-blur {
+    filter: blur(4px);
+    pointer-events: none;
+    transition: filter 0.2s ease-in-out;
+}
+
+#filter-popup-panel {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 340px;
+    height: auto;
+    max-height: calc(100vh - 2rem);
+    z-index: 1050;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    opacity: 1;
+    transform: scale(1);
+}
+
+#filter-popup-panel.d-none {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+.otif-filter-panel-title {
+    font-weight: 600;
+    color: var(--app-primary-color);
+}
+
+/*       .dx-treeview-node:not(.dx-treeview-node-has-children)
+        .dx-treeview-expander-icon-stub {
+            display: none !important;
+        }*/
+
+.filter-section {
+    margin-bottom: 0.75rem;
+}
+
+.filter-group .form-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+}
+
+/* Calendar Styles */
+#calendar-container {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 0.5rem;
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.btn-today {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+}
+
+.month-year-selector-btn {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0 0.5rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+}
+
+.calendar-grid span {
+    font-size: 0.75rem;
+    padding: 0.3rem 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-names span {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+#calendar-grid .day {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#calendar-grid .day:not(.disabled):hover {
+    background-color: #e0f7fa;
+}
+
+#calendar-grid .day.selected {
+    background-color: var(--app-primary-color);
+    color: #fff;
+}
+
+#calendar-grid .day.in-range {
+    background-color: rgba(var(--app-primary-rgb), 0.1);
+    border-radius: 0;
+}
+
+#calendar-grid .day.start-date {
+    background-color: var(--app-primary-color);
+    color: #fff;
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+}
+
+#calendar-grid .day.end-date {
+    background-color: var(--app-primary-color);
+    color: #fff;
+    border-top-right-radius: 50%;
+    border-bottom-right-radius: 50%;
+}
+
+#calendar-grid .day.disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+#calendar-grid .day.today {
+    font-weight: 700;
+    border: 1px solid var(--app-primary-color);
+}
+
+.date-range-box {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.date-range-item {
+    flex: 1;
+    text-align: center;
+}
+
+.date-range-item label {
+    display: block;
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.date-range-item span {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Month/Year Picker Overlay Styles */
+#month-year-picker-overlay,
+.month-year-picker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #fff;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+#month-year-picker-overlay.d-none,
+.month-year-picker-overlay.d-none {
+    display: none !important;
+}
+
+.picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.picker-header span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--app-primary-color);
+}
+
+.picker-body,
+.picker-columns {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.picker-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-right: 1px solid #e9ecef;
+}
+
+.picker-column:last-child {
+    border-right: none;
+}
+
+.picker-column-header {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6c757d;
+    border-bottom: 1px solid #e9ecef;
+    z-index: 1;
+}
+
+.picker-item {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.picker-item:hover {
+    background-color: #f8f9fa;
+}
+
+.picker-item.selected {
+    background-color: #e0e6ec;
+    color: #003366;
+    font-weight: 600;
+}
+
+/* Filter Panel Buttons */
+.btn-reset {
+    background-color: #ffffff;
+    border: 1px solid #003366;
+    color: #344767;
+    background-color: #fff;
+    border: 1px solid #d2d6da;
+}
+
+.btn-reset:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-apply {
+    background-color: var(--app-primary-color);
+    color: #fff;
+    border: none;
+}
+
+.btn-apply:hover {
+    background-color: #002347;
+    /* Darker shade */
+    color: #fff !important;
+    /* Ensure text stays white */
+}
+
+/* Dropdown Popup */
+
+.newdropdown-popup {
+    position: absolute;
+    z-index: 1100;
+    width: 280px;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    margin-top: 0px !important
+}
+
+
+
+
+.newdropdown-popup__header {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.newdropdown-popup__title {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--app-primary-color);
+}
+
+.newdropdown-popup__title .form-check-input {
+    margin-right: 0.5rem;
+}
+
+.newdropdown-popup__search {
+    padding: 0.5rem 0.75rem;
+}
+
+.newdropdown-popup__search .form-control {
+    font-size: 0.8rem;
+}
+
+.newdropdown-popup__list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 0 0.75rem;
+}
+
+.newdropdown-popup__list .form-check {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+.newdropdown-popup__footer {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.newdropdown-popup__footer .btn {
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+#timeFilterContainer .btn.filtered {
+    background-color: #e0e7ff !important;
+    color: #3730a3;
+    font-weight: 600;
+}
+
+/* --- Maintenance, RMQC, Costing, CAPA (Toggles) --- */
+/* Custom Toggle Button Styling */
+#pmTypeToggle .btn-check:not(:checked)+.btn-outline-primary,
+#sopViewToggle .btn-check:not(:checked)+.btn-outline-primary,
+#funnelTypeToggle .btn-check:not(:checked)+.btn-outline-primary {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #344767;
+    box-shadow: none;
+}
+
+#pmTypeToggle .btn-check:not(:checked)+.btn-outline-primary:hover,
+#sopViewToggle .btn-check:not(:checked)+.btn-outline-primary:hover,
+#funnelTypeToggle .btn-check:not(:checked)+.btn-outline-primary:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: var(--app-primary-color);
+}
+
+#pmTypeToggle .btn-check:checked+.btn-outline-primary,
+#sopViewToggle .btn-check:checked+.btn-outline-primary,
+#funnelTypeToggle .btn-check:checked+.btn-outline-primary {
+    background-color: var(--app-primary-color);
+    border-color: var(--app-primary-color);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+#pmTypeToggle .btn-check:checked+.btn-outline-primary:hover,
+#sopViewToggle .btn-check:checked+.btn-outline-primary:hover,
+#funnelTypeToggle .btn-check:checked+.btn-outline-primary:hover {
+    background-color: var(--app-primary-color);
+    border-color: var(--app-primary-color);
+    color: #ffffff;
+}
+
+/* --- Sales/CRM Specifics --- */
+.dashboard-toggle-group .btn-outline-primary {
+    --bs-btn-color: #003366;
+    --bs-btn-border-color: #003366;
+    --bs-btn-hover-bg: #003366;
+    --bs-btn-hover-border-color: #003366;
+    --bs-btn-active-bg: #003366;
+    --bs-btn-active-border-color: #003366;
+    --bs-btn-active-color: #FFFFFF;
+}
+
+.dashboard-toggle-group {
+    flex-shrink: 0 !important;
+    /* Prevents the buttons from being squeezed */
+    margin-top: 0.75rem;
+    margin-right: 0.75rem;
+}
+
+.dashboard-toggle-group .btn {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.7rem !important;
+}
+
+.content-title {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 10px !important;
+}
+
+.btn-custom-xs {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.3rem;
+    min-height: 0;
+}
+
+.chart-controls .btn {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-color: #D1D5DB;
+}
+
+/* Filter Panel Positioning */
+#filter-popup-panel {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 340px;
+    z-index: 1100;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+}
+
+
+
+.newdropdown-header,
+.newdropdown-search-container {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.newdropdown-list {
+    list-style: none;
+    padding: 4px;
+    margin: 0;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.newdropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.newdropdown-item:hover {
+    background-color: rgba(var(--app-primary-rgb), 0.12);
+}
+
+/* The "ONLY" Button Logic */
+.newdropdown-only-btn {
+    margin-left: 16px;
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    visibility: hidden;
+    /* Hidden by default */
+    opacity: 0;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.newdropdown-item:hover .newdropdown-only-btn {
+    visibility: visible;
+    /* Show on hover */
+    opacity: 1;
+}
+
+.newdropdown-only-btn:hover {
+    background-color: var(--app-primary-color);
+    color: #fff;
+    border-color: var(--app-primary-color);
+}
+
+/* Base custom checkbox/radio container */
+.custom-checkbox-otif {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    user-select: none;
+    width: 100%;
+}
+
+/* Hide the actual input */
+.custom-checkbox-otif input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* The visual box/circle */
+.custom-checkbox-otif-box {
+    height: 18px;
+    width: 18px;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    /* Default square for checkbox */
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Round style for Radio buttons */
+.custom-checkbox-otif input[type="radio"]~.custom-checkbox-otif-box {
+    border-radius: 50%;
+    /* Make it round */
+}
+
+/* Checked state */
+.custom-checkbox-otif input:checked~.custom-checkbox-otif-box {
+    background-color: var(--app-primary-color);
+    border-color: var(--app-primary-color);
+}
+
+/* Checkmark/Dot icon */
+.custom-checkbox-otif-box:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show checkmark for checkbox */
+.custom-checkbox-otif input:checked~.custom-checkbox-otif-box:after {
+    display: block;
+    transition: transform 0.15s ease-in-out;
+}
+
+.custom-checkbox-otif input:checked+.custom-checkbox-otif-box::after {
+    transform: scale(1);
+}
+
+.newdropdown-search-input {
+    width: 100%;
+    padding: 5px 8px;
+    font-size: 0.85rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+}
+
+#maWeekOptions {
+    max-height: 250px;
+    overflow-y: auto;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* 2. Search Header Styling */
+.otif-ma-dropdown-menu>li:first-child {
+    background-color: #fff !important;
+    z-index: 10 !important;
+    padding: 12px 12px 8px 12px !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.otif-ma-dropdown-menu {
+    max-height: none !important;
+    /* Limits the height of the list */
+    overflow-y: hidden !important;
+    /* Enables the scrollbar */
+    padding: 0 !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    min-width: 240px !important;
+    transform: translate3d(0px, 33px, 0px) !important;
+}
+
+#maSearchInput {
+    height: 34px !important;
+    font-size: 0.85rem !important;
+    border: 1px solid #e0e0e0 !important;
+    background-color: #fcfcfc !important;
+    border-radius: 6px !important;
+}
+
+/* 3. Compact List Items */
+#maDropdownMenu .dropdown-item {
+    padding: 9px 16px !important;
+    /* Compact but breathable */
+    font-size: 0.85rem !important;
+    color: #444 !important;
+    border: none !important;
+    background: transparent;
+    transition: background 0.1s ease;
+}
+
+/* 4. Hover & Active States */
+#maDropdownMenu .dropdown-item:hover:not(.active) {
+    background-color: #f5f7f9 !important;
+    color: #000 !important;
+}
+
+#maDropdownMenu .dropdown-item.active {
+    background-color: #003366 !important;
+    /* Your primary theme color */
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+/* Improve contrast of date range text in MA dropdown */
+.ma-week-range {
+    color: #6c757d;
+    /* Matches text-muted normally */
+}
+
+#maDropdownMenu .dropdown-item.active .ma-week-range {
+    color: rgba(255, 255, 255, 0.8) !important;
+    /* Brighter when item is selected */
+}
+
+/* 5. Custom Scrollbar (Matches OTIF Dashboard) */
+.otif-ma-dropdown-menu::-webkit-scrollbar {
+    width: 5px;
+}
+
+.otif-ma-dropdown-menu::-webkit-scrollbar-track {
+    background: #f9f9fa;
+}
+
+.otif-ma-dropdown-menu::-webkit-scrollbar-thumb {
+    background: #d1d1d1;
+    border-radius: 10px;
+}
+
+.otif-ma-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 6. Divider Styling */
+.otif-ma-dropdown-menu .dropdown-divider {
+    margin: 0 !important;
+    border-top: 1px solid #f0f0f0 !important;
+}
+
+.newdropdown-search-input:focus {
+    outline: none;
+    border-color: var(--app-primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--app-primary-rgb), 0.2);
+}
+
+/* MA Button Styling */
+.otif-ma-button {
+    background-color: transparent;
+    border: none;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    color: var(--text-color-default);
+}
+
+.otif-ma-button.active {
+    background-color: var(--app-primary-color) !important;
+    color: #fff !important;
+}
+
+/* Calendar Scroller Support */
+#calendar-container {
+    height: 15rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+}
+
+.calendar-day {
+    font-size: 0.8rem;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.calendar-day.in-range {
+    background-color: rgba(0, 51, 102, 0.1);
+}
+
+.calendar-day.selected-start,
+.calendar-day.selected-end {
+    background-color: var(--app-primary-color);
+    color: #fff;
+    border-radius: 50%;
+}
+
+.calendar-day.today {
+    background-color: rgba(var(--app-primary-rgb), 0.1);
+    color: var(--app-primary-color);
+    font-weight: bold;
+    border-radius: 50%;
+    border: 1px solid var(--app-primary-color);
+}
+
+/* 7. Month/Year Picker Overlay */
+#picker-done-btn {
+    background-color: #003366 !important;
+    border-color: #003366 !important;
+    color: #fff !important;
+}
+
+.month-year-picker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+}
+
+.month-year-picker-overlay.d-none {
+    display: none !important;
+}
+
+.picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.picker-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #344767;
+}
+
+.picker-columns {
+    display: flex;
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+    /* Mask/Overlay logic can be complex, keeping it simple first */
+}
+
+.picker-column {
+    flex: 1;
+    overflow-y: auto;
+    padding: 100px 0;
+    /* Spacer for center selection */
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.picker-column::-webkit-scrollbar {
+    display: none;
+}
+
+.picker-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.picker-item.selected {
+    color: #003366;
+    font-weight: 600;
+    transform: scale(1.1);
+}
+
+.picker-selection-highlight {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    transform: translateY(-20px);
+    background-color: rgba(0, 51, 102, 0.05);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.month-year-selector-btn {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.month-year-selector-btn:hover {
+    background-color: #f0f0f0;
+}
+
+/* 8. Custom Filter Height Refinement */
+.dx-dropdowneditor,
+.dx-texteditor-container {
+    height: 32px !important;
+}
+
+/* Remove default padding from the input container */
+.dx-texteditor-input-container {
+    padding: 0 !important;
+    height: 100% !important;
+}
+
+/* Remove default min-height and internal padding from the input itself */
+.dx-texteditor-input {
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 0 8px !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure the wrapper respects the height */
+.dx-dropdowneditor-input-wrapper {
+    height: 100% !important;
+    padding: 0 !important;
+}
+
+/* Ensure the dropdown button aligns and fits */
+.dx-dropdowneditor-button {
+    height: 100% !important;
+    min-height: 0 !important;
+    width: 32px !important;
+}
+
+
+/* 9. Search Panel Input Overlap Fix */
+.dx-searchbox .dx-texteditor-input {
+    padding-left: 35px !important;
+}
+
+/* 10. Dropdown Option Alignment Fix */
+.dx-treeview-item {
+    padding-left: 0 !important;
+}
+
+
+.dx-treeview-expander-icon-stub {
+    display: none !important;
+}
+
+/* 11. Dropdown Popup Horizontal Spacing */
+.dx-dropdowneditor-overlay .dx-popup-content {
+    padding: 10px !important;
+}
+
+/* Chart Headers with Controls */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem 0 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.chart-header .content-title {
+    margin: 0 !important;
+    /* Override the default margin */
+}
+
+.chart-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Content Blur Effect */
+.dashboard-blur {
+    filter: blur(5px);
+    pointer-events: none;
+    transition: filter 0.3s ease;
+}
+
+/* =========================================
+   FILTER INTERACTION STYLES
+   ========================================= */
+/* Unlocking disabled state for Auto-Switching */
+.filter-disabled {
+    opacity: 0.6 !important;
+    cursor: pointer !important;
+    /* Changed from not-allowed to pointer */
+    pointer-events: auto !important;
+    /* Changed from none to auto */
+}
+
+.filter-disabled:hover {
+    opacity: 0.8 !important;
+    /* Slightly brighter on hover */
+}
+
+/* Disabled state for filter buttons */
+.btn.filter-disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    border-color: #d1d5db !important;
+}
+
+/* Disabled state for dropdown buttons */
+#maDropdownButton.filter-disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+}
+
+/* Clear button styles for filter dropdowns */
+.newdropdown-clear-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+    margin-left: auto;
+}
+
+.newdropdown-clear-btn:hover {
+    color: #dc3545;
+}
+
+.newdropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ========== FILTER DISPLAY (Active Filters beside Title) ========== */
+.filter-display-container {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-left: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.4rem 0.15rem 0.6rem;
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #1565c0;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.filter-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 0.4rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.65rem;
+    transition: background-color 0.2s ease;
+}
+
+.filter-chip-remove:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.filter-chip-label {
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+.filter-chip.filter-chip-ma {
+    background: #fff3e0;
+    border-color: #ffb74d;
+    color: #e65100;
+}
+
+.filter-chip.filter-chip-time {
+    background: #e8f5e9;
+    border-color: #81c784;
+    color: #2e7d32;
+}
+
+.filter-chip.filter-chip-custom {
+    background: #f3e5f5 !important;
+    border-color: #ba68c8 !important;
+    color: #6a1b9a !important;
+}
