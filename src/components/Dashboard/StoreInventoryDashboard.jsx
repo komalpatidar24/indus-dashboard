@@ -73,7 +73,6 @@ const ChartOverlay = ({ loading }) => loading ? (
     </Box>
 ) : null;
 
-// eslint-disable-next-line no-unused-vars
 const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon }) => {
     const [hovered, setHovered] = useState(false);
     return (
@@ -81,43 +80,45 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon })
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             sx={{
-                borderRadius: { xs: '14px', sm: T.radius },
-                p: { xs: '12px 12px 10px 14px', sm: '14px 16px' },
+                borderRadius: '16px',
+                p: '16px 16px 14px 18px',
                 position: "relative", cursor: "default",
-                background: hovered ? `linear-gradient(150deg, #ffffff 0%, ${accent}09 100%)` : "#ffffff",
+                background: hovered
+                    ? `linear-gradient(150deg, #ffffff 0%, ${accent}09 100%)`
+                    : `linear-gradient(150deg, #ffffff 0%, #f5f7fb 100%)`,
                 border: `1.5px solid ${hovered ? accent + "50" : T.border}`,
                 boxShadow: hovered ? T.shadowMd : T.shadowSm,
-                transform: hovered ? "translateY(-4px)" : "translateY(0)",
+                transform: hovered ? "translateY(-6px) scale(1.01)" : "translateY(0) scale(1)",
                 transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
                 animation: `${fadeUp} 0.5s ease ${animDelay}s both`,
-                overflow: "hidden"
+                overflow: "hidden",
             }}
         >
+            {/* left accent bar */}
+            <Box sx={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "3px", background: `linear-gradient(180deg, ${accent}, ${accent}60)`, borderRadius: "16px 0 0 16px" }} />
+            {/* top-right blob */}
+            <Box sx={{ position: "absolute", top: 0, right: 0, width: 60, height: 60, borderRadius: "0 16px 0 60%", background: `linear-gradient(135deg, ${accent}10 0%, transparent 65%)`, pointerEvents: "none" }} />
+            {/* Icon */}
             <Box sx={{
-                position: "absolute", top: 0, left: 0, bottom: 0, width: "4px",
-                bgcolor: accent, transform: hovered ? "scaleY(1)" : "scaleY(0.4)",
-                transition: "transform 0.3s ease"
-            }} />
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-                <Box sx={{
-                    width: { xs: 30, sm: 34 }, height: { xs: 30, sm: 34 }, borderRadius: "10px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    bgcolor: bg, color, border: `1px solid ${color}20`,
-                    boxShadow: `0 4px 12px ${color}15`,
-                    animation: `${iconPop} 0.4s ease ${animDelay + 0.1}s both`,
-                }}>
-                    <Icon size={15} />
-                </Box>
+                width: 36, height: 36, borderRadius: "10px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                bgcolor: bg, color, border: `1px solid ${color}28`,
+                boxShadow: `0 2px 8px ${color}22`,
+                mb: 1.25, flexShrink: 0,
+                animation: `${iconPop} 0.4s ease ${animDelay + 0.1}s both`,
+            }}>
+                <Icon size={16} />
             </Box>
             {loading ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Shimmer width="60%" height={20} />
+                    <Shimmer width="60%" height={22} />
                     <Shimmer width="40%" height={10} />
                 </Box>
             ) : (
                 <>
-                    <Typography sx={{ fontSize: { xs: '1.05rem', sm: '1.35rem' }, fontWeight: 850, color: T.text, lineHeight: 1, mb: 0.5, fontFamily: T.fontMono, letterSpacing: "-0.5px" }}>{value}</Typography>
-                    <Typography sx={{ fontSize: { xs: '0.58rem', sm: '0.68rem' }, fontWeight: 700, color: T.textFaint, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</Typography>
+                    <Typography sx={{ fontSize: '1.45rem', fontWeight: 850, color: T.text, lineHeight: 1, mb: 0.6, fontFamily: T.fontMono, letterSpacing: "-0.8px" }}>{value}</Typography>
+                    <Box sx={{ width: "100%", height: "1px", background: `linear-gradient(90deg, ${accent}20, transparent 70%)`, mb: 0.6 }} />
+                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: T.textFaint, textTransform: "uppercase", letterSpacing: "0.08em", lineHeight: 1.2 }}>{label}</Typography>
                 </>
             )}
         </Box>
@@ -145,7 +146,7 @@ const ChartCard = ({ title, accent, children, loading, animDelay, action, scroll
             {action && <Box>{action}</Box>}
         </Box>
         <Box sx={{
-            height: { xs: 240, sm: 300 }, position: "relative",
+            height: { xs: 220, sm: 260 }, position: "relative",
             ...(scrollable && {
                 overflowX: 'auto', overflowY: 'hidden',
                 '&::-webkit-scrollbar': { height: '6px' },
@@ -480,13 +481,14 @@ const StoreInventoryDashboard = () => {
             </DashboardHeader>
 
             <Box sx={{ p: R.pagePad, boxSizing: 'border-box' }}>
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)", xl: "repeat(6, 1fr)" }, gap: { xs: '10px', sm: '12px' }, mb: { xs: 2, sm: 3 } }}>
+                {/* ── KPI row — 6-col on desktop, 3-col on tablet, 2-col on mobile ── */}
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(3, 1fr)", md: "repeat(6, 1fr)" }, gap: { xs: '10px', sm: '14px' }, mb: { xs: 2, sm: 3 } }}>
                     {kpiDefs.map((k, i) => ( <StatCard key={i} {...k} loading={loading} animDelay={i * 0.05} /> ))}
                 </Box>
 
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" }, gap: "28px", mb: 4 }}>
-                    {/* Charts remain the same */}
-                    <ChartCard title="Paper Issue (Sheets)" Icon={FileText} accent={T.red} loading={loading} animDelay={0.1} 
+                {/* ── Charts — 3-col on desktop, 2-col on tablet, 1-col on mobile ── */}
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }, gap: { xs: '16px', sm: '20px' }, mb: 4 }}>
+                    <ChartCard title="Paper Issue (Sheets)" Icon={FileText} accent={T.red} loading={loading} animDelay={0.1}
                         action={ data.paperIssueByMachine.length > 5 && ( <Button size="small" variant="outlined" sx={{ borderRadius: "8px", px: 2, fontSize: '0.65rem', color: T.textMuted, borderColor: T.border, fontWeight: 800 }} onClick={() => toggle('paperIssueChart')}> {toggles.paperIssueChart ? "Top 5" : "View All"} </Button> ) }
                         scrollable={toggles.paperIssueChart} minWidth={toggles.paperIssueChart ? `${data.paperIssueByMachine.length * 70 + 100}px` : undefined}
                     >

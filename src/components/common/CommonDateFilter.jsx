@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Box, Typography, Popover, Button,
     MenuItem, Select, Divider
@@ -239,24 +239,115 @@ const Pill = ({ label, active, onClick, period }) => (
    COMPACT CALENDAR STYLES
 ══════════════════════════════════════════════════ */
 const calendarSx = {
-    // override MUI's hardcoded 320px width and 336px max-height
     width: '100% !important',
-    maxHeight: 'none !important',
-    height: 'auto !important',
+    maxHeight: '260px !important',
+    height: '260px !important',
     minWidth: 0,
-    '& .MuiPickersCalendarHeader-root': { px: 1, minHeight: 32, mt: 0, mb: 0 },
-    '& .MuiPickersCalendarHeader-label': { fontSize: '0.76rem', fontWeight: 800 },
+    overflow: 'hidden',
+    '& .MuiPickersCalendarHeader-root': { px: 0.5, minHeight: 28, mt: 0, mb: 0 },
+    '& .MuiPickersCalendarHeader-label': { fontSize: '0.7rem', fontWeight: 800 },
     '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
-    '& .MuiDayCalendar-weekDayLabel': { fontSize: '0.63rem', fontWeight: 700, width: 26, height: 24, m: 0 },
+    '& .MuiDayCalendar-weekDayLabel': { fontSize: '0.58rem', fontWeight: 700, width: 22, height: 20, m: 0 },
     '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around', mb: 0, mt: 0 },
-    '& .MuiPickersDay-root': { fontSize: '0.7rem', width: 26, height: 26, m: 0 },
+    '& .MuiPickersDay-root': { fontSize: '0.63rem', width: 22, height: 22, m: 0 },
     '& .MuiPickersDay-root.Mui-selected': { bgcolor: '#0f172a', '&:hover': { bgcolor: '#1e293b' } },
-    // remove the reserved empty rows space — match actual weeks shown
     '& .MuiDayCalendar-slideTransition': { minHeight: '0 !important', overflow: 'hidden' },
     '& .MuiDayCalendar-monthContainer': { position: 'relative' },
-    '& .MuiPickersArrowSwitcher-button': { padding: '2px' },
-    '& .MuiPickersCalendarHeader-switchViewButton': { padding: '2px' },
+    '& .MuiPickersArrowSwitcher-button': { padding: '1px' },
+    '& .MuiPickersCalendarHeader-switchViewButton': { padding: '1px' },
+    /* year picker view — constrain inside the box */
+    '& .MuiYearCalendar-root': {
+        width: '100% !important',
+        maxHeight: '200px !important',
+        overflowY: 'auto',
+        padding: '4px 0',
+        scrollbarWidth: 'thin',
+        '&::-webkit-scrollbar': { width: '4px' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: '#e2e8f0', borderRadius: '4px' },
+    },
+    '& .MuiPickersYear-yearButton': {
+        fontSize: '0.65rem', fontWeight: 700, height: 28, width: '45%', margin: '2px',
+        borderRadius: '8px',
+    },
     mb: 0,
+};
+
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YEAR_RANGE = Array.from({ length: 16 }, (_, i) => 2015 + i); // 2015–2030
+
+/* Month+Year picker panel — shown instead of MUI year view */
+const MonthYearPicker = ({ value, onChange, accentColor, onClose }) => {
+    const current = value ? dayjs(value) : dayjs();
+    const [pickerYear, setPickerYear] = useState(current.year());
+
+    const handleSelect = (month, year) => {
+        const newDate = dayjs(`${year}-${String(month + 1).padStart(2,'0')}-01`);
+        onChange(newDate);
+        onClose();
+    };
+
+    return (
+        <Box sx={{ p: '8px 6px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Year scroller header */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+                <Box onClick={() => setPickerYear(y => y - 1)} sx={{ cursor: 'pointer', width: 20, height: 20, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M6.5 2L3.5 5L6.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                </Box>
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: '#0f172a' }}>{pickerYear}</Typography>
+                <Box onClick={() => setPickerYear(y => y + 1)} sx={{ cursor: 'pointer', width: 20, height: 20, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3.5 2L6.5 5L3.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                </Box>
+            </Box>
+
+            {/* Two columns: Months | Years */}
+            <Box sx={{ display: 'flex', gap: 1, flex: 1, overflow: 'hidden' }}>
+                {/* Months column */}
+                <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '4px', alignContent: 'start' }}>
+                    {MONTHS_SHORT.map((m, idx) => {
+                        const isSelected = current.month() === idx && current.year() === pickerYear;
+                        return (
+                            <Box key={m} onClick={() => handleSelect(idx, pickerYear)}
+                                sx={{
+                                    textAlign: 'center', py: '5px', borderRadius: '7px', cursor: 'pointer',
+                                    fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600,
+                                    bgcolor: isSelected ? accentColor : '#f8fafc',
+                                    color: isSelected ? '#fff' : '#475569',
+                                    border: `1px solid ${isSelected ? accentColor : '#e2e8f0'}`,
+                                    '&:hover': { bgcolor: isSelected ? accentColor : '#f1f5f9', color: isSelected ? '#fff' : '#0f172a' },
+                                    transition: 'all 0.12s ease',
+                                }}
+                            >{m}</Box>
+                        );
+                    })}
+                </Box>
+
+                {/* Divider */}
+                <Box sx={{ width: '1px', bgcolor: '#e2e8f0', flexShrink: 0 }} />
+
+                {/* Years column */}
+                <Box sx={{ width: 72, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px', scrollbarWidth: 'thin', '&::-webkit-scrollbar': { width: '3px' }, '&::-webkit-scrollbar-thumb': { bgcolor: '#e2e8f0', borderRadius: '3px' } }}>
+                    {YEAR_RANGE.map(yr => {
+                        const isSelected = current.year() === yr;
+                        const isCurrent = yr === pickerYear;
+                        return (
+                            <Box key={yr} onClick={() => setPickerYear(yr)}
+                                sx={{
+                                    textAlign: 'center', py: '5px', borderRadius: '7px', cursor: 'pointer',
+                                    fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600,
+                                    bgcolor: isSelected ? accentColor : isCurrent ? `${accentColor}18` : '#f8fafc',
+                                    color: isSelected ? '#fff' : isCurrent ? accentColor : '#475569',
+                                    border: `1px solid ${isSelected ? accentColor : isCurrent ? `${accentColor}40` : '#e2e8f0'}`,
+                                    '&:hover': { bgcolor: isSelected ? accentColor : '#f1f5f9' },
+                                    transition: 'all 0.12s ease',
+                                    flexShrink: 0,
+                                }}
+                            >{yr}</Box>
+                        );
+                    })}
+                </Box>
+            </Box>
+        </Box>
+    );
 };
 
 /* ══════════════════════════════════════════════════
@@ -283,6 +374,8 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
     // Custom date inputs (inside funnel popover)
     const [customFrom, setCustomFrom] = useState('');
     const [customTo,   setCustomTo]   = useState('');
+    // Which calendar has the month+year picker open: null | 'from' | 'to'
+    const [pickerOpen, setPickerOpen] = useState(null);
 
     /* ── open a period popover ── */
     const handlePillClick = (e, p) => {
@@ -504,84 +597,151 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
             <Popover
                 open={Boolean(funnelAnchor)}
                 anchorEl={funnelAnchor}
-                onClose={() => setFunnelAnchor(null)}
+                onClose={() => { setFunnelAnchor(null); setPickerOpen(null); }}
                 anchorOrigin={{ vertical:'bottom', horizontal:'right' }}
                 transformOrigin={{ vertical:'top', horizontal:'right' }}
                 PaperProps={{
                     elevation: 0,
                     sx:{
-                        mt:1, borderRadius:'16px',
-                        p: { xs: 1.2, sm: 2 },
-                        width: { xs: 268, sm: 320 },
-                        maxWidth: '95vw',
+                        mt: 1,
+                        borderRadius: '16px',
+                        p: { xs: 1.2, sm: 1.8 },
+                        width: { xs: 270, sm: 520 },
+                        maxWidth: '98vw',
                         maxHeight: '90vh',
                         overflowY: 'auto',
-                        boxShadow:'0 16px 48px -8px rgba(15,23,42,0.18), 0 0 0 1px rgba(226,232,240,0.9)',
-                        border:'1px solid rgba(226,232,240,0.6)',
+                        boxShadow: '0 16px 48px -8px rgba(15,23,42,0.20), 0 0 0 1px rgba(226,232,240,0.9)',
+                        border: '1px solid rgba(226,232,240,0.7)',
                     }
                 }}
             >
-                {/* Header */}
-                <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', mb:1.8 }}>
-                    <Box sx={{ display:'flex', alignItems:'center', gap:0.8 }}>
-                        <Box sx={{ bgcolor:'#0f172a', borderRadius:'8px', p:'5px', display:'flex' }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-                                <path d="M4 4h16v2.586l-6 6V20l-4-2v-7.414L4 6.586V4z" />
-                            </svg>
-                        </Box>
-                        <Typography sx={{ fontWeight:800, fontSize:'0.82rem', color:'#0f172a' }}>
-                            Custom Date Range
-                        </Typography>
+                {/* Header — title + active range + reset all in one row */}
+                <Box sx={{ display:'flex', alignItems:'center', gap: 1, mb: 1.2 }}>
+                    <Box sx={{ bgcolor:'#0f172a', borderRadius:'7px', p:'4px', display:'flex', flexShrink: 0 }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+                            <path d="M4 4h16v2.586l-6 6V20l-4-2v-7.414L4 6.586V4z" />
+                        </svg>
                     </Box>
-                    <Button
-                        onClick={handleReset} size="small"
-                        sx={{
-                            fontSize:'0.67rem', fontWeight:700, color:'#64748b',
-                            textTransform:'none', minWidth:0, px:1.1,
-                            borderRadius:'8px', border:'1px solid #e2e8f0',
-                            '&:hover':{ bgcolor:'#f1f5f9', borderColor:'#94a3b8' }
-                        }}
-                    >
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#0f172a', flexShrink: 0 }}>
+                        Custom Date Range
+                    </Typography>
+                    {/* Active range — inline, compressed */}
+                    <Box sx={{ display:'flex', alignItems:'center', gap: 0.5, bgcolor:'#f8fafc', borderRadius:'7px', px: 1, py: '3px', border:'1px solid #e2e8f0', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#0f172a', whiteSpace:'nowrap' }}>{dayjs(fromDate).format('DD MMM YY')}</Typography>
+                        <Typography sx={{ fontSize:'0.55rem', fontWeight:600, color:'#94a3b8', mx: 0.25 }}>→</Typography>
+                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#0f172a', whiteSpace:'nowrap' }}>{dayjs(toDate).format('DD MMM YY')}</Typography>
+                    </Box>
+                    <Button onClick={handleReset} size="small" sx={{ fontSize:'0.6rem', fontWeight:700, color:'#64748b', textTransform:'none', minWidth:0, px: 0.8, py: 0.3, borderRadius:'7px', border:'1px solid #e2e8f0', flexShrink: 0, '&:hover':{ bgcolor:'#f1f5f9', color:'#0f172a' } }}>
                         Reset
                     </Button>
                 </Box>
 
-                {/* Current filter info */}
-                <Box sx={{
-                    bgcolor:'#f8fafc', borderRadius:'10px', px:1.5, py:1,
-                    mb:1.8, border:'1px solid #e2e8f0'
-                }}>
-                    <Typography sx={{ fontSize:'0.63rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.4 }}>
-                        Active Range
-                    </Typography>
-                    <Typography sx={{ fontSize:'0.75rem', fontWeight:700, color:'#0f172a' }}>
-                        {dayjs(fromDate).format('DD MMM YYYY')} → {dayjs(toDate).format('DD MMM YYYY')}
-                    </Typography>
-                </Box>
-
-                {/* From / To date pickers */}
+                {/* Calendars — side by side on desktop, stacked on mobile */}
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <Box sx={{ mb: 0 }}>
-                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.2 }}>
-                            From
-                        </Typography>
-                        <DateCalendar
-                            value={customFrom ? dayjs(customFrom) : null}
-                            onChange={d => setCustomFrom(d ? d.format('YYYY-MM-DD') : '')}
-                            maxDate={customTo ? dayjs(customTo) : undefined}
-                            sx={calendarSx}
-                        />
-                    </Box>
-                    <Box sx={{ mb: 1, borderTop: '1px solid #f1f5f9', pt: 0.5 }}>
-                        <Typography sx={{ fontSize:'0.6rem', fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', mb:0.2 }}>
-                            To
-                        </Typography>
-                        <DateCalendar
-                            value={customTo ? dayjs(customTo) : null}
-                            onChange={d => setCustomTo(d ? d.format('YYYY-MM-DD') : '')}
-                            defaultCalendarMonth={customFrom ? dayjs(customFrom) : undefined}
-                            sx={calendarSx}
-                        />
+                    <Box sx={{ display: { xs: 'block', sm: 'flex' }, gap: 0, alignItems: 'flex-start' }}>
+                        {/* FROM calendar */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.4, px: 0.5 }}>
+                                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#0284c7', flexShrink: 0 }} />
+                                <Typography sx={{ fontSize:'0.58rem', fontWeight:800, color:'#0284c7', textTransform:'uppercase', letterSpacing:'0.08em' }}>From</Typography>
+                                {customFrom && <Typography sx={{ fontSize:'0.58rem', fontWeight:700, color:'#0f172a', ml: 'auto' }}>{dayjs(customFrom).format('DD MMM YY')}</Typography>}
+                            </Box>
+                            <Box sx={{ border: `1.5px solid ${customFrom ? '#0284c7' : '#e2e8f0'}`, borderRadius: '10px', overflow: 'hidden', bgcolor: '#fafbfc', height: 260, position: 'relative' }}>
+                                {pickerOpen === 'from' ? (
+                                    <MonthYearPicker
+                                        value={customFrom || null}
+                                        accentColor="#0284c7"
+                                        onChange={d => { setCustomFrom(d.format('YYYY-MM-DD')); }}
+                                        onClose={() => setPickerOpen(null)}
+                                    />
+                                ) : (
+                                    <DateCalendar
+                                        value={customFrom ? dayjs(customFrom) : null}
+                                        onChange={d => setCustomFrom(d ? d.format('YYYY-MM-DD') : '')}
+                                        maxDate={customTo ? dayjs(customTo) : undefined}
+                                        sx={{
+                                            ...calendarSx,
+                                            '& .MuiPickersDay-root.Mui-selected': { bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } },
+                                            '& .MuiPickersCalendarHeader-switchViewButton': { display: 'none' },
+                                            '& .MuiPickersCalendarHeader-label': { cursor: 'pointer', '&:hover': { color: '#0284c7' } },
+                                        }}
+                                        onMonthChange={() => {}}
+                                        slots={{ calendarHeader: (props) => (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5, minHeight: 28 }}>
+                                                <Box onClick={() => props.onMonthChange(props.currentMonth.subtract(1,'month'), 'right')} sx={{ cursor:'pointer', width:20, height:20, borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center', bgcolor:'#f1f5f9', '&:hover':{ bgcolor:'#e2e8f0' } }}>
+                                                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M6.5 2L3.5 5L6.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                                </Box>
+                                                <Typography onClick={() => setPickerOpen('from')} sx={{ fontSize:'0.7rem', fontWeight:800, cursor:'pointer', color:'#0f172a', '&:hover':{ color:'#0284c7' } }}>
+                                                    {props.currentMonth.format('MMM YYYY')}
+                                                </Typography>
+                                                <Box onClick={() => props.onMonthChange(props.currentMonth.add(1,'month'), 'left')} sx={{ cursor:'pointer', width:20, height:20, borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center', bgcolor:'#f1f5f9', '&:hover':{ bgcolor:'#e2e8f0' } }}>
+                                                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3.5 2L6.5 5L3.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                                </Box>
+                                            </Box>
+                                        ) }}
+                                    />
+                                )}
+                            </Box>
+                        </Box>
+
+                        {/* Vertical divider — desktop only */}
+                        <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'center', px: 1, pt: 2.5 }}>
+                            <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, transparent, #c4b5fd 40%, transparent)' }} />
+                            <Box sx={{ px: 0.8, py: '2px', borderRadius: '20px', bgcolor: '#f5f3ff', border: '1px solid #c4b5fd', my: 0.75, flexShrink: 0 }}>
+                                <Typography sx={{ fontSize: '0.48rem', fontWeight: 900, color: '#7c3aed' }}>VS</Typography>
+                            </Box>
+                            <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, transparent, #c4b5fd 40%, transparent)' }} />
+                        </Box>
+
+                        {/* Mobile divider */}
+                        <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1, my: 1 }}>
+                            <Box sx={{ flex: 1, height: '1px', bgcolor: '#e2e8f0' }} />
+                            <Typography sx={{ fontSize:'0.58rem', fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em' }}>To</Typography>
+                            <Box sx={{ flex: 1, height: '1px', bgcolor: '#e2e8f0' }} />
+                        </Box>
+
+                        {/* TO calendar */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.4, px: 0.5 }}>
+                                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#7c3aed', flexShrink: 0 }} />
+                                <Typography sx={{ fontSize:'0.58rem', fontWeight:800, color:'#7c3aed', textTransform:'uppercase', letterSpacing:'0.08em' }}>To</Typography>
+                                {customTo && <Typography sx={{ fontSize:'0.58rem', fontWeight:700, color:'#0f172a', ml: 'auto' }}>{dayjs(customTo).format('DD MMM YY')}</Typography>}
+                            </Box>
+                            <Box sx={{ border: `1.5px solid ${customTo ? '#7c3aed' : '#e2e8f0'}`, borderRadius: '10px', overflow: 'hidden', bgcolor: '#fafbfc', height: 260, position: 'relative' }}>
+                                {pickerOpen === 'to' ? (
+                                    <MonthYearPicker
+                                        value={customTo || null}
+                                        accentColor="#7c3aed"
+                                        onChange={d => { setCustomTo(d.format('YYYY-MM-DD')); }}
+                                        onClose={() => setPickerOpen(null)}
+                                    />
+                                ) : (
+                                    <DateCalendar
+                                        value={customTo ? dayjs(customTo) : null}
+                                        onChange={d => setCustomTo(d ? d.format('YYYY-MM-DD') : '')}
+                                        defaultCalendarMonth={customFrom ? dayjs(customFrom) : undefined}
+                                        sx={{
+                                            ...calendarSx,
+                                            '& .MuiPickersDay-root.Mui-selected': { bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' } },
+                                            '& .MuiPickersCalendarHeader-switchViewButton': { display: 'none' },
+                                        }}
+                                        slots={{ calendarHeader: (props) => (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5, minHeight: 28 }}>
+                                                <Box onClick={() => props.onMonthChange(props.currentMonth.subtract(1,'month'), 'right')} sx={{ cursor:'pointer', width:20, height:20, borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center', bgcolor:'#f1f5f9', '&:hover':{ bgcolor:'#e2e8f0' } }}>
+                                                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M6.5 2L3.5 5L6.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                                </Box>
+                                                <Typography onClick={() => setPickerOpen('to')} sx={{ fontSize:'0.7rem', fontWeight:800, cursor:'pointer', color:'#0f172a', '&:hover':{ color:'#7c3aed' } }}>
+                                                    {props.currentMonth.format('MMM YYYY')}
+                                                </Typography>
+                                                <Box onClick={() => props.onMonthChange(props.currentMonth.add(1,'month'), 'left')} sx={{ cursor:'pointer', width:20, height:20, borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center', bgcolor:'#f1f5f9', '&:hover':{ bgcolor:'#e2e8f0' } }}>
+                                                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3.5 2L6.5 5L3.5 8" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                                </Box>
+                                            </Box>
+                                        ) }}
+                                    />
+                                )}
+                            </Box>
+                        </Box>
                     </Box>
                 </LocalizationProvider>
 
@@ -590,11 +750,12 @@ const CommonDateFilter = ({ period, setPeriod, fromDate, setFromDate, toDate, se
                     fullWidth onClick={applyCustomRange}
                     disabled={!customFrom || !customTo}
                     sx={{
-                        bgcolor:'#0f172a', color:'#fff', borderRadius:'10px',
-                        fontWeight:800, fontSize:'0.72rem', textTransform:'uppercase',
-                        letterSpacing:'0.06em', py:0.9,
+                        mt: 1.2, bgcolor:'#0f172a', color:'#fff', borderRadius:'10px',
+                        fontWeight: 800, fontSize:'0.68rem', textTransform:'uppercase',
+                        letterSpacing:'0.06em', py: 0.8,
+                        boxShadow: '0 2px 10px rgba(15,23,42,0.2)',
                         '&:hover':{ bgcolor:'#1e293b' },
-                        '&.Mui-disabled':{ bgcolor:'#e2e8f0', color:'#94a3b8' }
+                        '&.Mui-disabled':{ bgcolor:'#e2e8f0', color:'#94a3b8', boxShadow: 'none' }
                     }}
                 >
                     Apply Range
