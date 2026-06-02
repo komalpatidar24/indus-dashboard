@@ -32,7 +32,7 @@ const _cYear  = (_now.month() + 1) >= 4 ? _now.year() : _now.year() - 1;
 const FY_FROM = `${_cYear}-04-01`;
 const FY_TO   = `${_cYear + 1}-03-31`;
 
-const CHART_H = 340;
+const CHART_H = typeof window !== 'undefined' && window.innerWidth < 600 ? 220 : 340;
 
 
 /* ── Status Breakdown: API key → label/color map ── */
@@ -220,9 +220,9 @@ const StatCard = ({ config, loading, rawValue, currency, animDelay }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       sx={{
-        borderRadius: "20px",
+        borderRadius: { xs: "14px", sm: "20px" },
         overflow: "hidden",
-        p: { xs: "16px 16px 14px 18px", sm: "20px 20px 17px 22px" },
+        p: { xs: "12px 12px 10px 14px", sm: "20px 20px 17px 22px" },
         display: "flex", flexDirection: "column",
         position: "relative",
         cursor: "default",
@@ -291,7 +291,7 @@ const StatCard = ({ config, loading, rawValue, currency, animDelay }) => {
 
         {/* Icon badge — has background, border, shadow in default state */}
         <Box sx={{
-          width: { xs: 40, sm: 46 }, height: { xs: 40, sm: 46 },
+          width: { xs: 32, sm: 46 }, height: { xs: 32, sm: 46 },
           borderRadius: "13px",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0, position: "relative",
@@ -304,7 +304,7 @@ const StatCard = ({ config, loading, rawValue, currency, animDelay }) => {
           transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.32s ease, border-color 0.25s",
           animation: `${iconPop} 0.55s cubic-bezier(0.34,1.56,0.64,1) ${animDelay + 0.15}s both`,
         }}>
-          <Icon size={19} color={color} strokeWidth={2.1} />
+          <Icon size={15} color={color} strokeWidth={2.1} />
 
           {/* Tiny inner shine on icon box */}
           <Box sx={{
@@ -334,7 +334,7 @@ const StatCard = ({ config, loading, rawValue, currency, animDelay }) => {
       ) : (
         <>
           <Typography sx={{
-            fontSize: { xs: "1.5rem", sm: "1.7rem" },
+            fontSize: { xs: "1.05rem", sm: "1.7rem" },
             fontWeight: 800,
             color: hovered ? accent : T.text,
             letterSpacing: "-0.9px",
@@ -751,8 +751,9 @@ const StatusDonutChart = ({ rawData, loading }) => {
   if (loading) return <Shimmer width="100%" height={CHART_H} radius={T.radiusSm} />;
 
   if (!segments.length) return (
-    <Box sx={{ height: CHART_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <Typography sx={{ fontSize: "0.78rem", color: T.textFaint }}>No data available</Typography>
+    <Box sx={{ height: CHART_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, opacity: 0.5 }}>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+      <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
     </Box>
   );
 
@@ -1075,6 +1076,7 @@ const QuotationDashboard = () => {
           },
           gap: { xs: "10px", sm: "12px", md: "14px" },
           mb: { xs: 2.5, sm: 3, md: 3.5 },
+          alignItems: 'stretch',
         }}>
           {CARD_DEFS.map((cfg, idx) => (
             <StatCard
@@ -1229,8 +1231,9 @@ const QuotationDashboard = () => {
             {categoryPerfData.length > 0 ? (
               <NightingaleRoseChart data={categoryPerfData} currency={currency} />
             ) : (
-              <Box sx={{ height: CHART_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Typography sx={{ fontSize: "0.78rem", color: T.textFaint }}>No data available</Typography>
+              <Box sx={{ height: CHART_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, opacity: 0.5 }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
               </Box>
             )}
           </ChartCard>

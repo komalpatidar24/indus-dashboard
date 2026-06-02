@@ -2811,7 +2811,7 @@ const ProductionDashboard = () => {
                 document.body
             )}
 
-            <Box sx={{ width: "100%", px: R.headerPx }}>
+            <Box sx={{ width: "100%", px: R.headerPx, pt: 1.5 }}>
                 {activeTab === 'production' && compareMode ? (
                     /* ── Compare Mode: row-based layout ── */
                     <CompareView compareData={compareData} />

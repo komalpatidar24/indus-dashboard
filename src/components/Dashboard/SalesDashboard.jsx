@@ -679,8 +679,9 @@ const RANK_PALETTE = [
 
 const Top5CustomersChart = ({ data, currency, rates }) => {
     if (!data?.labels?.length) return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+            <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
         </Box>
     );
 
@@ -808,8 +809,9 @@ const Top5SalesPersonsChart = ({ data, currency, rates }) => {
     const total  = values.reduce((a, b) => a + b, 0) || 1;
 
     if (!labels.length) return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+            <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
         </Box>
     );
 
@@ -873,8 +875,9 @@ const StateWisePieChart = ({ data }) => {
     const total = values.reduce((a, b) => a + b, 0) || 1;
 
     if (!labels.length) return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+            <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
         </Box>
     );
 
@@ -1507,12 +1510,13 @@ const SalesDashboard = () => {
                     {/* Monthly Sales Trend */}
                     <Card animDelay={0.35}>
                         <ChartTitle>Monthly Sales Trend</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             {charts.monthlySalesTrend?.labels?.length > 0 ? (
                                 <Bar data={charts.monthlySalesTrend} options={monthlySalesTrendOptions} />
                             ) : (
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
                                 </Box>
                             )}
                         </Box>
@@ -1521,12 +1525,13 @@ const SalesDashboard = () => {
                     {/* Last 3-Year Sales Trend */}
                     <Card animDelay={0.42}>
                         <ChartTitle>Last 3-Year Sales Trend</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             {charts.yearlySalesTrend?.labels?.length > 0 ? (
                                 <Line data={charts.yearlySalesTrend} options={yearlySalesTrendOptions} />
                             ) : (
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
                                 </Box>
                             )}
                         </Box>
@@ -1543,7 +1548,7 @@ const SalesDashboard = () => {
                     {/* Weekly Sales Funnel */}
                     <Card animDelay={0.56}>
                         <ChartTitle>Weekly Sales Funnel</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             <Bar data={funnelChart} options={funnelChartOptions} />
                         </Box>
                     </Card>
@@ -1551,7 +1556,7 @@ const SalesDashboard = () => {
                     {/* Weekly Sales (FO) */}
                     <Card animDelay={0.63}>
                         <ChartTitle>Weekly Sales (FO)</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             <Bar data={salesTargetChart} options={salesTargetChartOptions} />
                         </Box>
                     </Card>
@@ -1559,12 +1564,13 @@ const SalesDashboard = () => {
                     {/* Weekly Billing Actual */}
                     <Card animDelay={0.7}>
                         <ChartTitle>Weekly Billing Actual</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             {billingChart?.labels?.length > 0 ? (
                                 <Line data={billingChart} options={billingChartOptions} />
                             ) : (
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, opacity: 0.5 }}>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#94a3b8" strokeWidth="1.5"/></svg>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em' }}>No data available</Typography>
                                 </Box>
                             )}
                         </Box>
@@ -1581,7 +1587,7 @@ const SalesDashboard = () => {
                     {/* Weekly Job Status */}
                     <Card animDelay={0.84}>
                         <ChartTitle>Weekly Job Status Overview</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 200, md: 260, lg: 280 } }}>
                             <Bar data={jobStatusChart} options={jobStatusChartOptions} />
                         </Box>
                     </Card>

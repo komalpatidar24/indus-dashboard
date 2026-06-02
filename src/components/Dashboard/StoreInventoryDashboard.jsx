@@ -486,8 +486,8 @@ const StoreInventoryDashboard = () => {
                     {kpiDefs.map((k, i) => ( <StatCard key={i} {...k} loading={loading} animDelay={i * 0.05} /> ))}
                 </Box>
 
-                {/* ── Charts — 3-col on desktop, 2-col on tablet, 1-col on mobile ── */}
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }, gap: { xs: '16px', sm: '20px' }, mb: 4 }}>
+                {/* ── Row 1: 3 charts — Paper Issue, Inventory Overview, Stock Alert Priority ── */}
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }, gap: { xs: '16px', sm: '20px' }, mb: { xs: '16px', sm: '20px' } }}>
                     <ChartCard title="Paper Issue (Sheets)" Icon={FileText} accent={T.red} loading={loading} animDelay={0.1}
                         action={ data.paperIssueByMachine.length > 5 && ( <Button size="small" variant="outlined" sx={{ borderRadius: "8px", px: 2, fontSize: '0.65rem', color: T.textMuted, borderColor: T.border, fontWeight: 800 }} onClick={() => toggle('paperIssueChart')}> {toggles.paperIssueChart ? "Top 5" : "View All"} </Button> ) }
                         scrollable={toggles.paperIssueChart} minWidth={toggles.paperIssueChart ? `${data.paperIssueByMachine.length * 70 + 100}px` : undefined}
@@ -552,14 +552,17 @@ const StoreInventoryDashboard = () => {
                                 )} width={90} />
                                 <Tooltip cursor={{ fill: "rgba(217, 119, 6, 0.04)" }} content={<CT />} />
                                 <Bar dataKey="value" name="Current Stock" barSize={14} radius={[0, 4, 4, 0]}>
-                                    {sl(data.minStockAlerts, 'minStockChart').map((e, idx) => ( 
-                                        <Cell key={idx} fill={e.status === 'CRITICAL' ? T.red : T.amber} fillOpacity={0.9} style={{ filter: `drop-shadow(2px 0 4px ${e.status === 'CRITICAL' ? T.red : T.amber}33)` }} /> 
+                                    {sl(data.minStockAlerts, 'minStockChart').map((e, idx) => (
+                                        <Cell key={idx} fill={e.status === 'CRITICAL' ? T.red : T.amber} fillOpacity={0.9} style={{ filter: `drop-shadow(2px 0 4px ${e.status === 'CRITICAL' ? T.red : T.amber}33)` }} />
                                     ))}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
+                </Box>
 
+                {/* ── Row 2: 2 charts — Spare Parts, Dead Stock — fills 2/3 width each ── */}
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: '1fr', sm: 'repeat(2,1fr)', lg: 'repeat(2,1fr)' }, gap: { xs: '16px', sm: '20px' }, mb: 4 }}>
                     <ChartCard title="Spare Parts Consumption" Icon={Settings} accent={T.purple} loading={loading} animDelay={0.4}
                         action={ data.sparePartsByMachine.length > 5 && ( <Button size="small" variant="outlined" sx={{ borderRadius: "8px", px: 2, fontSize: '0.65rem', color: T.textMuted, borderColor: T.border, fontWeight: 800 }} onClick={() => toggle('sparePartsChart')}> {toggles.sparePartsChart ? "Top 5" : "View All"} </Button> ) }
                     >
@@ -597,8 +600,8 @@ const StoreInventoryDashboard = () => {
                                 <Tooltip cursor={{ fill: "rgba(220, 38, 38, 0.04)" }} content={<CT />} />
                                 <ReferenceLine x={100} stroke={T.red} strokeDasharray="4 4" label={{ position: 'top', value: '100d Threshold', fill: T.red, fontSize: 8, fontWeight: 900 }} />
                                 <Bar dataKey="days" name="Days Unused" barSize={14} radius={[0, 4, 4, 0]}>
-                                    {sl(data.deadStockValue, 'deadStockChart').map((e, idx) => ( 
-                                        <Cell key={idx} fill={e.days > 100 ? T.red : T.amber} fillOpacity={0.95} /> 
+                                    {sl(data.deadStockValue, 'deadStockChart').map((e, idx) => (
+                                        <Cell key={idx} fill={e.days > 100 ? T.red : T.amber} fillOpacity={0.95} />
                                     ))}
                                 </Bar>
                             </BarChart>
