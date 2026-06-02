@@ -20,7 +20,7 @@ import {
     Chart as ChartJS, ArcElement, Tooltip, Legend,
     CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler
 } from 'chart.js';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Doughnut, Bar, Line, Pie } from 'react-chartjs-2';
 import { postRequest } from '../api/api';
 import dayjs from "dayjs";
 
@@ -66,6 +66,52 @@ const CHART_COLORS = [
 
 /* Colors matching Top 5 Sales Persons donut */
 const FUNNEL_COLORS = ['#00a8ff', '#10ac84', '#f59e0b'];
+
+/* Colors for State-Wise Trend pie */
+const STATE_PIE_COLORS = ['#ef4444', '#3b82f6', '#10ac84', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+/* Colors for treemap */
+const TREEMAP_COLORS = ['#1e3a8a', '#0369a1', '#047857', '#6d28d9', '#b45309'];
+
+/* ── Trend slot generators ── */
+const getMonthSlots = (fromDateStr, toDateStr) => {
+    let start, end;
+    if (fromDateStr && toDateStr) {
+        start = new Date(fromDateStr); start.setDate(1);
+        end   = new Date(toDateStr);   end.setDate(1);
+    } else {
+        end   = new Date(); end.setDate(1);
+        start = new Date(end.getFullYear(), end.getMonth() - 11, 1);
+    }
+    const slots = [];
+    let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    const limit = new Date(end.getFullYear(), end.getMonth(), 1);
+    while (cur <= limit) {
+        slots.push({
+            label: cur.toLocaleString('en-US', { month: 'short' }),
+            year:  cur.getFullYear(),
+            month: cur.getMonth() + 1,
+        });
+        cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
+    return slots;
+};
+
+const getFYSlots = (fromDateStr, toDateStr) => {
+    const endDate   = toDateStr   ? new Date(toDateStr)   : new Date();
+    const startDate = fromDateStr ? new Date(fromDateStr) : null;
+    const endFY   = endDate.getMonth() >= 3 ? endDate.getFullYear() : endDate.getFullYear() - 1;
+    let   startFY = startDate
+        ? (startDate.getMonth() >= 3 ? startDate.getFullYear() : startDate.getFullYear() - 1)
+        : endFY - 2;
+    const slots = [];
+    for (let s = startFY; s <= endFY; s++) slots.push(`${s}-${s + 1}`);
+    while (slots.length < 3) {
+        const first = parseInt(slots[0].split('-')[0]);
+        slots.unshift(`${first - 1}-${first}`);
+    }
+    return slots;
+};
 
 const normalizeChartData = (raw, chartKey) => {
     if (!raw) return { labels: [], datasets: [] };
@@ -528,7 +574,7 @@ const GstToggle = ({ value, onChange }) => (
 ════════════════════════════════════════════════════════════ */
 const KpiCard = ({ icon, value, label, tint, iconColor, stripe, animDelay = 0, extra, onInfoClick }) => (
     <Box sx={{
-        flex: '1 1 0', minWidth: 0, borderRadius: '20px', bgcolor: '#ffffff',
+        flex: '1 1 0', minWidth: 0, borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
         boxShadow: '0 2px 0 rgba(15,23,42,0.03), 0 4px 20px rgba(15,23,42,0.07)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
@@ -553,28 +599,28 @@ const KpiCard = ({ icon, value, label, tint, iconColor, stripe, animDelay = 0, e
             position: 'absolute', top: -24, right: -24, width: 96, height: 96,
             borderRadius: '50%', bgcolor: tint, opacity: 0.6, pointerEvents: 'none',
         }} />
-        <Box sx={{ pl: 3, pr: 2.5, pt: 2.5, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ pl: { xs: 2, sm: 3 }, pr: { xs: 1.5, sm: 2.5 }, pt: { xs: 1.5, sm: 2.5 }, pb: { xs: 1.2, sm: 2 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.7, sm: 1 } }}>
             <Box sx={{
-                width: 44, height: 44, borderRadius: '13px', bgcolor: tint,
+                width: { xs: 34, sm: 44 }, height: { xs: 34, sm: 44 }, borderRadius: '13px', bgcolor: tint,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: `1.5px solid ${iconColor}22`,
                 boxShadow: `0 2px 10px ${iconColor}22, inset 0 1px 0 ${iconColor}15`,
                 animation: `${fadeIn} 0.5s ease ${animDelay + 0.15}s both`,
                 transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
             }}>
-                {React.cloneElement(icon, { size: 20, strokeWidth: 2.2, color: iconColor })}
+                {React.cloneElement(icon, { size: 16, strokeWidth: 2.2, color: iconColor })}
             </Box>
             <Typography className="kpi-value" sx={{
-                fontSize: { xs: '1.25rem', md: '1.5rem' },
+                fontSize: { xs: '1.05rem', md: '1.5rem' },
                 fontWeight: 900, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em',
-                fontFamily: "'Plus Jakarta Sans', sans-serif", mt: 0.5,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", mt: { xs: 0.2, sm: 0.5 },
                 transition: 'color 0.28s ease',
                 animation: `${countIn} 0.5s cubic-bezier(0.34,1.56,0.64,1) ${animDelay + 0.2}s both`,
             }}>
                 <AnimatedNumber value={value} />
             </Typography>
             <Typography sx={{
-                fontSize: '0.64rem', fontWeight: 700, color: '#7c8fa6',
+                fontSize: { xs: '0.58rem', sm: '0.64rem' }, fontWeight: 700, color: '#7c8fa6',
                 textTransform: 'uppercase', letterSpacing: '0.09em',
                 fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.4,
             }}>
@@ -729,94 +775,159 @@ const Top5CustomersChart = ({ data, currency, rates }) => {
     );
 };
 
-/* ─── Top 5 Sales Persons ──────────────────────────────────── */
-const DONUT_COLORS = ['#002855', '#00a8ff', '#10ac84', '#1289a7', '#f59e0b'];
+/* ─── Top 5 Sales Persons — Treemap ───────────────────────────── */
+const buildTreemap = (items, rect = { x: 0, y: 0, w: 100, h: 100 }) => {
+    if (!items.length) return [];
+    if (items.length === 1) return [{ ...items[0], ...rect }];
+    const total = items.reduce((s, d) => s + d.value, 0);
+    let splitIdx = 1;
+    let leftSum  = items[0].value;
+    for (let k = 1; k < items.length - 1; k++) {
+        const next = leftSum + items[k].value;
+        if (Math.abs(next / total - 0.5) < Math.abs(leftSum / total - 0.5)) {
+            leftSum  = next;
+            splitIdx = k + 1;
+        } else { break; }
+    }
+    const ratio = leftSum / total;
+    const { x, y, w, h } = rect;
+    let L, R;
+    if (w >= h) {
+        L = { x,             y, w: w * ratio,         h };
+        R = { x: x + w * ratio, y, w: w * (1 - ratio), h };
+    } else {
+        L = { x, y,             w, h: h * ratio         };
+        R = { x, y: y + h * ratio, w, h: h * (1 - ratio) };
+    }
+    return [...buildTreemap(items.slice(0, splitIdx), L), ...buildTreemap(items.slice(splitIdx), R)];
+};
 
 const Top5SalesPersonsChart = ({ data, currency, rates }) => {
-    if (!data?.labels?.length) return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+    const values = data?.datasets?.[0]?.data ?? [];
+    const labels = data?.labels ?? [];
+    const total  = values.reduce((a, b) => a + b, 0) || 1;
+
+    if (!labels.length) return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
         </Box>
     );
 
-    const values = data.datasets?.[0]?.data ?? [];
+    const items = labels
+        .map((label, i) => ({ label, value: values[i] ?? 0, color: TREEMAP_COLORS[i % TREEMAP_COLORS.length] }))
+        .sort((a, b) => b.value - a.value);
+
+    const tiles = buildTreemap(items);
+
+    return (
+        <Box sx={{ position: 'relative', width: '100%', height: { xs: 220, md: 280 }, borderRadius: '10px', overflow: 'hidden' }}>
+            {tiles.map((tile, i) => {
+                const pct    = ((tile.value / total) * 100).toFixed(1);
+                const fmtVal = formatCurrency(tile.value, currency, rates ?? {});
+                const compact = tile.h < 22;
+                const small   = !compact && tile.h < 35;
+                const padding = compact ? '4px 6px' : small ? '8px 10px' : '10px 12px';
+                const nameFz  = compact ? '0.62rem' : small ? '0.72rem' : tile.w > 25 ? '0.8rem' : '0.68rem';
+                const valFz   = compact ? '0.58rem' : small ? '0.66rem' : tile.w > 25 ? '0.7rem' : '0.6rem';
+                return (
+                    <Box key={i} title={`${tile.label}: ${fmtVal} (${pct}%)`} sx={{
+                        position: 'absolute',
+                        left: `${tile.x}%`, top: `${tile.y}%`,
+                        width: `${tile.w}%`, height: `${tile.h}%`,
+                        bgcolor: tile.color, boxSizing: 'border-box',
+                        border: '2.5px solid #fff', borderRadius: '6px', padding,
+                        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                        overflow: 'hidden', cursor: 'default',
+                        transition: 'filter 0.2s ease',
+                        animation: `${fadeUp} 0.55s ease ${i * 0.07}s both`,
+                        '&:hover': { filter: 'brightness(1.14)', zIndex: 2 },
+                    }}>
+                        {compact ? (
+                            <Typography noWrap sx={{ color: '#fff', fontWeight: 700, fontSize: nameFz, lineHeight: 1.15, textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+                                {tile.label} · {fmtVal} · {pct}%
+                            </Typography>
+                        ) : (
+                            <>
+                                <Typography sx={{
+                                    color: '#fff', fontWeight: 800, fontSize: nameFz, lineHeight: 1.25,
+                                    overflow: 'hidden', display: '-webkit-box',
+                                    WebkitLineClamp: small ? 1 : 2, WebkitBoxOrient: 'vertical',
+                                    textShadow: '0 1px 3px rgba(0,0,0,0.35)',
+                                }}>{tile.label}</Typography>
+                                <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: valFz, mt: 0.3, textShadow: '0 1px 2px rgba(0,0,0,0.25)' }}>
+                                    {fmtVal} · {pct}%
+                                </Typography>
+                            </>
+                        )}
+                    </Box>
+                );
+            })}
+        </Box>
+    );
+};
+
+/* ─── State-Wise Pie Chart ─────────────────────────────────── */
+const StateWisePieChart = ({ data }) => {
+    const values = data?.datasets?.[0]?.data ?? [];
+    const labels = data?.labels ?? [];
     const total = values.reduce((a, b) => a + b, 0) || 1;
 
+    if (!labels.length) return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+        </Box>
+    );
+
     const chartData = {
-        labels: data.labels,
-        datasets: [{
-            data: values, backgroundColor: DONUT_COLORS, borderColor: '#ffffff',
-            borderWidth: 3, hoverOffset: 10, borderRadius: 6,
-        }],
+        labels,
+        datasets: [{ data: values, backgroundColor: STATE_PIE_COLORS, borderColor: '#ffffff', borderWidth: 3, hoverOffset: 10 }],
     };
 
-    const totalFormatted = formatCurrency(total, currency, rates ?? {});
-
-    const options = {
-        responsive: true, maintainAspectRatio: false, cutout: '68%',
+    const pieOptions = {
+        responsive: true, maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(15,23,42,0.92)', padding: 12, cornerRadius: 10,
+                backgroundColor: 'rgba(15,23,42,0.95)', padding: 12, cornerRadius: 8,
                 callbacks: {
                     label: (ctx) => {
                         const val = ctx.raw;
-                        return `  ${formatCurrency(val, currency, rates ?? {})}  (${((val / total) * 100).toFixed(1)}%)`;
-                    }
+                        const pct = ((val / total) * 100).toFixed(1);
+                        const abs = Math.abs(val);
+                        const fmtVal = abs >= 1e7 ? `₹${(val / 1e7).toFixed(2)}Cr` : `₹${(val / 1e5).toFixed(2)}L`;
+                        return `  ${ctx.label}: ${fmtVal} (${pct}%)`;
+                    },
                 },
             },
         },
-        animation: { animateRotate: true, animateScale: true, duration: 1400, easing: 'easeOutQuart' },
+        animation: { animateRotate: true, animateScale: true, duration: 1400, easing: 'easeOutElastic' },
     };
 
     return (
-        <Box sx={{ width: '100%' }}>
-            {/* Donut centred, fixed size */}
-            <Box sx={{
-                position: 'relative',
-                width: 120, height: 120,
-                mx: 'auto', mb: 2,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-                <Doughnut data={chartData} options={options} />
-                <Box sx={{ position: 'absolute', textAlign: 'center', pointerEvents: 'none' }}>
-                    <Typography sx={{ fontSize: '0.45rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>total</Typography>
-                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>{totalFormatted}</Typography>
-                </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <Box sx={{ position: 'relative', flexShrink: 0, width: { xs: 160, sm: 185, md: 205 }, height: { xs: 160, sm: 185, md: 205 } }}>
+                <Pie data={chartData} options={pieOptions} />
             </Box>
-
-            {/* Legend — full width rows, no truncation */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {data.labels.map((label, i) => {
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: { xs: 0.85, md: 1.1 }, minWidth: 0, overflowY: 'auto', maxHeight: '100%' }}>
+                {labels.map((label, i) => {
                     const val = values[i] ?? 0;
-                    const pct = ((val / total) * 100).toFixed(0);
-                    const formatted = formatCurrency(val, currency, rates ?? {});
-                    const color = DONUT_COLORS[i % DONUT_COLORS.length];
+                    const pct = ((val / total) * 100).toFixed(1);
+                    const abs = Math.abs(val);
+                    const fmtVal = abs >= 1e7 ? `${(val / 1e7).toFixed(2)}Cr` : `${(val / 1e5).toFixed(2)}L`;
+                    const color = STATE_PIE_COLORS[i % STATE_PIE_COLORS.length];
                     return (
                         <Box key={i} sx={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            animation: `${fadeUp} 0.4s ease ${0.08 + i * 0.06}s both`,
+                            display: 'flex', alignItems: 'center', gap: 1.25,
+                            px: 1, py: 0.75, borderRadius: '10px',
+                            bgcolor: 'rgba(248,250,252,0.8)', border: '1px solid #f1f5f9',
+                            animation: `${fadeUp} 0.4s ease ${0.1 + i * 0.07}s both`,
+                            '&:hover': { bgcolor: `${color}12`, border: `1px solid ${color}40` },
                         }}>
-                            {/* Colour swatch */}
-                            <Box sx={{ width: 10, height: 10, borderRadius: '3px', flexShrink: 0, bgcolor: color }} />
-                            {/* Name — takes all remaining space, truncates only if truly needed */}
-                            <Typography sx={{
-                                fontSize: '0.73rem', fontWeight: 600, color: '#334155',
-                                flex: 1, minWidth: 0,
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }} title={label}>{label}</Typography>
-                            {/* Value */}
-                            <Typography sx={{ fontSize: '0.73rem', fontWeight: 800, color, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                                {formatted}
-                            </Typography>
-                            {/* Pct */}
-                            <Typography sx={{
-                                fontSize: '0.65rem', fontWeight: 700, color: '#64748b',
-                                bgcolor: '#f1f5f9', borderRadius: '4px',
-                                px: '5px', py: '1px', flexShrink: 0,
-                            }}>
-                                {pct}%
-                            </Typography>
+                            <Box sx={{ width: 10, height: 10, borderRadius: '3px', bgcolor: color, flexShrink: 0, boxShadow: `0 1px 4px ${color}66` }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={label}>{label}</Typography>
+                                <Typography sx={{ fontSize: '0.64rem', fontWeight: 600, color }}>{fmtVal} ({pct}%)</Typography>
+                            </Box>
                         </Box>
                     );
                 })}
@@ -915,6 +1026,9 @@ const SalesDashboard = () => {
         billingVsPending: emptyChart,
         top5Customers: emptyChart,
         top5SalesPersons: emptyChart,
+        monthlySalesTrend: emptyChart,
+        yearlySalesTrend: emptyChart,
+        stateWiseTrend: emptyChart,
     });
 
     /* ── Fetch data (all API calls unchanged) ── */
@@ -941,14 +1055,68 @@ const SalesDashboard = () => {
                 totalCustomer: totalCust?.data?.[0]?.Column1 ?? '—',
             });
 
-            const [funnel, salesTarget, billing, jobStatus, top5Cust, top5Sales] = await Promise.all([
+            const [funnel, salesTarget, billing, jobStatus, top5Cust, top5Sales,
+                monthlyTrend, yearlyTrend, stateTrend] = await Promise.all([
                 postRequest('GetWeeklySalesFunnel', payload),
                 postRequest('GetWeeklySalesVsTargetFO', payload),
                 postRequest('GetWeeklyBillingActualVsTarget', payload),
                 postRequest('GetWeeklyJobStatusOverview', payload),
                 postRequest('GetTop5CustomersBySales', payload),
                 postRequest('GetTop5SalesPersonsBySales', payload),
+                postRequest('GetMonthlySalesTrend', payload),
+                postRequest('GetYearlySalesTrend', payload),
+                postRequest('GetStateWiseSalesTrend', payload),
             ]);
+
+            /* ── Monthly Sales Trend — fill all month slots with 0 for missing months ── */
+            const monthlyRaw  = monthlyTrend?.data ?? [];
+            const monthSlots  = getMonthSlots(fromDate, toDate);
+            const monthlySalesTrendData = {
+                labels: monthSlots.map(m => m.label),
+                datasets: [{
+                    label: 'Monthly Sales',
+                    data: monthSlots.map(m => {
+                        const r = monthlyRaw.find(
+                            d => parseInt(d.YearNum) === m.year && parseInt(d.MonthNum) === m.month
+                        );
+                        return r ? parseFloat(r.TotalGrossAmount) || 0 : 0;
+                    }),
+                    backgroundColor: '#4e7fcf',
+                    hoverBackgroundColor: '#2e5db3',
+                    borderRadius: 4, borderSkipped: false, barPercentage: 0.75,
+                }],
+            };
+
+            /* ── Yearly Sales Trend — always 3 FY slots ── */
+            const yearlyRaw = yearlyTrend?.data ?? [];
+            const fySlots   = getFYSlots(fromDate, toDate);
+            const yearlySalesTrendData = {
+                labels: fySlots,
+                datasets: [{
+                    label: 'Annual Sales',
+                    data: fySlots.map(fy => {
+                        const r = yearlyRaw.find(d => d.FinancialYear === fy);
+                        return r ? parseFloat(r.TotalGrossAmount) || 0 : 0;
+                    }),
+                    borderColor: '#6c3fc9',
+                    backgroundColor: 'rgba(108, 63, 201, 0.10)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#6c3fc9', pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2.5, pointRadius: 7, pointHoverRadius: 10,
+                    tension: 0, fill: false,
+                }],
+            };
+
+            /* ── State-Wise Trend ── */
+            const stateRaw = (stateTrend?.data ?? []).filter(r => parseFloat(r.TotalGrossAmount) > 0);
+            const stateWiseTrendData = {
+                labels: stateRaw.map(r => r.ClientState || 'Unknown'),
+                datasets: [{
+                    data: stateRaw.map(r => parseFloat(r.TotalGrossAmount) || 0),
+                    backgroundColor: STATE_PIE_COLORS,
+                    borderColor: '#ffffff', borderWidth: 2, hoverOffset: 10,
+                }],
+            };
 
             setCharts(prev => ({
                 ...prev,
@@ -958,6 +1126,9 @@ const SalesDashboard = () => {
                 weeklyJobStatus: normalizeChartData(jobStatus?.data, 'weeklyJobStatus'),
                 top5Customers: normalizeChartData(top5Cust?.data, 'top5Customers'),
                 top5SalesPersons: normalizeChartData(top5Sales?.data, 'top5SalesPersons'),
+                monthlySalesTrend: monthlySalesTrendData,
+                yearlySalesTrend: yearlySalesTrendData,
+                stateWiseTrend: stateWiseTrendData,
             }));
 
         } catch (e) {
@@ -1138,6 +1309,92 @@ const SalesDashboard = () => {
         },
     }), []);
 
+    /* Monthly Sales Trend — bar chart, raw INR values */
+    const monthlySalesTrendOptions = useMemo(() => ({
+        ...commonChartOptions,
+        plugins: {
+            ...commonChartOptions.plugins,
+            tooltip: {
+                ...commonChartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (items) => items[0]?.label ?? '',
+                    label: (ctx) => {
+                        const val = ctx.raw ?? 0;
+                        const abs = Math.abs(val);
+                        let f;
+                        if (abs >= 1e7) f = `₹${(val / 1e7).toFixed(2)}Cr`;
+                        else if (abs >= 1e5) f = `₹${(val / 1e5).toFixed(2)}L`;
+                        else if (abs >= 1e3) f = `₹${(val / 1e3).toFixed(1)}K`;
+                        else f = `₹${val.toFixed(0)}`;
+                        return `  ${ctx.dataset.label}: ${f}`;
+                    },
+                    labelColor: tooltipLabelColor,
+                },
+            },
+        },
+        scales: {
+            x: { ...commonChartOptions.scales.x },
+            y: {
+                grid: { color: 'rgba(226,232,240,0.4)', drawBorder: false },
+                ticks: {
+                    font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' },
+                    color: '#64748b',
+                    callback: (v) => {
+                        const abs = Math.abs(v);
+                        if (abs >= 1e7) return `${(v / 1e7).toFixed(1)}Cr`;
+                        if (abs >= 1e5) return `${(v / 1e5).toFixed(1)}L`;
+                        if (abs >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
+                        return String(v);
+                    },
+                },
+                border: { display: false },
+            },
+        },
+    }), [tooltipLabel]);
+
+    /* Yearly Sales Trend — line chart */
+    const yearlySalesTrendOptions = useMemo(() => ({
+        ...commonChartOptions,
+        plugins: {
+            ...commonChartOptions.plugins,
+            tooltip: {
+                ...commonChartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (items) => items[0]?.label ?? '',
+                    label: (ctx) => {
+                        const val = ctx.raw ?? 0;
+                        const abs = Math.abs(val);
+                        let f;
+                        if (abs >= 1e7) f = `₹${(val / 1e7).toFixed(2)}Cr`;
+                        else if (abs >= 1e5) f = `₹${(val / 1e5).toFixed(2)}L`;
+                        else if (abs >= 1e3) f = `₹${(val / 1e3).toFixed(1)}K`;
+                        else f = `₹${val.toFixed(0)}`;
+                        return `  ${ctx.dataset.label}: ${f}`;
+                    },
+                    labelColor: tooltipLabelColor,
+                },
+            },
+        },
+        scales: {
+            x: { ...commonChartOptions.scales.x },
+            y: {
+                grid: { color: 'rgba(226,232,240,0.4)', drawBorder: false },
+                ticks: {
+                    font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' },
+                    color: '#64748b',
+                    callback: (v) => {
+                        const abs = Math.abs(v);
+                        if (abs >= 1e7) return `${(v / 1e7).toFixed(1)}Cr`;
+                        if (abs >= 1e5) return `${(v / 1e5).toFixed(1)}L`;
+                        if (abs >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
+                        return String(v);
+                    },
+                },
+                border: { display: false },
+            },
+        },
+    }), [tooltipLabel]);
+
     /* ════════════════════════════════════════════════════════════
        RENDER
     ════════════════════════════════════════════════════════════ */
@@ -1247,26 +1504,62 @@ const SalesDashboard = () => {
                     gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
                     gap: R.gapChart,
                 }}>
-                    {/* Weekly Sales Funnel */}
+                    {/* Monthly Sales Trend */}
                     <Card animDelay={0.35}>
+                        <ChartTitle>Monthly Sales Trend</ChartTitle>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                            {charts.monthlySalesTrend?.labels?.length > 0 ? (
+                                <Bar data={charts.monthlySalesTrend} options={monthlySalesTrendOptions} />
+                            ) : (
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    </Card>
+
+                    {/* Last 3-Year Sales Trend */}
+                    <Card animDelay={0.42}>
+                        <ChartTitle>Last 3-Year Sales Trend</ChartTitle>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
+                            {charts.yearlySalesTrend?.labels?.length > 0 ? (
+                                <Line data={charts.yearlySalesTrend} options={yearlySalesTrendOptions} />
+                            ) : (
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                                    <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>No data available</Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    </Card>
+
+                    {/* State-Wise Sales Trend */}
+                    <Card animDelay={0.49}>
+                        <ChartTitle>State-Wise Sales Trend</ChartTitle>
+                        <Box sx={{ height: { xs: 300, md: 340 }, overflow: 'hidden' }}>
+                            <StateWisePieChart data={charts.stateWiseTrend} />
+                        </Box>
+                    </Card>
+
+                    {/* Weekly Sales Funnel */}
+                    <Card animDelay={0.56}>
                         <ChartTitle>Weekly Sales Funnel</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 260, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
                             <Bar data={funnelChart} options={funnelChartOptions} />
                         </Box>
                     </Card>
 
                     {/* Weekly Sales (FO) */}
-                    <Card animDelay={0.42}>
+                    <Card animDelay={0.63}>
                         <ChartTitle>Weekly Sales (FO)</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 260, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
                             <Bar data={salesTargetChart} options={salesTargetChartOptions} />
                         </Box>
                     </Card>
 
                     {/* Weekly Billing Actual */}
-                    <Card animDelay={0.49}>
+                    <Card animDelay={0.7}>
                         <ChartTitle>Weekly Billing Actual</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 260, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
                             {billingChart?.labels?.length > 0 ? (
                                 <Line data={billingChart} options={billingChartOptions} />
                             ) : (
@@ -1278,7 +1571,7 @@ const SalesDashboard = () => {
                     </Card>
 
                     {/* Top 5 Customers — leaderboard */}
-                    <Card animDelay={0.56}>
+                    <Card animDelay={0.77}>
                         <ChartTitle>Top 5 Customers by Sales</ChartTitle>
                         <Box sx={{ height: { xs: 300, md: 320, lg: 340 }, overflow: 'hidden' }}>
                             <Top5CustomersChart data={charts.top5Customers} currency={currency} rates={rates} />
@@ -1286,17 +1579,19 @@ const SalesDashboard = () => {
                     </Card>
 
                     {/* Weekly Job Status */}
-                    <Card animDelay={0.63}>
+                    <Card animDelay={0.84}>
                         <ChartTitle>Weekly Job Status Overview</ChartTitle>
-                        <Box sx={{ position: 'relative', height: { xs: 260, md: 300, lg: 340 } }}>
+                        <Box sx={{ position: 'relative', height: { xs: 220, md: 300, lg: 340 } }}>
                             <Bar data={jobStatusChart} options={jobStatusChartOptions} />
                         </Box>
                     </Card>
 
-                    {/* Top 5 Sales Persons */}
-                    <Card animDelay={0.7}>
+                    {/* Top 5 Sales Persons — treemap */}
+                    <Card animDelay={0.91}>
                         <ChartTitle>Top 5 Sales Persons By Sales</ChartTitle>
-                        <Top5SalesPersonsChart data={charts.top5SalesPersons} currency={currency} rates={rates} />
+                        <Box sx={{ height: { xs: 220, md: 280 }, overflow: 'hidden' }}>
+                            <Top5SalesPersonsChart data={charts.top5SalesPersons} currency={currency} rates={rates} />
+                        </Box>
                     </Card>
                 </Box>
 

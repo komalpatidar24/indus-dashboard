@@ -122,7 +122,7 @@ export const GRID = {
     kpi2:    { xs: '1fr', sm: 'repeat(2, 1fr)' },
     kpi3:    { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
     kpi4:    { xs: 'repeat(2, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-    kpi5:    { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
+    kpi5:    { xs: 'repeat(3, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
     kpi6:    { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)', lg: 'repeat(6, 1fr)' },
     kpi7:    { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)', lg: 'repeat(7, 1fr)' },
 
