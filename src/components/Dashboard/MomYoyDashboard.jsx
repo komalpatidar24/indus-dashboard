@@ -10,7 +10,7 @@ import {
   Clock, Truck, ShieldAlert, TrendingUp, Info, ChevronRight,
   TrendingDown, CheckCircle2, AlertCircle
 } from "lucide-react";
-import { Box, Typography, CircularProgress, keyframes, LinearProgress } from "@mui/material";
+import { Box, Typography, CircularProgress, keyframes, LinearProgress, Tooltip as MuiTooltip } from "@mui/material";
 import DashboardHeader  from "../common/DashboardHeader";
 import CommonDateFilter from "../common/CommonDateFilter";
 import { postRequest }  from "../api/api";
@@ -79,13 +79,26 @@ const StatCard = ({ config, data, loading, delay }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
+    <MuiTooltip
+      title={value && value !== "—" ? (
+        <Box sx={{ textAlign: 'center', px: 0.5 }}>
+          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>{label}</Typography>
+          <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>{value}</Typography>
+        </Box>
+      ) : ''}
+      placement="top" arrow
+      componentsProps={{
+        tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+        arrow: { sx: { color: accent } },
+      }}
+    >
     <Box
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       sx={{
-        borderRadius: "20px",
+        borderRadius: { xs: "14px", sm: "20px" },
         overflow: "hidden",
-        p: { xs: "16px 16px 14px 18px", sm: "20px 20px 17px 22px" },
+        p: { xs: "12px 12px 10px 14px", sm: "20px 20px 17px 22px" },
         display: "flex", flexDirection: "column",
         position: "relative",
         cursor: "default",
@@ -142,7 +155,7 @@ const StatCard = ({ config, data, loading, delay }) => {
 
       <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 1.5 }}>
         <Box sx={{
-          width: { xs: 40, sm: 46 }, height: { xs: 40, sm: 46 },
+          width: { xs: 32, sm: 46 }, height: { xs: 32, sm: 46 },
           borderRadius: "13px",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0, position: "relative",
@@ -155,7 +168,7 @@ const StatCard = ({ config, data, loading, delay }) => {
           transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.32s ease, border-color 0.25s",
           animation: `${iconPop} 0.55s cubic-bezier(0.34,1.56,0.64,1) ${delay + 0.15}s both`,
         }}>
-          <Icon size={19} color={accent} strokeWidth={2.1} />
+          <Icon size={15} color={accent} strokeWidth={2.1} />
           <Box sx={{ position: "absolute", top: "6px", left: "6px", width: 6, height: 6, borderRadius: "50%", bgcolor: "#ffffff", opacity: 0.55 }} />
         </Box>
 
@@ -183,7 +196,7 @@ const StatCard = ({ config, data, loading, delay }) => {
       ) : (
         <>
           <Typography sx={{
-            fontSize: { xs: "1.5rem", sm: "1.7rem" },
+            fontSize: { xs: "1.05rem", sm: "1.7rem" },
             fontWeight: 800,
             color: hovered ? accent : T.text,
             letterSpacing: "-0.9px",
@@ -217,6 +230,7 @@ const StatCard = ({ config, data, loading, delay }) => {
         </>
       )}
     </Box>
+    </MuiTooltip>
   );
 };
 
@@ -319,14 +333,14 @@ const ChartCard = ({ title, subtitle, icon: Icon, iconColor = T.primary, iconBg 
 
 const ScorecardTable = ({ data = [] }) => (
   <Box sx={{ width: "100%", mt: 1 }}>
-    <Box sx={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, pb: 1, mb: 1.5 }}>
+    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1.5fr 1fr 1fr 1fr", sm: "2fr 1fr 1fr 1fr" }, borderBottom: `1px solid ${T.border}`, pb: 1, mb: 1.5 }}>
       <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: T.textFaint, textTransform: "uppercase" }}>Metric Category</Typography>
       <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: T.textFaint, textTransform: "uppercase", textAlign: "center" }}>Current (FY25)</Typography>
       <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: T.textFaint, textTransform: "uppercase", textAlign: "center" }}>Previous (FY24)</Typography>
       <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: T.textFaint, textTransform: "uppercase", textAlign: "right" }}>Trend</Typography>
     </Box>
     {data.map((m, i) => (
-      <Box key={i} sx={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", py: 2, borderBottom: i === data.length - 1 ? "none" : `1px solid ${T.borderLight}`, alignItems: "center" }}>
+      <Box key={i} sx={{ display: "grid", gridTemplateColumns: { xs: "1.5fr 1fr 1fr 1fr", sm: "2fr 1fr 1fr 1fr" }, py: { xs: 1.2, sm: 2 }, borderBottom: i === data.length - 1 ? "none" : `1px solid ${T.borderLight}`, alignItems: "center" }}>
         <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: T.text }}>{m.category}</Typography>
         <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, color: T.text, textAlign: "center" }}>{m.current}</Typography>
         <Typography sx={{ fontSize: "0.85rem", fontWeight: 500, color: T.textFaint, textAlign: "center" }}>{m.previous}</Typography>

@@ -24,7 +24,8 @@ const MORE_ITEMS = [
     { label: 'Wastage',     icon: Layers,        path: '/dashboard/WastageMaterial' },
 ];
 
-const NavItem = ({ label, icon: Icon, path, active, onClick }) => (
+// eslint-disable-next-line no-unused-vars
+const NavItem = ({ label, icon: Icon, path: _path, active, onClick }) => (
     <Box
         onClick={onClick}
         sx={{
@@ -181,7 +182,7 @@ const MobileBottomNav = () => {
 
                 {/* Menu items */}
                 <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {MORE_ITEMS.map(({ label, icon: Icon, path }) => {
+                    {MORE_ITEMS.map(({ label, icon: _Icon, path }) => {
                         const active = location.pathname === path;
                         return (
                             <Box

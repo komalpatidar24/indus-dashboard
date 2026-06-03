@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
-    Box, Typography, Paper,
+    Box, Typography, Paper, Tooltip as MuiTooltip,
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     Popover, List, ListItemButton, ListItemText, TextField,
     keyframes,
@@ -572,7 +572,34 @@ const GstToggle = ({ value, onChange }) => (
 /* ════════════════════════════════════════════════════════════
    KPI CARD
 ════════════════════════════════════════════════════════════ */
-const KpiCard = ({ icon, value, label, tint, iconColor, stripe, animDelay = 0, extra, onInfoClick }) => (
+const KpiCard = ({ icon, value, label, tint, iconColor, stripe, animDelay = 0, extra, onInfoClick }) => {
+    const rawVal = (() => {
+        if (value == null) return null;
+        const stripped = String(value).replace(/,/g, '');
+        const n = parseFloat(stripped);
+        if (!isNaN(n)) return n.toLocaleString('en-IN');
+        return String(value);
+    })();
+    return (
+    <MuiTooltip
+        placement="top"
+        arrow
+        disableHoverListener={!rawVal}
+        title={rawVal ? (
+            <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>
+                    {label}
+                </Typography>
+                <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>
+                    {rawVal}
+                </Typography>
+            </Box>
+        ) : ''}
+        componentsProps={{
+            tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${stripe}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${stripe}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${stripe}70`, backdropFilter: 'blur(10px)' } },
+            arrow: { sx: { color: stripe } },
+        }}
+    >
     <Box sx={{
         flex: '1 1 0', minWidth: 0, borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
@@ -657,7 +684,9 @@ const KpiCard = ({ icon, value, label, tint, iconColor, stripe, animDelay = 0, e
             </Box>
         )}
     </Box>
-);
+    </MuiTooltip>
+    );
+};
 
 /* ── KPI card configs ── */
 const KPI_CONFIGS = {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    Box, Typography, CircularProgress, keyframes,
+    Box, Typography, CircularProgress, keyframes, Tooltip as MuiTooltip,
 } from '@mui/material';
 import {
     Banknote, ShoppingCart, Wallet, Activity,
@@ -70,7 +70,7 @@ const ChartOverlay = ({ loading }) => loading ? (
 ) : null;
 
 /* ── KPI Stat Card ── */
-const StatCard = ({ label, icon: Icon, color, bg, accent, value, loading, animDelay, isAmount }) => {
+const StatCard = ({ label, icon: _Icon, color, bg, accent, value, loading, animDelay, isAmount }) => {
     const [hovered, setHovered] = useState(false);
     const display = useMemo(() => {
         if (loading) return null;
@@ -78,7 +78,27 @@ const StatCard = ({ label, icon: Icon, color, bg, accent, value, loading, animDe
         return isAmount ? fmtAmt(value) : fmtNum(value);
     }, [value, loading, isAmount]);
 
+    const rawDisplay = useMemo(() => {
+        if (value == null || value === '—') return null;
+        const n = Number(value);
+        if (isNaN(n)) return null;
+        return isAmount ? `₹${n.toLocaleString('en-IN')}` : n.toLocaleString('en-IN');
+    }, [value, isAmount]);
+
     return (
+        <MuiTooltip
+            title={rawDisplay ? (
+                <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>{label}</Typography>
+                    <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>{rawDisplay}</Typography>
+                </Box>
+            ) : ''}
+            placement="top" arrow
+            componentsProps={{
+                tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+                arrow: { sx: { color: accent } },
+            }}
+        >
         <Box
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -144,11 +164,12 @@ const StatCard = ({ label, icon: Icon, color, bg, accent, value, loading, animDe
                 </>
             )}
         </Box>
+        </MuiTooltip>
     );
 };
 
 /* ── Chart Card ── */
-const ChartCard = ({ title, Icon, accentA, accentB, loading, animDelay = 0, children }) => (
+const ChartCard = ({ title, Icon: _Icon, accentA, accentB, loading, animDelay = 0, children }) => (
     <Box sx={{
         background: 'linear-gradient(160deg,#ffffff 0%,#f7f9ff 100%)',
         borderRadius: '20px',

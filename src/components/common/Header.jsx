@@ -21,7 +21,7 @@ const Header = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [showFmsSubmenu, setShowFmsSubmenu] = useState(false);
-  const [showDashboardSubmenu, setShowDashboardSubmenu] = useState(false);
+  const [showDashboardSubmenu, setShowDashboardSubmenu] = useState(true);
   const [, setExpandedSubmenu] = useState(null);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [pendingCount] = useState(0);
@@ -160,7 +160,7 @@ const Header = () => {
     if (moduleMenuRef.current && !moduleMenuRef.current.contains(event.target)) {
       setShowModuleMenu(false);
       setShowFmsSubmenu(false);
-      setShowDashboardSubmenu(false);
+      setShowDashboardSubmenu(true);
       setExpandedSubmenu(null);
     }
     if (helpPanelRef.current && !helpPanelRef.current.contains(event.target) && !event.target.closest('.help-trigger')) {
@@ -194,7 +194,7 @@ const Header = () => {
     }
     setShowModuleMenu(false);
     setShowFmsSubmenu(false);
-    setShowDashboardSubmenu(false);
+    setShowDashboardSubmenu(true);
     setExpandedSubmenu(null);
   };
 
@@ -386,14 +386,13 @@ const Header = () => {
               </button>
 
             {showModuleMenu && (
-              <div className="absolute top-10 -left-4 w-[320px] bg-white text-slate-800 border border-slate-200 shadow-2xl rounded-2xl overflow-hidden z-[1050] animate-in slide-in-from-top-2 duration-200">
-                <div className="bg-slate-50/50 px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Application Modules</span>
+              <div className="absolute top-10 -left-4 w-[280px] bg-white text-slate-800 border border-slate-200 shadow-2xl rounded-2xl overflow-hidden z-[1050] animate-in slide-in-from-top-2 duration-200">
+                <div className="flex justify-end px-3 pt-2">
                   <button onClick={() => setShowModuleMenu(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
                     <X size={14} />
                   </button>
                 </div>
-                <div className="p-3">
+                <div className="px-3 pb-3">
                   {mainModules.map((m) => (
                     <div key={m.id}>
                       <button
@@ -405,14 +404,14 @@ const Header = () => {
                             handleNavigation(m.path, openInNewTab);
                           }
                         }}
-                        className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-all group text-left"
+                        className="w-full flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-all group text-left"
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                          isPrintudeWeb 
-                            ? 'bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100' 
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          isPrintudeWeb
+                            ? 'bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100'
                             : 'bg-teal-50 text-teal-600 group-hover:bg-teal-100'
                         }`}>
-                          <LayoutGrid size={20} />
+                          <LayoutGrid size={16} />
                         </div>
                         <div className="flex-1">
                           <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{m.name}</div>
@@ -421,20 +420,30 @@ const Header = () => {
                       </button>
 
                       {m.hasSubmenu && isSubmenuOpen(m.id) && (
-                        <div className="ml-14 mt-1 mb-2 space-y-1 animate-in slide-in-from-top-1 duration-200">
-                          {m.submenu.map((sub) => (
-                            <button
-                              key={sub.id}
-                              onClick={(e) => handleNavigation(sub.path, e.ctrlKey || e.metaKey)}
-                              className={`w-full py-3 pl-4 rounded-lg text-[12px] font-bold text-slate-600 uppercase text-left border-l-2 border-transparent transition-all tracking-widest ${
-                                isPrintudeWeb 
-                                  ? 'hover:bg-indigo-50/40 hover:border-indigo-600' 
-                                  : 'hover:bg-teal-50/40 hover:border-teal-600'
-                              }`}
-                            >
-                              {sub.name}
-                            </button>
-                          ))}
+                        <div className="mt-1 mb-1 space-y-0.5 animate-in slide-in-from-top-1 duration-200">
+                          {m.submenu.map((sub) => {
+                            const isActive = location.pathname === sub.path;
+                            return (
+                              <button
+                                key={sub.id}
+                                onClick={(e) => handleNavigation(sub.path, e.ctrlKey || e.metaKey)}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all group ${
+                                  isActive
+                                    ? isPrintudeWeb
+                                      ? 'bg-indigo-50 border-l-2 border-indigo-600 text-indigo-700'
+                                      : 'bg-teal-50 border-l-2 border-teal-600 text-teal-700'
+                                    : isPrintudeWeb
+                                      ? 'border-l-2 border-transparent text-slate-600 hover:bg-indigo-50/60 hover:border-indigo-400 hover:text-indigo-700'
+                                      : 'border-l-2 border-transparent text-slate-600 hover:bg-teal-50/60 hover:border-teal-500 hover:text-teal-700'
+                                }`}
+                              >
+                                <span className={`flex-shrink-0 ${isActive ? '' : 'opacity-50 group-hover:opacity-100'}`}>
+                                  {sub.icon}
+                                </span>
+                                <span className="text-[11px] font-semibold uppercase tracking-wide">{sub.name}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

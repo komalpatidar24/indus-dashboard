@@ -14,7 +14,7 @@ import {
 import {
   Box, Typography, CircularProgress, keyframes,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Popover
+  Popover, Tooltip as MuiTooltip
 } from "@mui/material";
 import DashboardHeader from "../common/DashboardHeader";
 import CommonDateFilter from "../common/CommonDateFilter";
@@ -100,7 +100,27 @@ const StatCard = ({ config, loading, rawValue, animDelay, isAmount = false }) =>
     return isAmount ? fmtAmt(rawValue) : fmtCount(rawValue);
   }, [rawValue, isAmount]);
 
+  const tooltipVal = useMemo(() => {
+    if (rawValue == null) return null;
+    const n = Number(rawValue);
+    if (isNaN(n)) return null;
+    return isAmount ? `₹${n.toLocaleString('en-IN')}` : n.toLocaleString('en-IN');
+  }, [rawValue, isAmount]);
+
   return (
+    <MuiTooltip
+      title={tooltipVal ? (
+        <Box sx={{ textAlign: 'center', px: 0.5 }}>
+          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>{label}</Typography>
+          <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>{tooltipVal}</Typography>
+        </Box>
+      ) : ''}
+      placement="top" arrow
+      componentsProps={{
+        tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+        arrow: { sx: { color: accent } },
+      }}
+    >
     <Box
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -163,6 +183,7 @@ const StatCard = ({ config, loading, rawValue, animDelay, isAmount = false }) =>
         </>
       )}
     </Box>
+    </MuiTooltip>
   );
 };
 

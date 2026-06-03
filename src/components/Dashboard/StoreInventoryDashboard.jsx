@@ -11,7 +11,7 @@ import {
 import {
     Box, Typography, CircularProgress, keyframes,
     Button, Paper, Chip, ButtonGroup, Dialog, DialogTitle,
-    DialogContent, IconButton, Slide
+    DialogContent, IconButton, Slide, Tooltip as MuiTooltip
 } from "@mui/material";
 import DashboardHeader from '../common/DashboardHeader';
 import CommonDateFilter from '../common/CommonDateFilter';
@@ -73,9 +73,23 @@ const ChartOverlay = ({ loading }) => loading ? (
     </Box>
 ) : null;
 
-const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon }) => {
+const StatCard = ({ label, value, rawValue, color, bg, accent, loading, animDelay, Icon: _Icon }) => {
     const [hovered, setHovered] = useState(false);
+    const tooltipVal = rawValue != null && rawValue !== '—' ? String(rawValue) : null;
     return (
+        <MuiTooltip
+            title={tooltipVal ? (
+                <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>{label}</Typography>
+                    <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>{tooltipVal}</Typography>
+                </Box>
+            ) : ''}
+            placement="top" arrow
+            componentsProps={{
+                tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+                arrow: { sx: { color: accent } },
+            }}
+        >
         <Box
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -122,6 +136,7 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, Icon })
                 </>
             )}
         </Box>
+        </MuiTooltip>
     );
 };
 
@@ -423,12 +438,12 @@ const StoreInventoryDashboard = () => {
     );
 
     const kpiDefs = [
-        { label: "Dead Stock Items",      value: fmtCount(data.kpis.deadStockItems.val),     Icon: AlertTriangle, color: T.red,     bg: T.redLight,     accent: T.red },
-        { label: "Internal Min Alerts",   value: fmtCount(data.kpis.totalValueBlocked.val), Icon: Clock,         color: T.amber,   bg: T.amberLight,   accent: T.amber },
-        { label: "Oldest Item Stock",     value: data.kpis.oldestItem.val,                  Icon: Activity,      color: T.sky,     bg: T.skyLight,     accent: T.sky },
-        { label: "Critical Stock (<5d)",  value: fmtCount(data.kpis.critical.val),          Icon: TrendingUp,    color: T.red,     bg: T.redLight,     accent: T.red },
-        { label: "Warning (5–10d)",       value: fmtCount(data.kpis.warning.val),           Icon: Package,       color: T.amber,   bg: T.amberLight,   accent: T.amber },
-        { label: "Since Last Order",      value: `${data.kpis.sinceLastOrder.val}d`,        Icon: RefreshCw,     color: T.primary, bg: T.primaryLight, accent: T.primary },
+        { label: "Dead Stock Items",      value: fmtCount(data.kpis.deadStockItems.val),     rawValue: Number(data.kpis.deadStockItems.val).toLocaleString('en-IN'),    Icon: AlertTriangle, color: T.red,     bg: T.redLight,     accent: T.red },
+        { label: "Internal Min Alerts",   value: fmtCount(data.kpis.totalValueBlocked.val), rawValue: Number(data.kpis.totalValueBlocked.val).toLocaleString('en-IN'), Icon: Clock,         color: T.amber,   bg: T.amberLight,   accent: T.amber },
+        { label: "Oldest Item Stock",     value: data.kpis.oldestItem.val,                  rawValue: data.kpis.oldestItem.val,                                        Icon: Activity,      color: T.sky,     bg: T.skyLight,     accent: T.sky },
+        { label: "Critical Stock (<5d)",  value: fmtCount(data.kpis.critical.val),          rawValue: Number(data.kpis.critical.val).toLocaleString('en-IN'),          Icon: TrendingUp,    color: T.red,     bg: T.redLight,     accent: T.red },
+        { label: "Warning (5–10d)",       value: fmtCount(data.kpis.warning.val),           rawValue: Number(data.kpis.warning.val).toLocaleString('en-IN'),           Icon: Package,       color: T.amber,   bg: T.amberLight,   accent: T.amber },
+        { label: "Since Last Order",      value: `${data.kpis.sinceLastOrder.val}d`,        rawValue: `${data.kpis.sinceLastOrder.val} days`,                          Icon: RefreshCw,     color: T.primary, bg: T.primaryLight, accent: T.primary },
     ];
 
     const MovementTable = ({ full = false }) => (

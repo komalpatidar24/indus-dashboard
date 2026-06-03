@@ -20,6 +20,7 @@ import ProcurementDashbaord from './components/Dashboard/ProcurementDashbaord';
 import MomYoyDashboard from './components/Dashboard/MomYoyDashboard';
 
 import MobileBottomNav from './components/common/MobileBottomNav';
+import PullToRefresh from './components/common/PullToRefresh';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -104,32 +105,34 @@ const ProtectedSSORoute = ({ children }) => {
   if (isAuthenticating) {
     return (
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f8fafc'
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f2744 100%)',
       }}>
-        <div style={{ textAlign: 'center' }}>
+        <img
+          src="/White new logo1.png"
+          alt="Indus Analytics"
+          style={{ width: '200px', maxWidth: '60vw', marginBottom: '40px', opacity: 0.95 }}
+        />
+        {/* Animated bar */}
+        <div style={{ width: '160px', height: '3px', background: 'rgba(255,255,255,0.12)', borderRadius: '99px', overflow: 'hidden' }}>
           <div style={{
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #3b82f6',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto'
-          }}></div>
-          <p style={{ marginTop: '20px', color: '#64748b', fontWeight: 600 }}>
-            Authenticating...
-          </p>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
+            height: '100%', width: '40%', borderRadius: '99px',
+            background: 'linear-gradient(90deg, #2dd4bf, #3b82f6)',
+            animation: 'slideBar 1.4s ease-in-out infinite',
+          }} />
         </div>
+        <p style={{ marginTop: '20px', color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          Loading...
+        </p>
+        <style>{`
+          @keyframes slideBar {
+            0%   { transform: translateX(-100%); }
+            50%  { transform: translateX(300%); }
+            100% { transform: translateX(300%); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -165,6 +168,7 @@ const App = () => {
       {/* bottom padding on mobile so content clears the bottom nav */}
       <div style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 68px)' }}
            className="mobile-page-wrap">
+      <PullToRefresh onRefresh={() => window.location.reload()}>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
@@ -186,6 +190,7 @@ const App = () => {
         <Route path="/dashboard/ProcurementDashbaord" element={<ProtectedSSORoute><ProcurementDashbaord /></ProtectedSSORoute>} />
         <Route path="/dashboard/MomYoyDashboard" element={<ProtectedSSORoute><MomYoyDashboard /></ProtectedSSORoute>} />
       </Routes>
+      </PullToRefresh>
       </div>
       <MobileBottomNav />
       <ToastContainer position="top-right" autoClose={3000} />

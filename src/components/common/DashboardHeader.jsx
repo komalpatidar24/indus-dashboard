@@ -24,7 +24,7 @@ const DashboardHeader = ({ title, onRefresh, loading, children, controls }) => {
                 justifyContent: 'space-between',
                 px: { xs: 2, md: 4 },
                 pt: { xs: 1.2, md: 1.75 },
-                pb: { xs: 0.5, md: 0 },
+                pb: { xs: 1, md: 1.5 },
             }}>
                 <Typography
                     variant="h5"
@@ -70,65 +70,94 @@ const DashboardHeader = ({ title, onRefresh, loading, children, controls }) => {
                 )}
             </Box>
 
-            {/* ── Row 2: Filters + Refresh (desktop) ── */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    gap: 1,
-                    px: { xs: 1.5, md: 4 },
-                    py: { xs: 0.8, md: 1.2 },
-                    overflowX: 'auto',
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': { display: 'none' },
-                }}
-            >
-                {children}
+            {/* ── Row 2: Filters + Refresh (desktop) — hidden when no children ── */}
+            {(children || (!controls && onRefresh)) && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        px: { xs: 1.5, md: 4 },
+                        py: { xs: 0.8, md: 1.2 },
+                        overflowX: 'auto',
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': { display: 'none' },
+                    }}
+                >
+                    {children}
 
-                {/* Desktop-only refresh — sits at the end of the filters row */}
-                {onRefresh && (
-                    <IconButton
-                        onClick={refresh}
-                        disabled={loading}
-                        size="small"
-                        sx={{
-                            display: { xs: 'none', md: 'flex' },
-                            color: T.textMuted,
-                            bgcolor: '#f8fafc',
-                            border: `1px solid ${T.border}`,
-                            borderRadius: R.radiusInput,
-                            p: 0.9,
-                            flexShrink: 0,
-                            transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
-                            '&:hover': {
-                                bgcolor: T.surface, color: T.text,
-                                transform: 'rotate(45deg) scale(1.08)',
-                                borderColor: '#cbd5e1',
-                                boxShadow: '0 4px 12px rgba(15,23,42,0.1)',
-                            },
-                        }}
-                    >
-                        {loading
-                            ? <CircularProgress size={15} sx={{ color: T.text }} />
-                            : <RefreshCw size={15} />}
-                    </IconButton>
-                )}
-            </Box>
+                    {/* Desktop-only refresh — sits at the end of the filters row */}
+                    {!controls && onRefresh && (
+                        <IconButton
+                            onClick={refresh}
+                            disabled={loading}
+                            size="small"
+                            sx={{
+                                display: { xs: 'none', md: 'flex' },
+                                color: T.textMuted,
+                                bgcolor: '#f8fafc',
+                                border: `1px solid ${T.border}`,
+                                borderRadius: R.radiusInput,
+                                p: 0.9,
+                                flexShrink: 0,
+                                transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                                '&:hover': {
+                                    bgcolor: T.surface, color: T.text,
+                                    transform: 'rotate(45deg) scale(1.08)',
+                                    borderColor: '#cbd5e1',
+                                    boxShadow: '0 4px 12px rgba(15,23,42,0.1)',
+                                },
+                            }}
+                        >
+                            {loading
+                                ? <CircularProgress size={15} sx={{ color: T.text }} />
+                                : <RefreshCw size={15} />}
+                        </IconButton>
+                    )}
+                </Box>
+            )}
 
-            {/* ── Row 3: Extra controls — single row on desktop, stacked on mobile ── */}
+            {/* ── Row 3: Extra controls ── */}
             {controls && (
                 <Box sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', md: 'row' },
                     alignItems: { md: 'center' },
+                    justifyContent: { md: 'flex-end' },
                     px: { xs: 1.5, md: 4 },
-                    pb: { xs: 0.8, md: 1 },
-                    gap: { xs: 0.8, md: 1.5 },
+                    pb: { xs: 0.8, md: 1.2 },
+                    pt: { xs: 0.6, md: 1.2 },
                     borderTop: `1px solid ${T.borderLight}`,
-                    pt: { xs: 0.8, md: 1 },
                 }}>
                     {controls}
+                    {/* Refresh at end of controls row on desktop */}
+                    {onRefresh && (
+                        <IconButton
+                            onClick={refresh}
+                            disabled={loading}
+                            size="small"
+                            sx={{
+                                display: { xs: 'none', md: 'flex' },
+                                color: T.textMuted,
+                                bgcolor: '#f8fafc',
+                                border: `1px solid ${T.border}`,
+                                borderRadius: R.radiusInput,
+                                p: 0.9,
+                                flexShrink: 0,
+                                transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                                '&:hover': {
+                                    bgcolor: T.surface, color: T.text,
+                                    transform: 'rotate(45deg) scale(1.08)',
+                                    borderColor: '#cbd5e1',
+                                    boxShadow: '0 4px 12px rgba(15,23,42,0.1)',
+                                },
+                            }}
+                        >
+                            {loading
+                                ? <CircularProgress size={15} sx={{ color: T.text }} />
+                                : <RefreshCw size={15} />}
+                        </IconButton>
+                    )}
                 </Box>
             )}
         </Box>

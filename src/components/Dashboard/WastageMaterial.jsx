@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, keyframes, Button, Grid, Paper, Popover } from '@mui/material';
+import { Box, Typography, CircularProgress, keyframes, Button, Grid, Paper, Popover, Tooltip } from '@mui/material';
 import {
     Layers, TrendingDown, AlertCircle, Droplets, Printer, FlaskConical,
     BarChart3, PieChart as PieIcon, LineChart as LineIcon, Activity,
@@ -104,7 +104,34 @@ const ChartOverlay = ({ loading }) => loading ? (
    STAT CARD
    ══════════════════════════════════════════════════════════════ */
 // eslint-disable-next-line no-unused-vars
-const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading, animDelay, showWarning, type, onInfoClick, Icon }) => (
+const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading, animDelay, showWarning, type, onInfoClick, Icon }) => {
+    const rawVal = (() => {
+        if (value == null) return null;
+        const stripped = String(value).replace(/,/g, '').replace(/%$/, '');
+        const n = parseFloat(stripped);
+        if (!isNaN(n)) return formatValue(n, type, true);
+        return String(value);
+    })();
+    return (
+    <Tooltip
+        placement="top"
+        arrow
+        disableHoverListener={!rawVal || loading}
+        title={rawVal && !loading ? (
+            <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>
+                    {label}
+                </Typography>
+                <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>
+                    {rawVal}
+                </Typography>
+            </Box>
+        ) : ''}
+        componentsProps={{
+            tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+            arrow: { sx: { color: accent } },
+        }}
+    >
     <Box sx={{
         borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
@@ -212,7 +239,9 @@ const StatCard = ({ label, value, subValue, subtext, color, bg, accent, loading,
             </Box>
         )}
     </Box>
-);
+    </Tooltip>
+    );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    CHART CARD

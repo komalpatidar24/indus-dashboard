@@ -1549,35 +1549,111 @@ const processProductionResponses = ({ sheetsRes, booksRes, jobsRes, dailyRes, sh
     return { kpi, charts: { dailyProduction, jobStatus, shiftProduction, productionByProcess, makeReadyTime } };
 };
 
-const ACCENT_THIS = { a: '#0284c7', b: '#38bdf8', label: 'This Month', pill: '#e0f2fe', text: '#0369a1' };
-const ACCENT_LAST = { a: '#7c3aed', b: '#a78bfa', label: 'Last Month', pill: '#f5f3ff', text: '#6d28d9' };
+const ACCENT_THIS = { a: '#0284c7', b: '#38bdf8', label: 'Period A', pill: '#e0f2fe', text: '#0369a1' };
+const ACCENT_LAST = { a: '#7c3aed', b: '#a78bfa', label: 'Period B', pill: '#f5f3ff', text: '#6d28d9' };
 
-/* Row-label pill shown at the left of each compare row */
+/* ── Compute Period B (previous period) from Period A (main filter) ──
+   Called automatically when Compare Mode is active and filter changes.
+   period = 'Day'|'Week'|'Month'|'Quarter'|'Year'|custom
+────────────────────────────────────────────────────────────────────── */
+const computePrevPeriod = (period, fromDate, toDate) => {
+    const f = dayjs(fromDate);
+    const t = dayjs(toDate);
+    if (period === 'Day') {
+        const prev = f.subtract(1, 'day');
+        return { from: prev.format('YYYY-MM-DD'), to: prev.format('YYYY-MM-DD'), label: prev.format('DD MMM YYYY') };
+    }
+    if (period === 'Week') {
+        const pf = f.subtract(1, 'week');
+        const pt = t.subtract(1, 'week');
+        return { from: pf.format('YYYY-MM-DD'), to: pt.format('YYYY-MM-DD'), label: `${pf.format('DD MMM')} – ${pt.format('DD MMM YYYY')}` };
+    }
+    if (period === 'Month') {
+        const pm = f.subtract(1, 'month').startOf('month');
+        return { from: pm.format('YYYY-MM-DD'), to: pm.endOf('month').format('YYYY-MM-DD'), label: pm.format('MMM YYYY') };
+    }
+    if (period === 'Quarter') {
+        const pf = f.subtract(3, 'month');
+        const pt = t.subtract(3, 'month');
+        const QS_MONTHS = [4, 7, 10, 1];
+        const qNum = QS_MONTHS.indexOf(pf.month() + 1) + 1 || Math.ceil((pf.month() + 1) / 3);
+        return { from: pf.format('YYYY-MM-DD'), to: pt.format('YYYY-MM-DD'), label: `Q${qNum} ${pf.format('MMM')}–${pt.format('MMM YYYY')}` };
+    }
+    if (period === 'Year') {
+        const yr = parseInt(fromDate.slice(0, 4)) - 1;
+        return { from: `${yr}-04-01`, to: `${yr + 1}-03-31`, label: `FY ${yr}–${String(yr + 1).slice(2)}` };
+    }
+    // Custom range — shift back by the same number of days
+    const days = t.diff(f, 'day') + 1;
+    const pf = f.subtract(days, 'day');
+    const pt = t.subtract(days, 'day');
+    return { from: pf.format('YYYY-MM-DD'), to: pt.format('YYYY-MM-DD'), label: `${pf.format('DD MMM')} – ${pt.format('DD MMM YYYY')}` };
+};
+
+
+/* Row-label pill — vertical on desktop (left side), horizontal on mobile (top) */
 const ComparePill = ({ accent }) => (
-    <Box sx={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: { xs: 28, md: 36 }, flexShrink: 0,
-    }}>
+    <>
+        {/* Mobile: horizontal pill above content */}
         <Box sx={{
-            writingMode: 'vertical-rl', textOrientation: 'mixed',
-            transform: 'rotate(180deg)',
-            px: '5px', py: '10px', borderRadius: '8px',
+            display: { xs: 'flex', md: 'none' },
+            alignItems: 'center',
+            px: '8px', py: '3px', borderRadius: '6px',
             bgcolor: accent.pill, border: `1.5px solid ${accent.a}30`,
             fontSize: '0.55rem', fontWeight: 800, color: accent.text,
             letterSpacing: '0.08em', textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap', alignSelf: 'flex-start',
         }}>
             {accent.label}
         </Box>
-    </Box>
+        {/* Desktop: vertical pill on left */}
+        <Box sx={{
+            display: { xs: 'none', md: 'flex' },
+            alignItems: 'center', justifyContent: 'center',
+            width: 36, flexShrink: 0,
+        }}>
+            <Box sx={{
+                writingMode: 'vertical-rl', textOrientation: 'mixed',
+                transform: 'rotate(180deg)',
+                px: '5px', py: '10px', borderRadius: '8px',
+                bgcolor: accent.pill, border: `1.5px solid ${accent.a}30`,
+                fontSize: '0.55rem', fontWeight: 800, color: accent.text,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+            }}>
+                {accent.label}
+            </Box>
+        </Box>
+    </>
 );
 
 /* KPI card used inside compare single-row (desktop only) */
 const CompareKpiCard = ({ label, value, color, icon: Icon, animDelay = 0 }) => {
     const display = useMemo(() => { if (value == null) return '—'; return fmt(value); }, [value]);
+    const rawVal = (value != null && !isNaN(parseFloat(value)))
+        ? parseFloat(value).toLocaleString('en-IN') : null;
     const bg = `${color}18`;
     const delayS = animDelay / 1000;
     return (
+        <Tooltip
+            placement="top"
+            arrow
+            disableHoverListener={!rawVal}
+            title={rawVal ? (
+                <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>
+                        {label}
+                    </Typography>
+                    <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>
+                        {rawVal}
+                    </Typography>
+                </Box>
+            ) : ''}
+            componentsProps={{
+                tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${color}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${color}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${color}70` } },
+                arrow: { sx: { color } },
+            }}
+        >
         <Box sx={{
             borderRadius: '16px',
             p: '16px 16px 14px 18px',
@@ -1587,7 +1663,7 @@ const CompareKpiCard = ({ label, value, color, icon: Icon, animDelay = 0 }) => {
             display: 'flex', flexDirection: 'column',
             position: 'relative', overflow: 'hidden',
             animation: `${fadeUp} 0.45s ease ${delayS}s both`,
-            height: '100%',
+            height: '100%', cursor: rawVal ? 'default' : 'default',
         }}>
             {/* left accent bar */}
             <Box sx={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${color} 0%, ${color}60 100%)`, borderRadius: '16px 0 0 16px' }} />
@@ -1608,41 +1684,71 @@ const CompareKpiCard = ({ label, value, color, icon: Icon, animDelay = 0 }) => {
                 {label}
             </Typography>
         </Box>
+        </Tooltip>
     );
 };
 
 /* Compact KPI tile for mobile compare rows */
 const CompareKpiTile = ({ label, value, color, icon: Icon, animDelay = 0 }) => {
     const display = useMemo(() => { if (value == null) return '—'; return fmt(value); }, [value]);
+    const rawVal = (value != null && !isNaN(parseFloat(value)))
+        ? parseFloat(value).toLocaleString('en-IN') : null;
     const bg = `${color}15`;
     const delayS = animDelay / 1000;
     return (
+        <Tooltip
+            placement="top"
+            arrow
+            disableHoverListener={!rawVal}
+            title={rawVal ? (
+                <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>
+                        {label}
+                    </Typography>
+                    <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>
+                        {rawVal}
+                    </Typography>
+                </Box>
+            ) : ''}
+            componentsProps={{
+                tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${color}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${color}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${color}70` } },
+                arrow: { sx: { color } },
+            }}
+        >
         <Box sx={{
-            borderRadius: '10px', p: '8px 8px 7px 10px',
+            borderRadius: '10px',
+            p: { xs: '5px 5px 5px 7px', md: '8px 8px 7px 10px' },
             bgcolor: '#fff', border: `1.5px solid ${T.border}`,
             boxShadow: '0 1px 4px rgba(15,23,42,0.06)',
             display: 'flex', flexDirection: 'column',
             borderLeft: `3px solid ${color}`,
             animation: `${fadeUp} 0.4s ease ${delayS}s both`,
+            minWidth: 0, overflow: 'hidden',
         }}>
-            <Box sx={{ width: 20, height: 20, borderRadius: '6px', bgcolor: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: '5px', flexShrink: 0 }}>
-                {Icon && <Icon size={11} color={color} strokeWidth={2.2} />}
+            <Box sx={{ width: { xs: 16, md: 20 }, height: { xs: 16, md: 20 }, borderRadius: '5px', bgcolor: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: '4px', flexShrink: 0 }}>
+                {Icon && <Icon size={9} color={color} strokeWidth={2.2} />}
             </Box>
-            <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color: T.text, fontFamily: T.fontMono, letterSpacing: '-0.4px', lineHeight: 1, mb: '3px' }}>
+            <Typography sx={{
+                fontSize: { xs: '0.68rem', md: '0.95rem' },
+                fontWeight: 800, color: T.text, fontFamily: T.fontMono,
+                letterSpacing: '-0.3px', lineHeight: 1, mb: '3px',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
                 {display}
             </Typography>
-            <Typography sx={{ fontSize: '0.48rem', fontWeight: 700, color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <Typography sx={{ fontSize: '0.44rem', fontWeight: 700, color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {label}
             </Typography>
         </Box>
+        </Tooltip>
     );
 };
 
 /* A single compare row: pill + 5 compact KPI tiles (mobile) */
 const CompareKpiRow = ({ accent, kpiDefs, loading }) => (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 0.75, md: 1 } }}>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'flex-start', gap: { xs: 0.5, md: 1 } }}>
         <ComparePill accent={accent} />
-        <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: { xs: 0.75, md: 1 } }}>
+        <Box sx={{ flex: 1, minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: { xs: 0.5, md: 1 } }}>
             {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <Box key={i} sx={{ borderRadius: '10px', bgcolor: '#f8fafc', border: `1.5px solid ${T.border}`, minHeight: { xs: 64, md: 52 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1669,10 +1775,10 @@ const CompareChartRow = ({ title, subtitle, thisData, lastData, type, onBarClick
             <Box sx={{ flex: 1, height: '1px', bgcolor: T.borderLight }} />
         </Box>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: { xs: 1, md: 1.5 } }}>
-            {/* This Month */}
-            <Box sx={{ display: 'flex', gap: { xs: 0.75, md: 1 }, alignItems: 'stretch' }}>
+            {/* This Period */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0.5, md: 1 }, alignItems: { xs: 'flex-start', md: 'stretch' } }}>
                 <ComparePill accent={ACCENT_THIS} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                     <ChartCard title={title} subtitle={`${ACCENT_THIS.label} · ${subtitle}`} accentA={ACCENT_THIS.a} accentB={ACCENT_THIS.b} animDelay={0}>
                         {type === 'process'
                             ? <ProductionByProcessChart data={thisData} onBarClick={onBarClick ?? (() => {})} />
@@ -1681,10 +1787,10 @@ const CompareChartRow = ({ title, subtitle, thisData, lastData, type, onBarClick
                     </ChartCard>
                 </Box>
             </Box>
-            {/* Last Month */}
-            <Box sx={{ display: 'flex', gap: { xs: 0.75, md: 1 }, alignItems: 'stretch' }}>
+            {/* Last Period */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0.5, md: 1 }, alignItems: { xs: 'flex-start', md: 'stretch' } }}>
                 <ComparePill accent={ACCENT_LAST} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                     <ChartCard title={title} subtitle={`${ACCENT_LAST.label} · ${subtitle}`} accentA={ACCENT_LAST.a} accentB={ACCENT_LAST.b} animDelay={80}>
                         {type === 'process'
                             ? <ProductionByProcessChart data={lastData} onBarClick={() => {}} />
@@ -1697,18 +1803,18 @@ const CompareChartRow = ({ title, subtitle, thisData, lastData, type, onBarClick
     </Box>
 );
 
-/* Full compare view — row-based layout */
-const CompareView = ({ compareData }) => {
+/* Full compare view — no separate filter bar; uses main header filter */
+const CompareView = ({ compareData, periodALabel, periodBLabel }) => {
     const { loading } = compareData;
     const td = compareData.thisMonth;
     const ld = compareData.lastMonth;
 
     const kpiDefs = [
-        { label: 'Sheets', value: null, color: '#3b82f6', icon: Layers, thisVal: td?.kpi?.sheetsProduced, lastVal: ld?.kpi?.sheetsProduced },
-        { label: 'Books', value: null, color: '#6366f1', icon: Activity, thisVal: td?.kpi?.booksProduced, lastVal: ld?.kpi?.booksProduced },
-        { label: 'Completed', value: null, color: '#10b981', icon: CheckCircle2, thisVal: td?.kpi?.completed, lastVal: ld?.kpi?.completed },
-        { label: 'In Progress', value: null, color: '#f59e0b', icon: Clock, thisVal: td?.kpi?.inProgress, lastVal: ld?.kpi?.inProgress },
-        { label: 'Pending', value: null, color: '#8b5cf6', icon: AlertCircle, thisVal: td?.kpi?.pending, lastVal: ld?.kpi?.pending },
+        { label: 'Sheets',      color: '#3b82f6', icon: Layers,       thisVal: td?.kpi?.sheetsProduced, lastVal: ld?.kpi?.sheetsProduced },
+        { label: 'Books',       color: '#6366f1', icon: Activity,     thisVal: td?.kpi?.booksProduced,  lastVal: ld?.kpi?.booksProduced  },
+        { label: 'Completed',   color: '#10b981', icon: CheckCircle2, thisVal: td?.kpi?.completed,      lastVal: ld?.kpi?.completed      },
+        { label: 'In Progress', color: '#f59e0b', icon: Clock,        thisVal: td?.kpi?.inProgress,     lastVal: ld?.kpi?.inProgress     },
+        { label: 'Pending',     color: '#8b5cf6', icon: AlertCircle,  thisVal: td?.kpi?.pending,        lastVal: ld?.kpi?.pending        },
     ];
     const thisKpi = kpiDefs.map(k => ({ ...k, value: k.thisVal }));
     const lastKpi = kpiDefs.map(k => ({ ...k, value: k.lastVal }));
@@ -1716,49 +1822,41 @@ const CompareView = ({ compareData }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 }, animation: `${fadeUp} 0.4s ease both` }}>
 
-            {/* ── Desktop: all 10 KPIs in one row with vertical VS divider ── */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', gap: 0.75 }}>
-                {/* Period labels above each group */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ display: 'flex', flex: 5, gap: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: ACCENT_THIS.a, flexShrink: 0 }} />
-                            <Typography sx={{ fontSize: '0.62rem', fontWeight: 800, color: ACCENT_THIS.text, letterSpacing: '0.04em' }}>{compareData.thisMonthLabel || 'This Month'}</Typography>
-                        </Box>
-                    </Box>
-                    <Box sx={{ width: 36, flexShrink: 0 }} /> {/* spacer for VS */}
-                    <Box sx={{ display: 'flex', flex: 5, gap: 1, justifyContent: 'flex-end' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: ACCENT_LAST.a, flexShrink: 0 }} />
-                            <Typography sx={{ fontSize: '0.62rem', fontWeight: 800, color: ACCENT_LAST.text, letterSpacing: '0.04em' }}>{compareData.lastMonthLabel || 'Last Month'}</Typography>
-                        </Box>
-                    </Box>
+            {/* ── Inline VS label — no extra controls, top filter IS the period selector ── */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Box sx={{ px: 1.2, py: '4px', borderRadius: '8px', bgcolor: `${ACCENT_THIS.a}12`, border: `1px solid ${ACCENT_THIS.a}30` }}>
+                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: ACCENT_THIS.a }}>{periodALabel}</Typography>
                 </Box>
-
-                {/* 10 KPI cards + VS */}
-                <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>
-                    {thisKpi.map((k, i) => (
-                        <Box key={`t${i}`} sx={{ flex: 1, minWidth: 0 }}>
-                            <CompareKpiCard label={k.label} value={k.value} color={k.color} icon={k.icon} animDelay={i * 50} />
-                        </Box>
-                    ))}
-                    {/* Vertical VS divider */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 36, gap: 0.5 }}>
-                        <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, transparent, #c4b5fd)' }} />
-                        <Box sx={{ px: 1.2, py: '5px', borderRadius: '20px', bgcolor: '#f5f3ff', border: '1.5px solid #c4b5fd', flexShrink: 0 }}>
-                            <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: '#7c3aed', letterSpacing: '0.05em' }}>VS</Typography>
-                        </Box>
-                        <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, #c4b5fd, transparent)' }} />
-                    </Box>
-                    {lastKpi.map((k, i) => (
-                        <Box key={`l${i}`} sx={{ flex: 1, minWidth: 0 }}>
-                            <CompareKpiCard label={k.label} value={k.value} color={k.color} icon={k.icon} animDelay={i * 50 + 250} />
-                        </Box>
-                    ))}
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: '#7c3aed' }}>VS</Typography>
+                <Box sx={{ px: 1.2, py: '4px', borderRadius: '8px', bgcolor: `${ACCENT_LAST.a}12`, border: `1px solid ${ACCENT_LAST.a}30` }}>
+                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: ACCENT_LAST.a }}>{periodBLabel}</Typography>
                 </Box>
+                {loading && <CircularProgress size={13} sx={{ color: '#7c3aed', ml: 0.5 }} />}
             </Box>
 
-            {/* ── Mobile: stacked rows ── */}
+            {/* ── Desktop: 10 KPI cards in one row with vertical VS divider ── */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'stretch', gap: 1 }}>
+                {thisKpi.map((k, i) => (
+                    <Box key={`t${i}`} sx={{ flex: 1, minWidth: 0 }}>
+                        <CompareKpiCard label={k.label} value={k.value} color={k.color} icon={k.icon} animDelay={i * 50} />
+                    </Box>
+                ))}
+                {/* Vertical VS divider */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: 36, gap: 0.5 }}>
+                    <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, transparent, #c4b5fd)' }} />
+                    <Box sx={{ px: 1.2, py: '5px', borderRadius: '20px', bgcolor: '#f5f3ff', border: '1.5px solid #c4b5fd', flexShrink: 0 }}>
+                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: '#7c3aed', letterSpacing: '0.05em' }}>VS</Typography>
+                    </Box>
+                    <Box sx={{ width: '1px', flex: 1, background: 'linear-gradient(180deg, #c4b5fd, transparent)' }} />
+                </Box>
+                {lastKpi.map((k, i) => (
+                    <Box key={`l${i}`} sx={{ flex: 1, minWidth: 0 }}>
+                        <CompareKpiCard label={k.label} value={k.value} color={k.color} icon={k.icon} animDelay={i * 50 + 250} />
+                    </Box>
+                ))}
+            </Box>
+
+            {/* ── Mobile: stacked KPI rows ── */}
             <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                     <Box sx={{ width: 28, flexShrink: 0 }} />
@@ -1810,17 +1908,17 @@ const CompareView = ({ compareData }) => {
                         </Typography>
                         <Box sx={{ flex: 1, height: '1px', bgcolor: T.borderLight }} />
                     </Box>
-                    <Box sx={{ display: 'flex', gap: { xs: 0.75, md: 1 }, alignItems: 'stretch', mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0.5, md: 1 }, alignItems: { xs: 'flex-start', md: 'stretch' }, mb: 1.5 }}>
                         <ComparePill accent={ACCENT_THIS} />
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                             <ChartCard title="Production by Process & Machine" subtitle={`${ACCENT_THIS.label} · Process breakdown`} accentA={ACCENT_THIS.a} accentB={ACCENT_THIS.b} animDelay={0}>
                                 <ProductionByProcessChart data={td.charts.productionByProcess} onBarClick={() => {}} />
                             </ChartCard>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: { xs: 0.75, md: 1 }, alignItems: 'stretch' }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0.5, md: 1 }, alignItems: { xs: 'flex-start', md: 'stretch' } }}>
                         <ComparePill accent={ACCENT_LAST} />
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                             <ChartCard title="Production by Process & Machine" subtitle={`${ACCENT_LAST.label} · Process breakdown`} accentA={ACCENT_LAST.a} accentB={ACCENT_LAST.b} animDelay={80}>
                                 <ProductionByProcessChart data={ld.charts.productionByProcess} onBarClick={() => {}} />
                             </ChartCard>
@@ -1870,6 +1968,10 @@ const ProductionDashboard = () => {
     const [compareMode, setCompareMode] = useState(false);
     const [compareData, setCompareData] = useState({ thisMonth: null, lastMonth: null, loading: false });
 
+    /* ── Compare period state: A = current main filter at toggle time, B = previous ── */
+    const [_comparePeriodA, setComparePeriodA] = useState({ from: FY_FROM, to: FY_TO });
+    const [_comparePeriodB, setComparePeriodB] = useState({ from: '', to: '' });
+
     const [prodKpi, setProdKpi] = useState({
         sheetsProduced: { current: 0, growth: null },
         booksProduced: { current: 0, growth: null },
@@ -1915,14 +2017,10 @@ const ProductionDashboard = () => {
         setIsDateUserSelected(true);
     }, []);
 
-    /* ── Compare Mode fetch ── */
-    const fetchCompareData = useCallback(async () => {
+    /* ── Compare Mode fetch — explicit pA and pB ── */
+    const fetchCompareData = useCallback(async (pA, pB) => {
+        if (!pA?.from || !pA?.to || !pB?.from || !pB?.to) return;
         setCompareData(prev => ({ ...prev, loading: true, thisMonth: null, lastMonth: null }));
-        const now = dayjs();
-        const thisMonthFrom = now.startOf('month').format('YYYY-MM-DD');
-        const thisMonthTo = now.format('YYYY-MM-DD');
-        const lastMonthFrom = now.subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
-        const lastMonthTo = now.subtract(1, 'month').endOf('month').format('YYYY-MM-DD');
 
         const puFilter = selectedProductionUnit !== 'All' ? { ProductionUnitID: selectedProductionUnit } : {};
 
@@ -1943,14 +2041,10 @@ const ProductionDashboard = () => {
 
         try {
             const [thisMonth, lastMonth] = await Promise.all([
-                fetchPeriod(thisMonthFrom, thisMonthTo),
-                fetchPeriod(lastMonthFrom, lastMonthTo),
+                fetchPeriod(pA.from, pA.to),
+                fetchPeriod(pB.from, pB.to),
             ]);
-            setCompareData({
-                thisMonth, lastMonth, loading: false,
-                thisMonthLabel: `${now.startOf('month').format('DD MMM')} – ${now.format('DD MMM YYYY')}`,
-                lastMonthLabel: `${now.subtract(1, 'month').startOf('month').format('DD MMM')} – ${now.subtract(1, 'month').endOf('month').format('DD MMM YYYY')}`,
-            });
+            setCompareData({ thisMonth, lastMonth, loading: false });
         } catch {
             setCompareData(prev => ({ ...prev, loading: false }));
         }
@@ -1958,10 +2052,16 @@ const ProductionDashboard = () => {
 
     const toggleCompareMode = useCallback(() => {
         setCompareMode(prev => {
-            if (!prev) fetchCompareData();
+            if (!prev) {
+                const pA = { from: fromDate, to: toDate };
+                const pB = computePrevPeriod(period, fromDate, toDate);
+                setComparePeriodA(pA);
+                setComparePeriodB(pB);
+                fetchCompareData(pA, pB);
+            }
             return !prev;
         });
-    }, [fetchCompareData]);
+    }, [fetchCompareData, fromDate, toDate, period]);
 
     /* ── Fetch Production Units once on mount ── */
     useEffect(() => {
@@ -2382,12 +2482,23 @@ const ProductionDashboard = () => {
                 onRefresh={fetchData}
                 loading={loading}
                 controls={
-                    <>
-                    {/* Tab Pills */}
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        alignItems: { xs: 'flex-start', md: 'center' },
+                        justifyContent: { md: 'flex-end' },
+                        gap: { xs: 0.75, md: 1 },
+                        flexWrap: 'nowrap',
+                        overflowX: { md: 'auto' },
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': { display: 'none' },
+                    }}>
+
+                    {/* ── Mobile Row 1 / Desktop inline: Production | Machine tab pills ── */}
                     <Box sx={{
                         display: "flex", gap: 0.5, flexShrink: 0,
                         background: "linear-gradient(145deg, #ffffff, #f8fafc)",
-                        p: "5px", borderRadius: "14px",
+                        p: "2px", borderRadius: "10px",
                         border: `1.5px solid ${T.border}`,
                         boxShadow: T.shadowSm,
                     }}>
@@ -2409,10 +2520,10 @@ const ProductionDashboard = () => {
                                         }
                                     }}
                                     sx={{
-                                        px: 4, py: 1, borderRadius: "10px",
-                                        fontSize: "0.78rem", fontWeight: 800, cursor: "pointer",
+                                        px: { xs: 1.5, md: 3 }, py: '4px', borderRadius: "7px",
+                                        fontSize: { xs: '0.72rem', md: '0.78rem' }, fontWeight: 800, cursor: "pointer",
                                         border: "none", outline: "none",
-                                        fontFamily: T.font, letterSpacing: "0.02em",
+                                        fontFamily: T.font, letterSpacing: "0.02em", whiteSpace: 'nowrap',
                                         transition: "all 0.28s cubic-bezier(0.34,1.56,0.64,1)",
                                         bgcolor: active ? tab.color : "transparent",
                                         color: active ? "#fff" : T.textMuted,
@@ -2430,8 +2541,9 @@ const ProductionDashboard = () => {
                         })}
                     </Box>
 
-                    {/* Production Unit + Compare Mode + Machine Wise — inline with tabs on desktop */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: 'nowrap', overflow: 'hidden' }}>
+                    {/* ── Mobile Row 2 / Desktop inline: Production Unit + Compare Mode + Machine Wise ── */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0, flexWrap: 'nowrap' }}>
+
                     {/* ── Production Unit Filter ── visible on both tabs when data exists */}
                     {showProductionUnitFilter && (
                         <Box ref={puFilterRef} sx={{ position: 'relative', zIndex: 10, animation: `${fadeUp} 0.3s ease both` }}>
@@ -2447,7 +2559,7 @@ const ProductionDashboard = () => {
                                 }}
                                 sx={{
                                     display: 'flex', alignItems: 'center', gap: 1,
-                                    px: 2, py: '7px', borderRadius: '12px',
+                                    px: 2, py: '4px', borderRadius: '10px',
                                     border: `1.5px solid ${selectedProductionUnit !== 'All' ? T.teal : T.border}`,
                                     bgcolor: selectedProductionUnit !== 'All' ? `${T.teal}15` : '#ffffff',
                                     cursor: 'pointer', outline: 'none', fontFamily: T.font,
@@ -2496,64 +2608,6 @@ const ProductionDashboard = () => {
                                 </svg>
                             </Box>
 
-                            {/* Dropdown rendered via portal — see below the DashboardHeader */}
-                            {false && (
-                                <Box sx={{ display: 'none' }}>
-                                    <Box sx={{ px: 2, py: '10px', borderBottom: `1px solid ${T.borderLight}`, bgcolor: '#fafbfc' }}>
-                                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                            Production Unit
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{
-                                        maxHeight: 220, overflowY: 'auto', py: '6px',
-                                        '&::-webkit-scrollbar': { width: '4px' },
-                                        '&::-webkit-scrollbar-thumb': { bgcolor: T.border, borderRadius: '4px' },
-                                    }}>
-                                        <Box
-                                            component="button"
-                                            onClick={() => { setSelectedProductionUnit('All'); setPuDropdownOpen(false); }}
-                                            sx={{
-                                                display: 'flex', alignItems: 'center', gap: 1.5,
-                                                width: '100%', px: 2, py: '9px',
-                                                border: 'none', cursor: 'pointer', textAlign: 'left',
-                                                bgcolor: selectedProductionUnit === 'All' ? `${T.teal}12` : 'transparent',
-                                                fontFamily: T.font,
-                                                '&:hover': { bgcolor: `${T.teal}10` },
-                                                transition: 'background 0.15s',
-                                            }}
-                                        >
-                                            <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: selectedProductionUnit === 'All' ? T.teal : T.border }} />
-                                            <Typography sx={{ fontSize: '0.73rem', fontWeight: selectedProductionUnit === 'All' ? 800 : 600, color: selectedProductionUnit === 'All' ? T.teal : T.textMuted }}>
-                                                All Units
-                                            </Typography>
-                                        </Box>
-                                        {productionUnits.map(unit => {
-                                            const isActive = String(selectedProductionUnit) === String(unit.ProductionUnitID);
-                                            return (
-                                                <Box
-                                                    key={unit.ProductionUnitID}
-                                                    component="button"
-                                                    onClick={() => { setSelectedProductionUnit(String(unit.ProductionUnitID)); setPuDropdownOpen(false); }}
-                                                    sx={{
-                                                        display: 'flex', alignItems: 'center', gap: 1.5,
-                                                        width: '100%', px: 2, py: '9px',
-                                                        border: 'none', cursor: 'pointer', textAlign: 'left',
-                                                        bgcolor: isActive ? `${T.teal}12` : 'transparent',
-                                                        fontFamily: T.font,
-                                                        '&:hover': { bgcolor: `${T.teal}10` },
-                                                        transition: 'background 0.15s',
-                                                    }}
-                                                >
-                                                    <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: isActive ? T.teal : T.border }} />
-                                                    <Typography sx={{ fontSize: '0.73rem', fontWeight: isActive ? 800 : 600, color: isActive ? T.teal : T.textMuted }}>
-                                                        {unit.ProductionUnitName ?? unit.ProductionUnit ?? `Unit ${unit.ProductionUnitID}`}
-                                                    </Typography>
-                                                </Box>
-                                            );
-                                        })}
-                                    </Box>
-                                </Box>
-                            )}
                         </Box>
                     )}
 
@@ -2564,7 +2618,7 @@ const ProductionDashboard = () => {
                             onClick={toggleCompareMode}
                             sx={{
                                 display: 'flex', alignItems: 'center', gap: 1,
-                                px: 2, py: '7px', borderRadius: '12px', cursor: 'pointer',
+                                px: 2, py: '4px', borderRadius: '10px', cursor: 'pointer',
                                 border: `1.5px solid ${compareMode ? '#7c3aed' : T.border}`,
                                 bgcolor: compareMode ? '#7c3aed' : '#ffffff',
                                 outline: 'none', fontFamily: T.font,
@@ -2611,7 +2665,7 @@ const ProductionDashboard = () => {
                                 }}
                                 sx={{
                                     display: 'flex', alignItems: 'center', gap: 1,
-                                    px: 2, py: '7px', borderRadius: '12px',
+                                    px: 2, py: '4px', borderRadius: '10px',
                                     border: `1.5px solid ${machineFilter !== 'All' ? T.amber : T.border}`,
                                     bgcolor: machineFilter !== 'All' ? `${T.amber}15` : '#ffffff',
                                     cursor: 'pointer', outline: 'none', fontFamily: T.font,
@@ -2654,16 +2708,20 @@ const ProductionDashboard = () => {
 
                         </Box>
                     )}
-                    </Box> {/* end sub-row 2 */}
-                    </>
+                    </Box>
+
+                    {/* ── Mobile Row 3 / Desktop inline: date filter pills ── */}
+                    <Box sx={{ overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' }, flexShrink: 0 }}>
+                        <CommonDateFilter
+                            period={period} setPeriod={setPeriod}
+                            fromDate={fromDate} setFromDate={setFromDate}
+                            toDate={toDate} setToDate={handleSetToDate}
+                            onApply={() => { }}
+                        />
+                    </Box>
+                    </Box>
                 }
             >
-                <CommonDateFilter
-                    period={period} setPeriod={setPeriod}
-                    fromDate={fromDate} setFromDate={setFromDate}
-                    toDate={toDate} setToDate={handleSetToDate}
-                    onApply={() => { }}
-                />
             </DashboardHeader>
 
             {/* ── Production Unit dropdown — portal so it escapes sticky header ── */}
@@ -2814,7 +2872,11 @@ const ProductionDashboard = () => {
             <Box sx={{ width: "100%", px: R.headerPx, pt: 1.5 }}>
                 {activeTab === 'production' && compareMode ? (
                     /* ── Compare Mode: row-based layout ── */
-                    <CompareView compareData={compareData} />
+                    <CompareView
+                        compareData={compareData}
+                        periodALabel={fromDate === toDate ? dayjs(fromDate).format('DD MMM YYYY') : `${dayjs(fromDate).format('DD MMM')} – ${dayjs(toDate).format('DD MMM YYYY')}`}
+                        periodBLabel={compareData.periodBLabel ?? '—'}
+                    />
                 ) : activeTab === 'production' ? (
                     /* ── Normal Production view ── */
                     <Box sx={{ animation: `${fadeUp} 0.45s ease both` }}>

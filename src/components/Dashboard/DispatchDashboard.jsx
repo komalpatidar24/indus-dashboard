@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, keyframes, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, keyframes, Button, Tooltip } from '@mui/material';
 import { Truck, Clock, Package, Smartphone, Activity, BarChart3, PieChart as PieIcon, LineChart as LineIcon, Info } from 'lucide-react';
 import DashboardHeader from '../common/DashboardHeader';
 import DashboardChart from '../common/DashboardChart';
@@ -131,7 +131,30 @@ const DISPATCH_DRILL_CONFIG = {
    STAT CARD — compact, animated, with info icon
    ══════════════════════════════════════════════════════════════ */
 // eslint-disable-next-line no-unused-vars
-const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoClick, Icon }) => (
+const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoClick, Icon }) => {
+    const rawVal = (() => {
+        if (value == null) return null;
+        const stripped = String(value).replace(/,/g, '');
+        const n = parseFloat(stripped);
+        if (!isNaN(n)) return n.toLocaleString('en-IN');
+        return String(value);
+    })();
+    return (
+    <Tooltip
+        placement="top"
+        arrow
+        disableHoverListener={!rawVal || loading}
+        title={rawVal && !loading ? (
+            <Box sx={{ textAlign: 'center', px: 0.5 }}>
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>{label}</Typography>
+                <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: T.fontMono, letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>{rawVal}</Typography>
+            </Box>
+        ) : ''}
+        componentsProps={{
+            tooltip: { sx: { background: `linear-gradient(135deg, #0f172a 0%, ${accent}dd 100%)`, color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: `0 16px 40px ${accent}45, 0 4px 16px rgba(0,0,0,0.25)`, border: `1px solid ${accent}70`, backdropFilter: 'blur(10px)' } },
+            arrow: { sx: { color: accent } },
+        }}
+    >
     <Box sx={{
         borderRadius: { xs: '14px', sm: '20px' }, bgcolor: '#ffffff',
         border: '1px solid #e9eef4',
@@ -230,7 +253,9 @@ const StatCard = ({ label, value, color, bg, accent, loading, animDelay, onInfoC
             )}
         </Box>
     </Box>
-);
+    </Tooltip>
+    );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    CHART CARD — compact with animated top bar

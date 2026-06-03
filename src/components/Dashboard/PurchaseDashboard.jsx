@@ -86,19 +86,11 @@ const ExactValueTooltip = ({ rawValue, label, currency, children, isAmount = tru
     };
 
     const tooltipContent = (
-        <Box sx={{
-            px: 1.5, py: 1,
-            borderRadius: '8px',
-            background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-            minWidth: 120,
-            textAlign: 'center',
-        }}>
-            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 0.3 }}>
+        <Box sx={{ textAlign: 'center', px: 0.5 }}>
+            <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.75, mb: 0.6, color: 'inherit', lineHeight: 1 }}>
                 {label}
             </Typography>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 900, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
+            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: "'JetBrains Mono', 'Fira Code', monospace", letterSpacing: '-0.6px', color: 'inherit', lineHeight: 1 }}>
                 {formatExact(rawValue)}
             </Typography>
         </Box>
@@ -110,15 +102,8 @@ const ExactValueTooltip = ({ rawValue, label, currency, children, isAmount = tru
             placement="top"
             arrow
             componentsProps={{
-                tooltip: {
-                    sx: {
-                        bgcolor: 'transparent',
-                        p: 0,
-                        '& .MuiTooltip-arrow': { color: '#1e293b' },
-                        boxShadow: 'none',
-                        maxWidth: 'none',
-                    }
-                }
+                tooltip: { sx: { background: 'linear-gradient(135deg, #0f172a 0%, #334155dd 100%)', color: '#ffffff', borderRadius: '14px', px: 2.5, py: 1.6, minWidth: 110, boxShadow: '0 16px 40px rgba(51,65,85,0.45), 0 4px 16px rgba(0,0,0,0.25)', border: '1px solid #33415570', backdropFilter: 'blur(10px)' } },
+                arrow: { sx: { color: '#1e293b' } },
             }}
         >
             {children}
