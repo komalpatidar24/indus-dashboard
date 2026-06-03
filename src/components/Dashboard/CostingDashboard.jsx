@@ -70,7 +70,8 @@ const ChartOverlay = ({ loading }) => loading ? (
 ) : null;
 
 /* ── KPI Stat Card ── */
-const StatCard = ({ label, icon: _Icon, color, bg, accent, value, loading, animDelay, isAmount }) => {
+// eslint-disable-next-line no-unused-vars
+const StatCard = ({ label, icon: Icon, color, bg, accent, value, loading, animDelay, isAmount }) => {
     const [hovered, setHovered] = useState(false);
     const display = useMemo(() => {
         if (loading) return null;
@@ -169,7 +170,8 @@ const StatCard = ({ label, icon: _Icon, color, bg, accent, value, loading, animD
 };
 
 /* ── Chart Card ── */
-const ChartCard = ({ title, Icon: _Icon, accentA, accentB, loading, animDelay = 0, children }) => (
+// eslint-disable-next-line no-unused-vars
+const ChartCard = ({ title, Icon, accentA, accentB, loading, animDelay = 0, children }) => (
     <Box sx={{
         background: 'linear-gradient(160deg,#ffffff 0%,#f7f9ff 100%)',
         borderRadius: '20px',

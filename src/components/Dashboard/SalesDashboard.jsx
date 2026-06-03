@@ -1382,6 +1382,7 @@ const SalesDashboard = () => {
                 border: { display: false },
             },
         },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [tooltipLabel]);
 
     /* Yearly Sales Trend — line chart */
@@ -1425,6 +1426,7 @@ const SalesDashboard = () => {
                 border: { display: false },
             },
         },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [tooltipLabel]);
 
     /* ════════════════════════════════════════════════════════════

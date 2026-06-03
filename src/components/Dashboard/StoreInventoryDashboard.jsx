@@ -73,7 +73,8 @@ const ChartOverlay = ({ loading }) => loading ? (
     </Box>
 ) : null;
 
-const StatCard = ({ label, value, rawValue, color, bg, accent, loading, animDelay, Icon: _Icon }) => {
+// eslint-disable-next-line no-unused-vars
+const StatCard = ({ label, value, rawValue, color, bg, accent, loading, animDelay, Icon }) => {
     const [hovered, setHovered] = useState(false);
     const tooltipVal = rawValue != null && rawValue !== '—' ? String(rawValue) : null;
     return (

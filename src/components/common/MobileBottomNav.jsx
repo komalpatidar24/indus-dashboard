@@ -182,7 +182,8 @@ const MobileBottomNav = () => {
 
                 {/* Menu items */}
                 <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {MORE_ITEMS.map(({ label, icon: _Icon, path }) => {
+                    {/* eslint-disable-next-line no-unused-vars */}
+                    {MORE_ITEMS.map(({ label, icon: Icon, path }) => {
                         const active = location.pathname === path;
                         return (
                             <Box
